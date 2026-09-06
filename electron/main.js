@@ -71,7 +71,16 @@ ipcMain.handle('career:new', (_e, slot, profile) => {
   const file = slotPath(slot);
   if (fs.existsSync(file)) throw new Error('slot in use');   // caller must delete first
   const schema = fs.readFileSync(path.join(RESOURCES, 'schema.sql'), 'utf8');
-  return db.create(file, schema, profile);
+  try {
+    return db.create(file, schema, profile);
+  } catch (err) {
+    // a partly written save is worse than none at all
+    db.close();
+    for (const ext of ['', '-wal', '-shm']) {
+      try { fs.unlinkSync(file + ext); } catch (_) {}
+    }
+    throw err;
+  }
 });
 
 ipcMain.handle('career:load', (_e, slot) => db.open(slotPath(slot)));

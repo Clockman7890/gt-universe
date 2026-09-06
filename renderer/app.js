@@ -15,30 +15,36 @@ const repWord = r => REP[Math.min(4, Math.floor((r || 0) * 5))];
 function drawCity(canvas, dim) {
   const dpr = window.devicePixelRatio || 1;
   const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (!w || !h) return;
   canvas.width = w * dpr; canvas.height = h * dpr;
   const g = canvas.getContext('2d');
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
 
+  // everything below is authored for a 700 x 436 card and scaled up
+  const k = Math.max(w / 700, h / 436);
+
   g.fillStyle = '#0B0C0F';
   g.fillRect(0, 0, w, h);
 
-  // irregular blocks, two rotations so no grid reads through
+  // city blocks: density follows area, size follows scale
   const rnd = mulberry(20200614);
-  for (const [angle, count, shade] of [[0.21, 260, 12], [-0.47, 170, 8]]) {
+  for (const [angle, per1000, shade] of [[0.21, 1.9, 12], [-0.47, 1.1, 8]]) {
+    const count = Math.round(per1000 * (w * h) / 1000);
     g.save();
     g.translate(w / 2, h / 2); g.rotate(angle); g.translate(-w / 2, -h / 2);
     for (let i = 0; i < count; i++) {
-      const x = rnd() * w * 1.6 - w * 0.3;
-      const y = rnd() * h * 1.6 - h * 0.3;
-      const bw = 14 + rnd() * 34, bh = 12 + rnd() * 30;
-      const v = 19 + Math.floor(rnd() * shade);
+      const x  = rnd() * w * 1.7 - w * 0.35;
+      const y  = rnd() * h * 1.7 - h * 0.35;
+      const bw = (7 + rnd() * 19) * k;
+      const bh = (6 + rnd() * 16) * k;
+      const v  = 19 + Math.floor(rnd() * shade);
       g.fillStyle = `rgb(${v},${v + 2},${v + 8})`;
       g.fillRect(x, y, bw, bh);
     }
     g.restore();
   }
 
-  // winding streets carved out of the blocks
+  // winding streets carved back out of the blocks
   const roads = [
     [[0, .28], [.2, .2], [.45, .4], [.7, .34], [1, .18]],
     [[0, .70], [.18, .74], [.42, .58], [.7, .66], [1, .76]],
@@ -63,18 +69,27 @@ function drawCity(canvas, dim) {
     }
   };
   g.lineCap = 'round';
-  g.strokeStyle = '#0B0C0F'; g.lineWidth = 30; trace();
-  g.strokeStyle = '#31353F'; g.lineWidth = 1.2; trace();
+  // 1. gutter: a touch darker than the ground, so the cut reads as a trench
+  g.strokeStyle = '#07080A'; g.lineWidth = 30 * k; trace();
+  // 2. asphalt: lighter than the background, this is what makes it a road
+  g.strokeStyle = '#22252C'; g.lineWidth = 24 * k; trace();
+  // 3. centre line
+  g.strokeStyle = '#3D424E'; g.lineWidth = Math.max(1.2, 1.6 * k); trace();
 
-  // river along the bottom
+  // river across the bottom
   g.beginPath();
   g.moveTo(0, h * 0.90);
-  g.quadraticCurveTo(w * .3, h * .84, w * .55, h * .90);
-  g.quadraticCurveTo(w * .8, h * .96, w, h * .88);
+  g.quadraticCurveTo(w * .30, h * .845, w * .55, h * .90);
+  g.quadraticCurveTo(w * .80, h * .955, w, h * .875);
   g.lineTo(w, h); g.lineTo(0, h); g.closePath();
   g.fillStyle = '#0E1218'; g.fill();
+  g.beginPath();
+  g.moveTo(0, h * 0.90);
+  g.quadraticCurveTo(w * .30, h * .845, w * .55, h * .90);
+  g.quadraticCurveTo(w * .80, h * .955, w, h * .875);
+  g.strokeStyle = '#1B2735'; g.lineWidth = Math.max(1, 1.5 * k); g.stroke();
 
-  if (dim) { g.fillStyle = 'rgba(11,12,15,0.72)'; g.fillRect(0, 0, w, h); }
+  if (dim) { g.fillStyle = 'rgba(11,12,15,0.74)'; g.fillRect(0, 0, w, h); }
 }
 
 function mulberry(a) {
@@ -179,6 +194,7 @@ $('exit').onclick = () => window.gt.quit();
 $('btn-create').onclick = async () => {
   if (!pendingSlot) return;
   const [country, block] = $('f-country').value.split('|');
+  try {
   await window.gt.newCareer(pendingSlot, {
     name: $('f-name').value.trim() || 'Driver',
     country, block,
@@ -190,6 +206,9 @@ $('btn-create').onclick = async () => {
   });
   pendingSlot = null;
   show('hub'); paint(); refresh();
+  } catch (err) {
+    alert('Could not start the career:\n\n' + (err && err.message ? err.message : err));
+  }
 };
 
 $('plaza').onclick = async () => { await window.gt.advance(); refresh(); };

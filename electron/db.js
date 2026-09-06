@@ -4,6 +4,44 @@ const Database = require('better-sqlite3');
 let handle = null;
 let dirty = false;
 
+// the fourteen driver blocks, needed before any driver row can exist
+const BLOCKS = [
+  ['trofeo_adriatico',  'Trofeo Adriatico GT5',        'europe',       0.11, 1.0],
+  ['nordisk',           'Nordisk GT5 Cup',             'europe',       0.07, 1.0],
+  ['british_benelux',   'British & Benelux GT5',       'europe',       0.14, 1.0],
+  ['alpen_pokal',       'Alpen GT5 Pokal',             'europe',       0.14, 1.0],
+  ['central_european',  'Central European GT5 Trophy', 'europe',       0.05, 1.0],
+  ['coupe_latine',      'Coupe Latine GT5',            'europe',       0.12, 1.0],
+  ['eurasian',          'Eurasian GT5 Series',         'europe',       0.04, 1.6],
+  ['gt5_north_america', 'GT5 North America Cup',       'americas',     0.10, 1.0],
+  ['copa_sudamericana', 'Copa Sudamericana GT5',       'americas',     0.07, 0.7],
+  ['lancer_japan',      'Lancer R Cup Japan',          'asia_pacific', 0.06, 0.7],
+  ['east_asia_lancer',  'East Asia Lancer Series',     'asia_pacific', 0.03, 0.7],
+  ['asian_gt5_trophy',  'Asian GT5 Trophy',            'asia_pacific', 0.02, 0.7],
+  ['australasian_arc',  'Australasian ARC Series',     'asia_pacific', 0.04, 1.0],
+  ['africa_gulf',       'Africa & Gulf Lancer Cup',    'africa_gulf',  0.01, 0.5]
+];
+
+// only the countries the create screen can pick; the generator adds the rest
+const COUNTRIES = [
+  ['GRC','Greece','trofeo_adriatico'],   ['ITA','Italy','trofeo_adriatico'],
+  ['GBR','United Kingdom','british_benelux'], ['DEU','Germany','alpen_pokal'],
+  ['SWE','Sweden','nordisk'],            ['FRA','France','coupe_latine'],
+  ['USA','United States','gt5_north_america'], ['BRA','Brazil','copa_sudamericana'],
+  ['JPN','Japan','lancer_japan'],        ['AUS','Australia','australasian_arc'],
+  ['ZAF','South Africa','africa_gulf'],  ['RUS','Russia','eurasian']
+];
+
+function seedReference(d) {
+  const b = d.prepare(`INSERT OR IGNORE INTO blocks
+      (id, name, continent, production_weight, passive_multiplier)
+      VALUES (?,?,?,?,?)`);
+  for (const row of BLOCKS) b.run(...row);
+  const c = d.prepare(`INSERT OR IGNORE INTO countries (code, name, block_id, weight)
+      VALUES (?,?,?,1.0)`);
+  for (const row of COUNTRIES) c.run(...row);
+}
+
 function close() {
   if (handle) { handle.close(); handle = null; }
   dirty = false;
@@ -39,6 +77,8 @@ function create(file, schemaSql, profile) {
     VALUES (1, 2, 1.0, 1.0, 'full')`).run();
 
   handle.prepare(`INSERT INTO seasons (season, calendar_year) VALUES (1, 2020)`).run();
+
+  seedReference(handle);
 
   // the player is just another row in drivers; generation of the rest comes later
   if (profile) {
