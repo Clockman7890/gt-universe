@@ -175,6 +175,9 @@ async function refreshSaves() {
       if (s.empty) {
         pendingSlot = s.slot;
         $('slot-tag').textContent = '— slot ' + s.slot;
+        for (const id of ['f-name','f-age','f-capital','f-passive','f-exp']) $(id).value = '';
+        $('f-country').selectedIndex = 0;
+        $('f-entry').selectedIndex = 0;
         show('create');
       } else if (!s.corrupt) {
         await window.gt.loadCareer(s.slot);
@@ -189,10 +192,38 @@ async function refreshSaves() {
 $('btn-create-back').onclick = () => { pendingSlot = null; show('title'); };
 $('btn-settings').onclick = () => alert('Settings — not implemented yet.');
 $('btn-exit-title').onclick = () => window.gt.quit();
-$('exit').onclick = () => window.gt.quit();
+
+// leaving the hub closes the career and returns to the title screen
+$('exit').onclick = async () => {
+  await window.gt.closeCareer();
+  await refreshSaves();
+  pendingSlot = null;
+  show('title');
+  paint();
+};
+
+function invalid() {
+  const name = $('f-name').value.trim();
+  const sel  = $('f-country').value;
+  const age  = +$('f-age').value;
+  const cap  = +$('f-capital').value;
+  const pas  = +$('f-passive').value;
+  const exp  = +$('f-exp').value;
+  const gt5  = $('f-entry').value === 'gt5';
+  if (!name)                        return 'Enter a driver name.';
+  if (!sel)                         return 'Choose a nationality.';
+  if (!(age >= 18 && age <= 50))    return 'Age must be between 18 and 50.';
+  if (!(cap >= 150000 && cap <= 3000000)) return 'Starting capital must be between €150,000 and €3,000,000.';
+  if (!(pas >= 10000 && pas <= 300000))   return 'Passive income must be between €10,000 and €300,000.';
+  const lo = gt5 ? 0.60 : 0.50, hi = gt5 ? 0.70 : 0.60;
+  if (!(exp >= lo && exp <= hi))    return `Driving experience must be between ${lo.toFixed(2)} and ${hi.toFixed(2)}.`;
+  return null;
+}
 
 $('btn-create').onclick = async () => {
   if (!pendingSlot) return;
+  const bad = invalid();
+  if (bad) { alert(bad); return; }
   const [country, block] = $('f-country').value.split('|');
   try {
   await window.gt.newCareer(pendingSlot, {
@@ -212,7 +243,6 @@ $('btn-create').onclick = async () => {
 };
 
 $('plaza').onclick = async () => { await window.gt.advance(); refresh(); };
-$('b-save').onclick = async () => { await window.gt.saveNow(); };
 
 document.querySelectorAll('.node').forEach(n => {
   n.onclick = () => {

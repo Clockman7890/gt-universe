@@ -103,24 +103,14 @@ ipcMain.handle('career:delete', async (_e, slot) => {
   return true;
 });
 
-ipcMain.handle('career:save', () => { db.save(); return true; });
-
 ipcMain.handle('career:state', () => db.state());
 
 ipcMain.handle('career:advance', () => db.advanceWeek());
 
-ipcMain.handle('app:quit', async () => {
-  if (db.isDirty()) {
-    const { response } = await dialog.showMessageBox(win, {
-      type: 'question',
-      buttons: ['Save and exit', 'Exit without saving', 'Cancel'],
-      defaultId: 0,
-      cancelId: 2,
-      message: 'You have unsaved progress.'
-    });
-    if (response === 2) return false;
-    if (response === 0) db.save();
-  }
+ipcMain.handle('career:close', () => { db.close(); return true; });
+
+ipcMain.handle('app:quit', () => {
+  // progress is written to disk as it happens, so there is nothing to confirm
   db.close();
   app.quit();
   return true;

@@ -33,38 +33,138 @@
 
     <div class="field">
       <label>Driver name</label>
-      <input id="f-name" value="Ilias Orologas">
+      <input id="f-name" placeholder="Enter a name" maxlength="28">
     </div>
     <div class="field">
       <label>Nationality</label>
       <select id="f-country">
-        <option value="GRC|trofeo_adriatico">Greece — Trofeo Adriatico</option>
-        <option value="ITA|trofeo_adriatico">Italy — Trofeo Adriatico</option>
-        <option value="GBR|british_benelux">United Kingdom — British &amp; Benelux</option>
-        <option value="DEU|alpen_pokal">Germany — Alpen GT5 Pokal</option>
-        <option value="SWE|nordisk">Sweden — Nordisk GT5 Cup</option>
-        <option value="FRA|coupe_latine">France — Coupe Latine</option>
-        <option value="USA|gt5_north_america">United States — North America Cup</option>
-        <option value="BRA|copa_sudamericana">Brazil — Copa Sudamericana</option>
-        <option value="JPN|lancer_japan">Japan — Lancer R Cup</option>
-        <option value="AUS|australasian_arc">Australia — Australasian ARC</option>
-        <option value="ZAF|africa_gulf">South Africa — Africa &amp; Gulf</option>
-        <option value="RUS|eurasian">Russia — Eurasian GT5</option>
+        <option value="" disabled selected>Choose a nationality…</option>
+        <optgroup label="Trofeo Adriatico GT5">
+          <option value="ALB|trofeo_adriatico">Albania</option>
+          <option value="BGR|trofeo_adriatico">Bulgaria</option>
+          <option value="HRV|trofeo_adriatico">Croatia</option>
+          <option value="CYP|trofeo_adriatico">Cyprus</option>
+          <option value="GRC|trofeo_adriatico">Greece</option>
+          <option value="ITA|trofeo_adriatico">Italy</option>
+          <option value="MKD|trofeo_adriatico">North Macedonia</option>
+          <option value="ROU|trofeo_adriatico">Romania</option>
+          <option value="SRB|trofeo_adriatico">Serbia</option>
+          <option value="SVN|trofeo_adriatico">Slovenia</option>
+          <option value="TUR|trofeo_adriatico">Turkey</option>
+        </optgroup>
+        <optgroup label="Nordisk GT5 Cup">
+          <option value="DNK|nordisk">Denmark</option>
+          <option value="FIN|nordisk">Finland</option>
+          <option value="ISL|nordisk">Iceland</option>
+          <option value="NOR|nordisk">Norway</option>
+          <option value="SWE|nordisk">Sweden</option>
+        </optgroup>
+        <optgroup label="British & Benelux GT5">
+          <option value="BEL|british_benelux">Belgium</option>
+          <option value="IRL|british_benelux">Ireland</option>
+          <option value="LUX|british_benelux">Luxembourg</option>
+          <option value="NLD|british_benelux">Netherlands</option>
+          <option value="GBR|british_benelux">United Kingdom</option>
+        </optgroup>
+        <optgroup label="Alpen GT5 Pokal">
+          <option value="AUT|alpen_pokal">Austria</option>
+          <option value="DEU|alpen_pokal">Germany</option>
+          <option value="POL|alpen_pokal">Poland</option>
+          <option value="CHE|alpen_pokal">Switzerland</option>
+        </optgroup>
+        <optgroup label="Central European GT5 Trophy">
+          <option value="CZE|central_european">Czechia</option>
+          <option value="EST|central_european">Estonia</option>
+          <option value="HUN|central_european">Hungary</option>
+          <option value="LVA|central_european">Latvia</option>
+          <option value="LTU|central_european">Lithuania</option>
+          <option value="SVK|central_european">Slovakia</option>
+          <option value="UKR|central_european">Ukraine</option>
+        </optgroup>
+        <optgroup label="Coupe Latine GT5">
+          <option value="FRA|coupe_latine">France</option>
+          <option value="PRT|coupe_latine">Portugal</option>
+          <option value="ESP|coupe_latine">Spain</option>
+        </optgroup>
+        <optgroup label="Eurasian GT5 Series">
+          <option value="ARM|eurasian">Armenia</option>
+          <option value="AZE|eurasian">Azerbaijan</option>
+          <option value="BLR|eurasian">Belarus</option>
+          <option value="GEO|eurasian">Georgia</option>
+          <option value="KAZ|eurasian">Kazakhstan</option>
+          <option value="RUS|eurasian">Russia</option>
+        </optgroup>
+        <optgroup label="GT5 North America Cup">
+          <option value="CAN|gt5_north_america">Canada</option>
+          <option value="USA|gt5_north_america">United States</option>
+        </optgroup>
+        <optgroup label="Copa Sudamericana GT5">
+          <option value="ARG|copa_sudamericana">Argentina</option>
+          <option value="BOL|copa_sudamericana">Bolivia</option>
+          <option value="BRA|copa_sudamericana">Brazil</option>
+          <option value="CHL|copa_sudamericana">Chile</option>
+          <option value="COL|copa_sudamericana">Colombia</option>
+          <option value="ECU|copa_sudamericana">Ecuador</option>
+          <option value="PRY|copa_sudamericana">Paraguay</option>
+          <option value="PER|copa_sudamericana">Peru</option>
+          <option value="URY|copa_sudamericana">Uruguay</option>
+          <option value="VEN|copa_sudamericana">Venezuela</option>
+        </optgroup>
+        <optgroup label="Lancer R Cup Japan">
+          <option value="JPN|lancer_japan">Japan</option>
+        </optgroup>
+        <optgroup label="East Asia Lancer Series">
+          <option value="CHN|east_asia_lancer">China</option>
+          <option value="HKG|east_asia_lancer">Hong Kong</option>
+          <option value="MAC|east_asia_lancer">Macau</option>
+          <option value="KOR|east_asia_lancer">South Korea</option>
+          <option value="TWN|east_asia_lancer">Taiwan</option>
+        </optgroup>
+        <optgroup label="Asian GT5 Trophy">
+          <option value="IND|asian_gt5_trophy">India</option>
+          <option value="IDN|asian_gt5_trophy">Indonesia</option>
+          <option value="MYS|asian_gt5_trophy">Malaysia</option>
+          <option value="PAK|asian_gt5_trophy">Pakistan</option>
+          <option value="PHL|asian_gt5_trophy">Philippines</option>
+          <option value="SGP|asian_gt5_trophy">Singapore</option>
+          <option value="LKA|asian_gt5_trophy">Sri Lanka</option>
+          <option value="THA|asian_gt5_trophy">Thailand</option>
+        </optgroup>
+        <optgroup label="Australasian ARC Series">
+          <option value="AUS|australasian_arc">Australia</option>
+          <option value="NZL|australasian_arc">New Zealand</option>
+        </optgroup>
+        <optgroup label="Africa & Gulf Lancer Cup">
+          <option value="AGO|africa_gulf">Angola</option>
+          <option value="BHR|africa_gulf">Bahrain</option>
+          <option value="EGY|africa_gulf">Egypt</option>
+          <option value="JOR|africa_gulf">Jordan</option>
+          <option value="KEN|africa_gulf">Kenya</option>
+          <option value="KWT|africa_gulf">Kuwait</option>
+          <option value="LBN|africa_gulf">Lebanon</option>
+          <option value="MAR|africa_gulf">Morocco</option>
+          <option value="NGA|africa_gulf">Nigeria</option>
+          <option value="OMN|africa_gulf">Oman</option>
+          <option value="QAT|africa_gulf">Qatar</option>
+          <option value="SAU|africa_gulf">Saudi Arabia</option>
+          <option value="ZAF|africa_gulf">South Africa</option>
+          <option value="ARE|africa_gulf">United Arab Emirates</option>
+        </optgroup>
       </select>
     </div>
     <div class="field">
       <label>Age</label>
-      <input id="f-age" type="number" min="18" max="50" value="34">
+      <input id="f-age" type="number" min="18" max="50" placeholder="18 – 50">
       <span class="hint">18 – 50</span>
     </div>
     <div class="field">
       <label>Starting capital</label>
-      <input id="f-capital" type="number" min="150000" max="3000000" step="10000" value="300000">
+      <input id="f-capital" type="number" min="150000" max="3000000" step="10000" placeholder="150000">
       <span class="hint">€150,000 – €3,000,000</span>
     </div>
     <div class="field">
       <label>Passive income</label>
-      <input id="f-passive" type="number" min="10000" max="300000" step="5000" value="60000">
+      <input id="f-passive" type="number" min="10000" max="300000" step="5000" placeholder="10000">
       <span class="hint">€10,000 – €300,000 per year</span>
     </div>
     <div class="field">
@@ -76,7 +176,7 @@
     </div>
     <div class="field">
       <label>Driving experience</label>
-      <input id="f-exp" type="number" min="0.50" max="0.70" step="0.01" value="0.65">
+      <input id="f-exp" type="number" min="0.60" max="0.70" step="0.01" placeholder="0.60 – 0.70">
     </div>
 
     <div style="display:flex;gap:8px;margin-top:22px">
@@ -95,7 +195,6 @@
     <span id="b-rep">Unproven</span>
     <span class="sp"></span>
     <span class="news" id="b-news">News<span class="count" id="b-count">0</span></span>
-    <span class="link" id="b-save">Save</span>
   </div>
 
   <div id="hub-map">
@@ -131,7 +230,7 @@
 
     <div id="plaza"><b>Advance</b><b>week</b><span id="p-next">→ week 2</span></div>
     <div id="region">—</div>
-    <button id="exit">Exit</button>
+    <button id="exit">Main menu</button>
   </div>
 </section>
 

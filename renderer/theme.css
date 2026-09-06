@@ -105,7 +105,7 @@ button.primary:hover { background: var(--accent-soft); }
           color: #5C5F68; font-size: 12px; letter-spacing: 2px; }
 #exit   { position: absolute; right: 24px; bottom: 16px;
           background: #1A1C21; border: .8px solid var(--border);
-          padding: 5px 16px; font-size: 12px; border-radius: 6px; }
+          padding: 5px 14px; font-size: 12px; border-radius: 6px; }
 
 /* ---------- title ---------- */
 #title-inner { position: absolute; inset: 0; display: flex;

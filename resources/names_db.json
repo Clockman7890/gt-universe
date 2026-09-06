@@ -1,0 +1,2716 @@
+{
+ "GRC": {
+  "rule": "plain",
+  "classic": [
+   "Dimitrios",
+   "Ioannis",
+   "Konstantinos",
+   "Georgios",
+   "Nikolaos",
+   "Vasileios",
+   "Christos",
+   "Panagiotis",
+   "Athanasios",
+   "Michail",
+   "Evangelos",
+   "Spyridon"
+  ],
+  "modern": [
+   "Orfeas",
+   "Rafail",
+   "Angelos",
+   "Stefanos",
+   "Alexandros",
+   "Manos",
+   "Achilleas",
+   "Ilias",
+   "Fotis",
+   "Thanos",
+   "Nikitas",
+   "Odysseas"
+  ],
+  "surnames": [
+   "Andreadis",
+   "Antonopoulos",
+   "Dimitriou",
+   "Doukas",
+   "Fotiadis",
+   "Gerasimou",
+   "Ioannidis",
+   "Kalogeropoulos",
+   "Kanellis",
+   "Karagiannis",
+   "Katsaros",
+   "Lambrou",
+   "Louridas",
+   "Manolakis",
+   "Marinos",
+   "Mavridis",
+   "Nikolaidis",
+   "Papadopoulos",
+   "Pavlidis",
+   "Roussos",
+   "Samaras",
+   "Sideris",
+   "Stergiou",
+   "Tsakiris",
+   "Vergos",
+   "Vlachos",
+   "Xenakis",
+   "Zafeiris"
+  ]
+ },
+ "ITA": {
+  "rule": "plain",
+  "classic": [
+   "Giuseppe",
+   "Antonio",
+   "Marco",
+   "Roberto",
+   "Stefano",
+   "Maurizio",
+   "Paolo",
+   "Luigi",
+   "Franco",
+   "Sergio"
+  ],
+  "modern": [
+   "Lorenzo",
+   "Matteo",
+   "Alessandro",
+   "Federico",
+   "Riccardo",
+   "Tommaso",
+   "Leonardo",
+   "Gabriele",
+   "Andrea",
+   "Filippo"
+  ],
+  "surnames": [
+   "Barbieri",
+   "Basile",
+   "Bellini",
+   "Bianchi",
+   "Caruso",
+   "Colombo",
+   "Conti",
+   "De Luca",
+   "Farina",
+   "Ferrari",
+   "Fontana",
+   "Gallo",
+   "Grassi",
+   "Greco",
+   "Lombardi",
+   "Mancini",
+   "Marino",
+   "Moretti",
+   "Orlando",
+   "Pellegrini",
+   "Ricci",
+   "Rinaldi",
+   "Rizzo",
+   "Rossi",
+   "Sartori",
+   "Testa",
+   "Villa",
+   "Zanetti"
+  ]
+ },
+ "DEU": {
+  "rule": "plain",
+  "classic": [
+   "Michael",
+   "Thomas",
+   "Andreas",
+   "Stefan",
+   "Jürgen",
+   "Wolfgang",
+   "Klaus",
+   "Dirk",
+   "Ralf",
+   "Uwe"
+  ],
+  "modern": [
+   "Luca",
+   "Finn",
+   "Jonas",
+   "Maximilian",
+   "Elias",
+   "Noah",
+   "Leon",
+   "Paul",
+   "Emil",
+   "Moritz"
+  ],
+  "surnames": [
+   "Albrecht",
+   "Becker",
+   "Berger",
+   "Brandt",
+   "Böhm",
+   "Engel",
+   "Fischer",
+   "Haas",
+   "Hoffmann",
+   "Kaufmann",
+   "Krüger",
+   "Kuhn",
+   "Lehmann",
+   "Müller",
+   "Neumann",
+   "Reinhardt",
+   "Riedel",
+   "Schmidt",
+   "Schwarz",
+   "Schäfer",
+   "Seidel",
+   "Sommer",
+   "Vogel",
+   "Wagner",
+   "Weber",
+   "Winkler",
+   "Ziegler",
+   "Zimmermann"
+  ]
+ },
+ "AUT": {
+  "rule": "plain",
+  "classic": [
+   "Klaus",
+   "Gerhard",
+   "Herbert",
+   "Josef",
+   "Franz"
+  ],
+  "modern": [
+   "Lukas",
+   "Tobias",
+   "David",
+   "Felix",
+   "Simon"
+  ],
+  "surnames": [
+   "Bauer",
+   "Brunner",
+   "Ebner",
+   "Egger",
+   "Fuchs",
+   "Gruber",
+   "Hofer",
+   "Huber",
+   "Lang",
+   "Leitner",
+   "Moser",
+   "Pichler",
+   "Reiter",
+   "Steiner",
+   "Wagner",
+   "Wieser"
+  ]
+ },
+ "GBR": {
+  "rule": "plain",
+  "classic": [
+   "Nigel",
+   "Gary",
+   "Andrew",
+   "Stuart",
+   "Paul",
+   "Ian",
+   "Neil",
+   "Derek",
+   "Colin",
+   "Martin"
+  ],
+  "modern": [
+   "Oliver",
+   "Harry",
+   "Jack",
+   "Charlie",
+   "Freddie",
+   "Louis",
+   "Alfie",
+   "Theo",
+   "Reuben",
+   "Sonny"
+  ],
+  "surnames": [
+   "Ashworth",
+   "Barlow",
+   "Bennett",
+   "Cavendish",
+   "Clarke",
+   "Dunmore",
+   "Ellison",
+   "Fairbairn",
+   "Foster",
+   "Grantham",
+   "Harrison",
+   "Hollingworth",
+   "Hughes",
+   "Kingsley",
+   "Loxley",
+   "Marsden",
+   "Merrick",
+   "Norbury",
+   "Prescott",
+   "Radcliffe",
+   "Rushton",
+   "Stanbridge",
+   "Thorne",
+   "Trewin",
+   "Vaughan",
+   "Wexley",
+   "Whitaker",
+   "Wilson"
+  ]
+ },
+ "NLD": {
+  "rule": "dutch",
+  "classic": [
+   "Jeroen",
+   "Hendrik",
+   "Marcel",
+   "Erik",
+   "Bas",
+   "Joost"
+  ],
+  "modern": [
+   "Daan",
+   "Sem",
+   "Lucas",
+   "Bram",
+   "Thijs",
+   "Sven"
+  ],
+  "surnames": [
+   "Bakker",
+   "Boersma",
+   "Bosch",
+   "Dijkstra",
+   "Groen",
+   "Hoek",
+   "Jansen",
+   "Koster",
+   "Kramer",
+   "Kuipers",
+   "Linden",
+   "Meijer",
+   "Nijhuis",
+   "Rietveld",
+   "Slot",
+   "Smit",
+   "Timmer",
+   "Verhoeven",
+   "Vermeer",
+   "Visser"
+  ]
+ },
+ "BEL": {
+  "rule": "dutch",
+  "classic": [
+   "Dries",
+   "Geert",
+   "Kurt",
+   "Wim"
+  ],
+  "modern": [
+   "Lars",
+   "Milan",
+   "Wout",
+   "Arne"
+  ],
+  "surnames": [
+   "Claes",
+   "Coppens",
+   "De Smet",
+   "Dumont",
+   "Janssens",
+   "Lambrecht",
+   "Maes",
+   "Naessens",
+   "Peeters",
+   "Segers",
+   "Vandenberghe",
+   "Vanhoutte",
+   "Verstraete",
+   "Wouters"
+  ]
+ },
+ "ESP": {
+  "rule": "double",
+  "classic": [
+   "Antonio",
+   "Javier",
+   "Francisco",
+   "Miguel",
+   "Carlos",
+   "Rafael",
+   "Alberto"
+  ],
+  "modern": [
+   "Hugo",
+   "Mateo",
+   "Pablo",
+   "Álvaro",
+   "Diego",
+   "Marcos",
+   "Izan"
+  ],
+  "surnames": [
+   "Aguilar",
+   "Bermúdez",
+   "Cabrera",
+   "Castillo",
+   "Delgado",
+   "Domínguez",
+   "Escobar",
+   "Fernández",
+   "Gallardo",
+   "García",
+   "Herrera",
+   "Iglesias",
+   "Lozano",
+   "Marín",
+   "Molina",
+   "Moreno",
+   "Navarro",
+   "Ortega",
+   "Pastor",
+   "Quintana",
+   "Rueda",
+   "Salazar",
+   "Serrano",
+   "Vega"
+  ]
+ },
+ "PRT": {
+  "rule": "double",
+  "classic": [
+   "Rui",
+   "Joaquim",
+   "Manuel",
+   "Nuno"
+  ],
+  "modern": [
+   "Duarte",
+   "Tomás",
+   "Afonso",
+   "Salvador"
+  ],
+  "surnames": [
+   "Barreto",
+   "Cordeiro",
+   "Costa",
+   "Esteves",
+   "Ferreira",
+   "Fonseca",
+   "Guerreiro",
+   "Lopes",
+   "Machado",
+   "Marçal",
+   "Matias",
+   "Nogueira",
+   "Pinto",
+   "Rebelo"
+  ]
+ },
+ "FRA": {
+  "rule": "plain",
+  "classic": [
+   "Philippe",
+   "Laurent",
+   "Olivier",
+   "Thierry",
+   "Pascal",
+   "Christophe",
+   "Bruno"
+  ],
+  "modern": [
+   "Gabriel",
+   "Léo",
+   "Hugo",
+   "Jules",
+   "Nathan",
+   "Mathis",
+   "Aksel"
+  ],
+  "surnames": [
+   "Bertrand",
+   "Caron",
+   "Chevalier",
+   "Delacroix",
+   "Dubois",
+   "Faure",
+   "Fournier",
+   "Gauthier",
+   "Girard",
+   "Jourdain",
+   "Leclère",
+   "Lefèvre",
+   "Legrand",
+   "Lemoine",
+   "Marchand",
+   "Mercier",
+   "Moreau",
+   "Noël",
+   "Pelletier",
+   "Perrin",
+   "Renard",
+   "Rousseau",
+   "Sabatier",
+   "Vidal"
+  ]
+ },
+ "SWE": {
+  "rule": "plain",
+  "classic": [
+   "Lars",
+   "Anders",
+   "Mikael",
+   "Per",
+   "Håkan",
+   "Ove"
+  ],
+  "modern": [
+   "Elias",
+   "Liam",
+   "Oscar",
+   "Hugo",
+   "Viktor",
+   "Melvin"
+  ],
+  "surnames": [
+   "Andersson",
+   "Bergström",
+   "Bjelke",
+   "Ekström",
+   "Falk",
+   "Hedlund",
+   "Holmberg",
+   "Lindgren",
+   "Lindqvist",
+   "Norén",
+   "Nyström",
+   "Sandberg",
+   "Sundström",
+   "Wallin",
+   "Åkesson",
+   "Öberg"
+  ]
+ },
+ "NOR": {
+  "rule": "plain",
+  "classic": [
+   "Odd",
+   "Terje",
+   "Bjørn",
+   "Kjell"
+  ],
+  "modern": [
+   "Nils",
+   "Emil",
+   "Jakob",
+   "Sander"
+  ],
+  "surnames": [
+   "Aune",
+   "Bergström",
+   "Dahl",
+   "Fjeldstad",
+   "Grønvold",
+   "Halvorsen",
+   "Haugen",
+   "Lien",
+   "Nordby",
+   "Rustad",
+   "Solberg",
+   "Vang"
+  ]
+ },
+ "DNK": {
+  "rule": "plain",
+  "classic": [
+   "Søren",
+   "Henrik",
+   "Poul",
+   "Jørgen"
+  ],
+  "modern": [
+   "Oscar",
+   "Malthe",
+   "Alfred",
+   "Storm"
+  ],
+  "surnames": [
+   "Bruun",
+   "Frandsen",
+   "Gade",
+   "Holm",
+   "Kjær",
+   "Lindholm",
+   "Munk",
+   "Overgaard",
+   "Rasmussen",
+   "Schandorff",
+   "Skov",
+   "Thygesen"
+  ]
+ },
+ "FIN": {
+  "rule": "plain",
+  "classic": [
+   "Jari",
+   "Mika",
+   "Pekka",
+   "Timo"
+  ],
+  "modern": [
+   "Onni",
+   "Eino",
+   "Väinö",
+   "Aatos"
+  ],
+  "surnames": [
+   "Aaltonen",
+   "Hakala",
+   "Heikkilä",
+   "Jokinen",
+   "Korhonen",
+   "Laine",
+   "Mäkinen",
+   "Nieminen",
+   "Rantanen",
+   "Salminen",
+   "Toivonen",
+   "Virtanen"
+  ]
+ },
+ "ISL": {
+  "rule": "patronymic",
+  "classic": [
+   "Gunnar",
+   "Björn",
+   "Einar",
+   "Ólafur",
+   "Magnús"
+  ],
+  "modern": [
+   "Aron",
+   "Kristján",
+   "Viktor",
+   "Emil",
+   "Dagur"
+  ],
+  "surnames": []
+ },
+ "POL": {
+  "rule": "slavic",
+  "classic": [
+   "Piotr",
+   "Andrzej",
+   "Tomasz",
+   "Krzysztof"
+  ],
+  "modern": [
+   "Antoni",
+   "Jakub",
+   "Kacper",
+   "Filip"
+  ],
+  "surnames": [
+   "Baran",
+   "Górski",
+   "Jaworski",
+   "Kaczmarek",
+   "Kowalski",
+   "Lis",
+   "Mazur",
+   "Nowak",
+   "Sikora",
+   "Urbański",
+   "Walczak",
+   "Woźniak",
+   "Wrona",
+   "Zieliński"
+  ]
+ },
+ "CZE": {
+  "rule": "slavic",
+  "classic": [
+   "Pavel",
+   "Petr",
+   "Jaroslav",
+   "Miroslav"
+  ],
+  "modern": [
+   "Jakub",
+   "Matěj",
+   "Vojtěch",
+   "Adam"
+  ],
+  "surnames": [
+   "Bartoš",
+   "Dvořák",
+   "Hájek",
+   "Kolář",
+   "Kučera",
+   "Marek",
+   "Novák",
+   "Pospíšil",
+   "Procházka",
+   "Svoboda",
+   "Veselý",
+   "Zeman",
+   "Černý",
+   "Šimek"
+  ]
+ },
+ "RUS": {
+  "rule": "slavic",
+  "classic": [
+   "Sergei",
+   "Vladimir",
+   "Andrei",
+   "Igor",
+   "Oleg",
+   "Yuri"
+  ],
+  "modern": [
+   "Nikita",
+   "Artem",
+   "Maxim",
+   "Danila",
+   "Ivan",
+   "Timur"
+  ],
+  "surnames": [
+   "Belov",
+   "Fedotov",
+   "Golubev",
+   "Gusev",
+   "Isaev",
+   "Karpov",
+   "Kuznetsov",
+   "Lebedev",
+   "Medvedev",
+   "Morozov",
+   "Nikitin",
+   "Orlov",
+   "Petrov",
+   "Popov",
+   "Romanov",
+   "Sokolov",
+   "Titov",
+   "Volkov",
+   "Yakovlev",
+   "Zaitsev"
+  ]
+ },
+ "UKR": {
+  "rule": "slavic",
+  "classic": [
+   "Oleksandr",
+   "Vitaliy",
+   "Serhiy"
+  ],
+  "modern": [
+   "Nazar",
+   "Bohdan",
+   "Maksym"
+  ],
+  "surnames": [
+   "Bondarenko",
+   "Danylenko",
+   "Gutsul",
+   "Hrytsenko",
+   "Kovalenko",
+   "Lysenko",
+   "Melnyk",
+   "Pavlyuk",
+   "Savchenko",
+   "Tkachenko",
+   "Zhuravel"
+  ]
+ },
+ "USA": {
+  "rule": "plain",
+  "classic": [
+   "Michael",
+   "David",
+   "Jeffrey",
+   "Brian",
+   "Todd",
+   "Gregory",
+   "Scott",
+   "Kevin"
+  ],
+  "modern": [
+   "Mason",
+   "Logan",
+   "Ethan",
+   "Caleb",
+   "Hunter",
+   "Wyatt",
+   "Grayson",
+   "Bennett"
+  ],
+  "surnames": [
+   "Ackerman",
+   "Ashby",
+   "Bowman",
+   "Braddock",
+   "Brooks",
+   "Calloway",
+   "Carver",
+   "Davis",
+   "Doyle",
+   "Fitzgerald",
+   "Gallagher",
+   "Hayes",
+   "Holbrook",
+   "Ingram",
+   "Keating",
+   "Kendrick",
+   "Langford",
+   "Lawson",
+   "McAllister",
+   "Miller",
+   "Norwood",
+   "Pemberton",
+   "Prescott",
+   "Reynolds",
+   "Ridgeway",
+   "Sheridan",
+   "Sullivan",
+   "Whitfield"
+  ]
+ },
+ "CAN": {
+  "rule": "plain",
+  "classic": [
+   "Denis",
+   "Marc",
+   "Real",
+   "Guy"
+  ],
+  "modern": [
+   "Liam",
+   "Nolan",
+   "Beckett",
+   "Emerson"
+  ],
+  "surnames": [
+   "Beaulieu",
+   "Bergeron",
+   "Cormier",
+   "Fortin",
+   "Gagnon",
+   "Lavoie",
+   "MacKenzie",
+   "Pelletier",
+   "Rousseau",
+   "Tremblay",
+   "Vaillancourt",
+   "Whitcomb"
+  ]
+ },
+ "BRA": {
+  "rule": "double",
+  "classic": [
+   "Ricardo",
+   "Marcelo",
+   "Fernando",
+   "Rodrigo",
+   "Alexandre",
+   "Cesar"
+  ],
+  "modern": [
+   "Enzo",
+   "Gabriel",
+   "Lucas",
+   "Davi",
+   "Pedro",
+   "Theo"
+  ],
+  "surnames": [
+   "Almeida",
+   "Andrade",
+   "Barbosa",
+   "Bittencourt",
+   "Camargo",
+   "Cardoso",
+   "Duarte",
+   "Figueiredo",
+   "Guimarães",
+   "Lacerda",
+   "Monteiro",
+   "Moreira",
+   "Nogueira",
+   "Pacheco",
+   "Peixoto",
+   "Queiroz",
+   "Rezende",
+   "Rocha",
+   "Sampaio",
+   "Silva",
+   "Souza",
+   "Teixeira"
+  ]
+ },
+ "ARG": {
+  "rule": "double",
+  "classic": [
+   "Gustavo",
+   "Sergio",
+   "Hernán",
+   "Daniel"
+  ],
+  "modern": [
+   "Benjamín",
+   "Thiago",
+   "Bautista",
+   "Ciro"
+  ],
+  "surnames": [
+   "Bustos",
+   "Cabrera",
+   "Franco",
+   "Giménez",
+   "Ibarra",
+   "Ledesma",
+   "Maidana",
+   "Ojeda",
+   "Peralta",
+   "Quiroga",
+   "Riquelme",
+   "Salvatierra",
+   "Sosa",
+   "Vera"
+  ]
+ },
+ "JPN": {
+  "rule": "plain",
+  "classic": [
+   "Hiroshi",
+   "Takeshi",
+   "Kenji",
+   "Masaru",
+   "Yutaka",
+   "Shigeru"
+  ],
+  "modern": [
+   "Haruto",
+   "Sota",
+   "Ren",
+   "Yuto",
+   "Riku",
+   "Kaito"
+  ],
+  "surnames": [
+   "Arakawa",
+   "Fujimoto",
+   "Hasegawa",
+   "Inoue",
+   "Ishikawa",
+   "Kobayashi",
+   "Kubo",
+   "Maeda",
+   "Matsumoto",
+   "Nakamura",
+   "Nishimura",
+   "Ogawa",
+   "Okada",
+   "Saitō",
+   "Sasaki",
+   "Takahashi",
+   "Tanaka",
+   "Uehara",
+   "Watanabe",
+   "Yoshida"
+  ]
+ },
+ "AUS": {
+  "rule": "plain",
+  "classic": [
+   "Craig",
+   "Shane",
+   "Wayne",
+   "Darren",
+   "Glenn",
+   "Brett"
+  ],
+  "modern": [
+   "Cooper",
+   "Archie",
+   "Levi",
+   "Max",
+   "Jasper",
+   "Flynn"
+  ],
+  "surnames": [
+   "Beauchamp",
+   "Cadwallader",
+   "Callaghan",
+   "Delaney",
+   "Fraser",
+   "Gilmour",
+   "Hendricks",
+   "Hollis",
+   "Kerr",
+   "Lockyer",
+   "Mercer",
+   "Prendergast",
+   "Ryan",
+   "Sinclair",
+   "Thompson",
+   "Walker",
+   "Waverley",
+   "Wentworth"
+  ]
+ },
+ "NZL": {
+  "rule": "plain",
+  "classic": [
+   "Grant",
+   "Trevor",
+   "Murray"
+  ],
+  "modern": [
+   "Nikau",
+   "Ari",
+   "Cody"
+  ],
+  "surnames": [
+   "Baxter",
+   "Cavanagh",
+   "Fenwick",
+   "Hargreaves",
+   "Hohepa",
+   "Marsh",
+   "Mitchell",
+   "Ngata",
+   "Tane",
+   "Whitcombe"
+  ]
+ },
+ "THA": {
+  "rule": "plain",
+  "classic": [
+   "Somchai",
+   "Prasert",
+   "Wichai"
+  ],
+  "modern": [
+   "Nattapong",
+   "Krit",
+   "Thanawat"
+  ],
+  "surnames": [
+   "Anuwat",
+   "Chaiyaporn",
+   "Kittisak",
+   "Phanuwat",
+   "Rattanakosin",
+   "Srisuk",
+   "Sukhum",
+   "Techawong",
+   "Wongsawat",
+   "Yotsakorn"
+  ]
+ },
+ "IND": {
+  "rule": "plain",
+  "classic": [
+   "Rajesh",
+   "Sanjay",
+   "Vikram"
+  ],
+  "modern": [
+   "Arjun",
+   "Vihaan",
+   "Kabir"
+  ],
+  "surnames": [
+   "Bhatia",
+   "Chandran",
+   "Chawla",
+   "Deshpande",
+   "Gill",
+   "Iyer",
+   "Kapoor",
+   "Mehta",
+   "Nair",
+   "Pillai",
+   "Rao",
+   "Reddy",
+   "Sharma",
+   "Verma"
+  ]
+ },
+ "ARE": {
+  "rule": "plain",
+  "classic": [
+   "Khalid",
+   "Saeed",
+   "Rashid",
+   "Ahmed"
+  ],
+  "modern": [
+   "Omar",
+   "Zayed",
+   "Faisal",
+   "Hamad"
+  ],
+  "surnames": [
+   "Al Balushi",
+   "Al Falasi",
+   "Al Hashimi",
+   "Al Ketbi",
+   "Al Mansoori",
+   "Al Marri",
+   "Al Nuaimi",
+   "Al Qassimi",
+   "Al Rumaithi",
+   "Al Shamsi",
+   "Al Suwaidi",
+   "Al Zaabi"
+  ]
+ },
+ "SAU": {
+  "rule": "plain",
+  "classic": [
+   "Abdullah",
+   "Fahd",
+   "Bandar"
+  ],
+  "modern": [
+   "Turki",
+   "Ziyad",
+   "Rakan"
+  ],
+  "surnames": [
+   "Al Dosari",
+   "Al Faisal",
+   "Al Ghamdi",
+   "Al Harbi",
+   "Al Mutairi",
+   "Al Otaibi",
+   "Al Qahtani",
+   "Al Shehri",
+   "Al Subaie",
+   "Al Zahrani"
+  ]
+ },
+ "ZAF": {
+  "rule": "plain",
+  "classic": [
+   "Pieter",
+   "Johan",
+   "Andre",
+   "Gerhard"
+  ],
+  "modern": [
+   "Ruan",
+   "Kyle",
+   "Ethan",
+   "Jaco"
+  ],
+  "surnames": [
+   "Botha",
+   "Coetzee",
+   "Fourie",
+   "Joubert",
+   "Kruger",
+   "Marais",
+   "Nel",
+   "Pretorius",
+   "Steenkamp",
+   "Swanepoel",
+   "Venter",
+   "du Plessis",
+   "van Wyk",
+   "van Zyl"
+  ]
+ },
+ "MAR": {
+  "rule": "plain",
+  "classic": [
+   "Youssef",
+   "Karim",
+   "Mehdi"
+  ],
+  "modern": [
+   "Adam",
+   "Rayan",
+   "Ilyas"
+  ],
+  "surnames": [
+   "Benali",
+   "Berrada",
+   "Bouzid",
+   "Chraibi",
+   "El Amrani",
+   "El Fassi",
+   "Haddad",
+   "Lahlou",
+   "Ouazzani",
+   "Sekkat",
+   "Tazi"
+  ]
+ },
+ "NGA": {
+  "rule": "plain",
+  "classic": [
+   "Emeka",
+   "Tunde",
+   "Chuka"
+  ],
+  "modern": [
+   "Chidi",
+   "Ade",
+   "Obi"
+  ],
+  "surnames": [
+   "Abiodun",
+   "Adeyemi",
+   "Balogun",
+   "Chukwu",
+   "Eze",
+   "Ibrahim",
+   "Nwachukwu",
+   "Nwosu",
+   "Ogunlesi",
+   "Okafor",
+   "Uzoma"
+  ]
+ },
+ "TUR": {
+  "rule": "plain",
+  "classic": [
+   "Mehmet",
+   "Ahmet",
+   "Kemal"
+  ],
+  "modern": [
+   "Emir",
+   "Kerem",
+   "Yiğit"
+  ],
+  "surnames": [
+   "Arslan",
+   "Aydın",
+   "Demir",
+   "Doğan",
+   "Erdem",
+   "Kaya",
+   "Koç",
+   "Polat",
+   "Yıldız",
+   "Yılmaz",
+   "Çelik",
+   "Özdemir",
+   "Şahin",
+   "Şimşek"
+  ]
+ },
+ "KAZ": {
+  "rule": "slavic",
+  "classic": [
+   "Yerlan",
+   "Nurlan",
+   "Bakyt"
+  ],
+  "modern": [
+   "Alikhan",
+   "Sanzhar",
+   "Aldiyar"
+  ],
+  "surnames": [
+   "Abenov",
+   "Baiseitov",
+   "Dosmukhamedov",
+   "Iskakov",
+   "Kaliyev",
+   "Nurmagambetov",
+   "Serikov",
+   "Sultanov",
+   "Tuleuov"
+  ]
+ },
+ "CYP": {
+  "rule": "plain",
+  "classic": [
+   "Andreas",
+   "Christos",
+   "Savvas",
+   "Marios",
+   "Kyriakos",
+   "Loukas"
+  ],
+  "modern": [
+   "Andreas",
+   "Nikolas",
+   "Stelios",
+   "Alexios",
+   "Petros",
+   "Charis"
+  ],
+  "surnames": [
+   "Christodoulou",
+   "Georgiou",
+   "Hadjipavlou",
+   "Constantinou",
+   "Panayiotou",
+   "Michaelides",
+   "Savvides",
+   "Charalambous",
+   "Kyprianou",
+   "Neophytou",
+   "Loizides",
+   "Papacosta"
+  ]
+ },
+ "BGR": {
+  "rule": "slavic",
+  "classic": [
+   "Georgi",
+   "Ivan",
+   "Dimitar",
+   "Nikolay",
+   "Plamen",
+   "Stoyan"
+  ],
+  "modern": [
+   "Martin",
+   "Kaloyan",
+   "Viktor",
+   "Aleksandar",
+   "Boris",
+   "Damyan"
+  ],
+  "surnames": [
+   "Petrov",
+   "Ivanov",
+   "Dimitrov",
+   "Georgiev",
+   "Todorov",
+   "Stoyanov",
+   "Kolev",
+   "Angelov",
+   "Marinov",
+   "Vasilev",
+   "Hristov",
+   "Iliev"
+  ]
+ },
+ "ROU": {
+  "rule": "plain",
+  "classic": [
+   "Ion",
+   "Gheorghe",
+   "Mihai",
+   "Constantin",
+   "Vasile",
+   "Nicolae"
+  ],
+  "modern": [
+   "Andrei",
+   "Stefan",
+   "Rares",
+   "Darius",
+   "Matei",
+   "Luca"
+  ],
+  "surnames": [
+   "Popescu",
+   "Ionescu",
+   "Dumitrescu",
+   "Georgescu",
+   "Stoica",
+   "Munteanu",
+   "Radu",
+   "Barbu",
+   "Marinescu",
+   "Nistor",
+   "Vlaicu",
+   "Preda"
+  ]
+ },
+ "SRB": {
+  "rule": "slavic",
+  "classic": [
+   "Dragan",
+   "Zoran",
+   "Milan",
+   "Nenad",
+   "Goran",
+   "Slobodan"
+  ],
+  "modern": [
+   "Luka",
+   "Nikola",
+   "Stefan",
+   "Vuk",
+   "Filip",
+   "Lazar"
+  ],
+  "surnames": [
+   "Jovanovic",
+   "Petrovic",
+   "Nikolic",
+   "Markovic",
+   "Djordjevic",
+   "Stojanovic",
+   "Ilic",
+   "Pavlovic",
+   "Milosevic",
+   "Ristic",
+   "Zivkovic",
+   "Todorovic"
+  ]
+ },
+ "HRV": {
+  "rule": "slavic",
+  "classic": [
+   "Ivica",
+   "Zeljko",
+   "Damir",
+   "Tomislav",
+   "Kresimir",
+   "Branko"
+  ],
+  "modern": [
+   "Luka",
+   "Ivan",
+   "Marko",
+   "Jakov",
+   "Roko",
+   "Borna"
+  ],
+  "surnames": [
+   "Horvat",
+   "Kovacevic",
+   "Babic",
+   "Maric",
+   "Novak",
+   "Juric",
+   "Vukovic",
+   "Knezevic",
+   "Perisic",
+   "Matic",
+   "Grgic",
+   "Radic"
+  ]
+ },
+ "SVN": {
+  "rule": "slavic",
+  "classic": [
+   "Janez",
+   "Marko",
+   "Bostjan",
+   "Andrej",
+   "Matjaz",
+   "Peter"
+  ],
+  "modern": [
+   "Nejc",
+   "Ziga",
+   "Jakob",
+   "Tim",
+   "Vid",
+   "Anze"
+  ],
+  "surnames": [
+   "Novak",
+   "Horvat",
+   "Kranjc",
+   "Zupancic",
+   "Potocnik",
+   "Kovac",
+   "Mlakar",
+   "Bozic",
+   "Golob",
+   "Kos",
+   "Rozman",
+   "Vidmar"
+  ]
+ },
+ "MKD": {
+  "rule": "slavic",
+  "classic": [
+   "Goran",
+   "Vlado",
+   "Aleksandar",
+   "Zoran",
+   "Blagoj",
+   "Trajko"
+  ],
+  "modern": [
+   "Stefan",
+   "David",
+   "Marko",
+   "Damjan",
+   "Filip",
+   "Nikola"
+  ],
+  "surnames": [
+   "Stojanovski",
+   "Trajkovski",
+   "Petrovski",
+   "Nikolovski",
+   "Dimitrievski",
+   "Angelovski",
+   "Ristovski",
+   "Georgievski",
+   "Ivanovski",
+   "Mitrevski",
+   "Jovanovski",
+   "Kostovski"
+  ]
+ },
+ "ALB": {
+  "rule": "plain",
+  "classic": [
+   "Agim",
+   "Besnik",
+   "Fatmir",
+   "Ilir",
+   "Arben",
+   "Genci"
+  ],
+  "modern": [
+   "Erion",
+   "Klajdi",
+   "Redon",
+   "Endrit",
+   "Kevin",
+   "Denis"
+  ],
+  "surnames": [
+   "Hoxha",
+   "Shehu",
+   "Krasniqi",
+   "Berisha",
+   "Gjoka",
+   "Dervishi",
+   "Meta",
+   "Lleshi",
+   "Doda",
+   "Bardhi",
+   "Xhaferi",
+   "Cela"
+  ]
+ },
+ "IRL": {
+  "rule": "plain",
+  "classic": [
+   "Declan",
+   "Seamus",
+   "Padraig",
+   "Ciaran",
+   "Eoin",
+   "Brendan"
+  ],
+  "modern": [
+   "Cian",
+   "Oisin",
+   "Fionn",
+   "Darragh",
+   "Rory",
+   "Tadhg"
+  ],
+  "surnames": [
+   "Murphy",
+   "O'Sullivan",
+   "Kavanagh",
+   "Doherty",
+   "Fitzgerald",
+   "Brennan",
+   "Devlin",
+   "Gallagher",
+   "McCarthy",
+   "Hennessy",
+   "Nolan",
+   "Quinlan"
+  ]
+ },
+ "LUX": {
+  "rule": "plain",
+  "classic": [
+   "Jean",
+   "Marc",
+   "Guy",
+   "Romain"
+  ],
+  "modern": [
+   "Noah",
+   "Liam",
+   "Mathis",
+   "Elias"
+  ],
+  "surnames": [
+   "Weber",
+   "Schmit",
+   "Muller",
+   "Hoffmann",
+   "Wagner",
+   "Reuter",
+   "Thill",
+   "Kremer"
+  ]
+ },
+ "CHE": {
+  "rule": "plain",
+  "classic": [
+   "Beat",
+   "Urs",
+   "Rolf",
+   "Werner",
+   "Marcel",
+   "Kurt"
+  ],
+  "modern": [
+   "Nino",
+   "Levin",
+   "Elia",
+   "Janis",
+   "Timo",
+   "Andrin"
+  ],
+  "surnames": [
+   "Meier",
+   "Keller",
+   "Brunner",
+   "Zimmermann",
+   "Frei",
+   "Schneider",
+   "Baumann",
+   "Steiner",
+   "Roth",
+   "Widmer",
+   "Amrein",
+   "Furrer"
+  ]
+ },
+ "SVK": {
+  "rule": "slavic",
+  "classic": [
+   "Jozef",
+   "Peter",
+   "Milan",
+   "Marian",
+   "Stanislav",
+   "Vladimir"
+  ],
+  "modern": [
+   "Adam",
+   "Samuel",
+   "Jakub",
+   "Matej",
+   "Oliver",
+   "Simon"
+  ],
+  "surnames": [
+   "Novak",
+   "Horvath",
+   "Varga",
+   "Toth",
+   "Kovac",
+   "Balog",
+   "Hudak",
+   "Sedlak",
+   "Bednar",
+   "Kral",
+   "Sokol",
+   "Marek"
+  ]
+ },
+ "HUN": {
+  "rule": "plain",
+  "classic": [
+   "Laszlo",
+   "Istvan",
+   "Zoltan",
+   "Attila",
+   "Gabor",
+   "Tamas"
+  ],
+  "modern": [
+   "Bence",
+   "Levente",
+   "Marton",
+   "Zsombor",
+   "Dominik",
+   "Adam"
+  ],
+  "surnames": [
+   "Nagy",
+   "Kovacs",
+   "Szabo",
+   "Toth",
+   "Horvath",
+   "Varga",
+   "Kiss",
+   "Molnar",
+   "Nemeth",
+   "Farkas",
+   "Balogh",
+   "Racz"
+  ]
+ },
+ "EST": {
+  "rule": "plain",
+  "classic": [
+   "Toomas",
+   "Jaan",
+   "Andres",
+   "Rein",
+   "Mart",
+   "Priit"
+  ],
+  "modern": [
+   "Rasmus",
+   "Oliver",
+   "Sander",
+   "Robin",
+   "Karl",
+   "Marten"
+  ],
+  "surnames": [
+   "Tamm",
+   "Saar",
+   "Sepp",
+   "Kask",
+   "Kukk",
+   "Rebane",
+   "Ilves",
+   "Parn",
+   "Koppel",
+   "Laur",
+   "Mets",
+   "Vaher"
+  ]
+ },
+ "LVA": {
+  "rule": "plain",
+  "classic": [
+   "Janis",
+   "Andris",
+   "Juris",
+   "Valdis",
+   "Aivars",
+   "Uldis"
+  ],
+  "modern": [
+   "Roberts",
+   "Daniels",
+   "Marks",
+   "Emils",
+   "Gustavs",
+   "Rihards"
+  ],
+  "surnames": [
+   "Berzins",
+   "Kalnins",
+   "Ozols",
+   "Liepins",
+   "Krumins",
+   "Balodis",
+   "Vitols",
+   "Zarins",
+   "Eglitis",
+   "Purins",
+   "Rudzitis",
+   "Skujins"
+  ]
+ },
+ "LTU": {
+  "rule": "plain",
+  "classic": [
+   "Vytautas",
+   "Algirdas",
+   "Rimantas",
+   "Gintaras",
+   "Darius",
+   "Saulius"
+  ],
+  "modern": [
+   "Matas",
+   "Nojus",
+   "Dominykas",
+   "Lukas",
+   "Jokubas",
+   "Arnas"
+  ],
+  "surnames": [
+   "Kazlauskas",
+   "Jankauskas",
+   "Petrauskas",
+   "Butkus",
+   "Urbonas",
+   "Vaitkus",
+   "Stankevicius",
+   "Grigas",
+   "Mikalauskas",
+   "Ramanauskas",
+   "Zukauskas",
+   "Navickas"
+  ]
+ },
+ "BLR": {
+  "rule": "slavic",
+  "classic": [
+   "Aleh",
+   "Siarhei",
+   "Uladzimir",
+   "Viktar",
+   "Ihar",
+   "Mikalai"
+  ],
+  "modern": [
+   "Maksim",
+   "Artsiom",
+   "Danila",
+   "Yahor",
+   "Kiryl",
+   "Anton"
+  ],
+  "surnames": [
+   "Kavalenka",
+   "Novik",
+   "Shauchenka",
+   "Baranau",
+   "Lukashuk",
+   "Hrytsuk",
+   "Dubina",
+   "Sakalou",
+   "Zhuk",
+   "Marozau",
+   "Kazlou",
+   "Bandarenka"
+  ]
+ },
+ "GEO": {
+  "rule": "plain",
+  "classic": [
+   "Giorgi",
+   "Levan",
+   "Zurab",
+   "Vakhtang",
+   "Irakli",
+   "Davit"
+  ],
+  "modern": [
+   "Luka",
+   "Saba",
+   "Nika",
+   "Giorgi",
+   "Sandro",
+   "Tornike"
+  ],
+  "surnames": [
+   "Beridze",
+   "Kapanadze",
+   "Gogoladze",
+   "Tsiklauri",
+   "Chkheidze",
+   "Maisuradze",
+   "Lomidze",
+   "Kvaratskhelia",
+   "Abashidze",
+   "Jorbenadze",
+   "Nadiradze",
+   "Shengelia"
+  ]
+ },
+ "ARM": {
+  "rule": "plain",
+  "classic": [
+   "Armen",
+   "Vahagn",
+   "Ashot",
+   "Karen",
+   "Gagik",
+   "Hovhannes"
+  ],
+  "modern": [
+   "Narek",
+   "Davit",
+   "Tigran",
+   "Arman",
+   "Gor",
+   "Erik"
+  ],
+  "surnames": [
+   "Sargsyan",
+   "Hakobyan",
+   "Grigoryan",
+   "Petrosyan",
+   "Manukyan",
+   "Avetisyan",
+   "Karapetyan",
+   "Mkrtchyan",
+   "Vardanyan",
+   "Harutyunyan",
+   "Ghazaryan",
+   "Simonyan"
+  ]
+ },
+ "AZE": {
+  "rule": "plain",
+  "classic": [
+   "Elchin",
+   "Rashad",
+   "Ilgar",
+   "Vugar",
+   "Namig",
+   "Farhad"
+  ],
+  "modern": [
+   "Emin",
+   "Murad",
+   "Tural",
+   "Kanan",
+   "Nihad",
+   "Orkhan"
+  ],
+  "surnames": [
+   "Aliyev",
+   "Mammadov",
+   "Huseynov",
+   "Guliyev",
+   "Ismayilov",
+   "Rzayev",
+   "Hasanov",
+   "Aghayev",
+   "Karimov",
+   "Safarov",
+   "Musayev",
+   "Baghirov"
+  ]
+ },
+ "CHL": {
+  "rule": "double",
+  "classic": [
+   "Rodrigo",
+   "Cristian",
+   "Patricio",
+   "Sebastian",
+   "Claudio"
+  ],
+  "modern": [
+   "Matias",
+   "Vicente",
+   "Agustin",
+   "Benjamin",
+   "Tomas"
+  ],
+  "surnames": [
+   "Munoz",
+   "Rojas",
+   "Contreras",
+   "Fuentes",
+   "Araya",
+   "Espinoza",
+   "Valenzuela",
+   "Sepulveda",
+   "Bravo",
+   "Tapia",
+   "Riquelme",
+   "Cortes"
+  ]
+ },
+ "URY": {
+  "rule": "double",
+  "classic": [
+   "Washington",
+   "Ruben",
+   "Alvaro",
+   "Gustavo",
+   "Nelson"
+  ],
+  "modern": [
+   "Facundo",
+   "Bruno",
+   "Joaquin",
+   "Santino",
+   "Valentin"
+  ],
+  "surnames": [
+   "Rodriguez",
+   "Fernandez",
+   "Pereyra",
+   "Cabrera",
+   "Silveira",
+   "Techera",
+   "Bentancur",
+   "Lasa",
+   "Viera",
+   "Olivera",
+   "Nunez",
+   "Correa"
+  ]
+ },
+ "PRY": {
+  "rule": "double",
+  "classic": [
+   "Ramon",
+   "Julio",
+   "Hugo",
+   "Cesar",
+   "Derlis"
+  ],
+  "modern": [
+   "Mateo",
+   "Thiago",
+   "Ian",
+   "Lautaro",
+   "Alan"
+  ],
+  "surnames": [
+   "Benitez",
+   "Gimenez",
+   "Ayala",
+   "Villalba",
+   "Ortiz",
+   "Ramirez",
+   "Duarte",
+   "Caceres",
+   "Ovelar",
+   "Riveros",
+   "Franco",
+   "Mendoza"
+  ]
+ },
+ "BOL": {
+  "rule": "double",
+  "classic": [
+   "Marcelo",
+   "Juan",
+   "Wilson",
+   "Freddy",
+   "Ronald"
+  ],
+  "modern": [
+   "Diego",
+   "Alvaro",
+   "Jhon",
+   "Bruno",
+   "Kevin"
+  ],
+  "surnames": [
+   "Quispe",
+   "Mamani",
+   "Flores",
+   "Terceros",
+   "Vaca",
+   "Arce",
+   "Chura",
+   "Aguilar",
+   "Camacho",
+   "Suarez",
+   "Rocha",
+   "Ledezma"
+  ]
+ },
+ "PER": {
+  "rule": "double",
+  "classic": [
+   "Juan",
+   "Cesar",
+   "Percy",
+   "Wilfredo",
+   "Raul"
+  ],
+  "modern": [
+   "Sebastian",
+   "Gonzalo",
+   "Rodrigo",
+   "Fabio",
+   "Piero"
+  ],
+  "surnames": [
+   "Rojas",
+   "Vasquez",
+   "Quispe",
+   "Ramos",
+   "Chavez",
+   "Salazar",
+   "Zapata",
+   "Huaman",
+   "Vargas",
+   "Alvarado",
+   "Cardenas",
+   "Bustamante"
+  ]
+ },
+ "COL": {
+  "rule": "double",
+  "classic": [
+   "Jairo",
+   "Nelson",
+   "Fabio",
+   "Hernan",
+   "Orlando"
+  ],
+  "modern": [
+   "Santiago",
+   "Juan Jose",
+   "Emiliano",
+   "Samuel",
+   "Nicolas"
+  ],
+  "surnames": [
+   "Restrepo",
+   "Gomez",
+   "Arango",
+   "Cardona",
+   "Ocampo",
+   "Zapata",
+   "Bedoya",
+   "Escobar",
+   "Betancur",
+   "Osorio",
+   "Quintero",
+   "Salazar"
+  ]
+ },
+ "ECU": {
+  "rule": "double",
+  "classic": [
+   "Byron",
+   "Wilson",
+   "Segundo",
+   "Angel",
+   "Marco"
+  ],
+  "modern": [
+   "Mateo",
+   "Emilio",
+   "Isaac",
+   "Damian",
+   "Adrian"
+  ],
+  "surnames": [
+   "Cevallos",
+   "Guerrero",
+   "Zambrano",
+   "Mendoza",
+   "Paredes",
+   "Cedeno",
+   "Andrade",
+   "Vera",
+   "Yepez",
+   "Chala",
+   "Bone",
+   "Solorzano"
+  ]
+ },
+ "VEN": {
+  "rule": "double",
+  "classic": [
+   "Jose",
+   "Luis",
+   "Alexander",
+   "Yohan",
+   "Douglas"
+  ],
+  "modern": [
+   "Sebastian",
+   "Adrian",
+   "Andres",
+   "Jesus",
+   "Diego"
+  ],
+  "surnames": [
+   "Perez",
+   "Marcano",
+   "Salcedo",
+   "Bastardo",
+   "Guillen",
+   "Rondon",
+   "Arteaga",
+   "Chirinos",
+   "Colmenares",
+   "Sanoja",
+   "Pineda",
+   "Escalona"
+  ]
+ },
+ "CHN": {
+  "rule": "plain",
+  "classic": [
+   "Wei",
+   "Jian",
+   "Ming",
+   "Hui",
+   "Gang",
+   "Feng"
+  ],
+  "modern": [
+   "Hao",
+   "Yifan",
+   "Ziyang",
+   "Chenxi",
+   "Ruixin",
+   "Jiahao"
+  ],
+  "surnames": [
+   "Chen",
+   "Wang",
+   "Li",
+   "Zhang",
+   "Liu",
+   "Huang",
+   "Zhao",
+   "Wu",
+   "Zhou",
+   "Xu",
+   "Lin",
+   "Sun"
+  ]
+ },
+ "TWN": {
+  "rule": "plain",
+  "classic": [
+   "Chien",
+   "Hsin",
+   "Cheng",
+   "Kuo",
+   "Wen",
+   "Ping"
+  ],
+  "modern": [
+   "Yu-Hsuan",
+   "Chia-Hao",
+   "Po-Wei",
+   "Kai-Ting",
+   "Yen-Ju",
+   "Tzu-Chi"
+  ],
+  "surnames": [
+   "Lin",
+   "Chen",
+   "Huang",
+   "Tsai",
+   "Yang",
+   "Hsu",
+   "Kuo",
+   "Cheng",
+   "Hsieh",
+   "Chiu",
+   "Liao",
+   "Chan"
+  ]
+ },
+ "HKG": {
+  "rule": "plain",
+  "classic": [
+   "Ka Ming",
+   "Chi Wai",
+   "Kwok Wing",
+   "Wing Hong",
+   "Tak Shing"
+  ],
+  "modern": [
+   "Marcus",
+   "Ryan",
+   "Nathan",
+   "Jayden",
+   "Ethan"
+  ],
+  "surnames": [
+   "Chan",
+   "Wong",
+   "Lee",
+   "Cheung",
+   "Lau",
+   "Ho",
+   "Ng",
+   "Tsang",
+   "Yeung",
+   "Lam",
+   "Kwok",
+   "Fung"
+  ]
+ },
+ "MAC": {
+  "rule": "plain",
+  "classic": [
+   "Chio Hong",
+   "Ka Wai",
+   "Man Kit",
+   "Chan Wai"
+  ],
+  "modern": [
+   "Kelvin",
+   "Ian",
+   "Vincent",
+   "Leo"
+  ],
+  "surnames": [
+   "Lei",
+   "Chao",
+   "Ho",
+   "Wong",
+   "Ip",
+   "Sou",
+   "Lam",
+   "Kuok"
+  ]
+ },
+ "KOR": {
+  "rule": "plain",
+  "classic": [
+   "Jong-su",
+   "Byung-ho",
+   "Sang-cheol",
+   "Young-jin",
+   "Dae-ho"
+  ],
+  "modern": [
+   "Min-jun",
+   "Do-yun",
+   "Seo-jun",
+   "Ha-jun",
+   "Ji-ho"
+  ],
+  "surnames": [
+   "Kim",
+   "Lee",
+   "Park",
+   "Choi",
+   "Jung",
+   "Kang",
+   "Cho",
+   "Yoon",
+   "Jang",
+   "Lim",
+   "Han",
+   "Shin"
+  ]
+ },
+ "MYS": {
+  "rule": "plain",
+  "classic": [
+   "Azlan",
+   "Rosli",
+   "Kamarul",
+   "Hafiz",
+   "Zulkifli"
+  ],
+  "modern": [
+   "Aiman",
+   "Danial",
+   "Irfan",
+   "Haziq",
+   "Amir"
+  ],
+  "surnames": [
+   "Abdullah",
+   "Ibrahim",
+   "Rahman",
+   "Yusof",
+   "Hashim",
+   "Ismail",
+   "Zainal",
+   "Mokhtar",
+   "Salleh",
+   "Bakar",
+   "Osman",
+   "Razak"
+  ]
+ },
+ "SGP": {
+  "rule": "plain",
+  "classic": [
+   "Boon Keng",
+   "Wei Ming",
+   "Chee Seng",
+   "Kok Leong"
+  ],
+  "modern": [
+   "Ethan",
+   "Ryan",
+   "Marcus",
+   "Aaron"
+  ],
+  "surnames": [
+   "Tan",
+   "Lim",
+   "Ong",
+   "Goh",
+   "Sim",
+   "Teo",
+   "Chia",
+   "Neo",
+   "Toh",
+   "Koh",
+   "Yeo",
+   "Chua"
+  ]
+ },
+ "IDN": {
+  "rule": "plain",
+  "classic": [
+   "Bambang",
+   "Agus",
+   "Slamet",
+   "Hendra",
+   "Rudi"
+  ],
+  "modern": [
+   "Rizky",
+   "Fajar",
+   "Bagas",
+   "Dimas",
+   "Arya"
+  ],
+  "surnames": [
+   "Wijaya",
+   "Santoso",
+   "Kusuma",
+   "Halim",
+   "Setiawan",
+   "Nugroho",
+   "Pratama",
+   "Gunawan",
+   "Suryadi",
+   "Hartono",
+   "Salim",
+   "Wibowo"
+  ]
+ },
+ "PHL": {
+  "rule": "double",
+  "classic": [
+   "Ernesto",
+   "Rolando",
+   "Danilo",
+   "Rogelio",
+   "Edgardo"
+  ],
+  "modern": [
+   "Miguel",
+   "Rafael",
+   "Gabriel",
+   "Andres",
+   "Enzo"
+  ],
+  "surnames": [
+   "Santos",
+   "Reyes",
+   "Cruz",
+   "Bautista",
+   "Villanueva",
+   "Dela Cruz",
+   "Aquino",
+   "Mercado",
+   "Gatchalian",
+   "Ocampo",
+   "Rivera",
+   "Manalo"
+  ]
+ },
+ "LKA": {
+  "rule": "plain",
+  "classic": [
+   "Sunil",
+   "Nimal",
+   "Ranjith",
+   "Upali",
+   "Chaminda"
+  ],
+  "modern": [
+   "Dinuka",
+   "Sahan",
+   "Kavindu",
+   "Ravindu",
+   "Tharindu"
+  ],
+  "surnames": [
+   "Perera",
+   "Fernando",
+   "Silva",
+   "Jayawardena",
+   "Bandara",
+   "Wickramasinghe",
+   "Ratnayake",
+   "Gunasekara",
+   "Dissanayake",
+   "Herath",
+   "Weerasinghe",
+   "Amarasinghe"
+  ]
+ },
+ "PAK": {
+  "rule": "plain",
+  "classic": [
+   "Tariq",
+   "Aslam",
+   "Nadeem",
+   "Iqbal",
+   "Shahid"
+  ],
+  "modern": [
+   "Hamza",
+   "Ahmed",
+   "Bilal",
+   "Zain",
+   "Usman"
+  ],
+  "surnames": [
+   "Khan",
+   "Malik",
+   "Chaudhry",
+   "Qureshi",
+   "Butt",
+   "Rahim",
+   "Shaikh",
+   "Baig",
+   "Farooq",
+   "Nawaz",
+   "Abbasi",
+   "Raza"
+  ]
+ },
+ "QAT": {
+  "rule": "plain",
+  "classic": [
+   "Nasser",
+   "Jassim",
+   "Hamad",
+   "Abdulaziz"
+  ],
+  "modern": [
+   "Khalifa",
+   "Mohammed",
+   "Saoud",
+   "Yousef"
+  ],
+  "surnames": [
+   "Al Attiyah",
+   "Al Thani",
+   "Al Kuwari",
+   "Al Marri",
+   "Al Naimi",
+   "Al Sulaiti",
+   "Al Emadi",
+   "Al Mannai"
+  ]
+ },
+ "BHR": {
+  "rule": "plain",
+  "classic": [
+   "Ebrahim",
+   "Salman",
+   "Yaqoob",
+   "Ali"
+  ],
+  "modern": [
+   "Isa",
+   "Hamad",
+   "Rashed",
+   "Zayed"
+  ],
+  "surnames": [
+   "Al Khalifa",
+   "Al Doseri",
+   "Al Alawi",
+   "Buheji",
+   "Al Mahmood",
+   "Al Qassab",
+   "Fakhro",
+   "Al Sayed"
+  ]
+ },
+ "KWT": {
+  "rule": "plain",
+  "classic": [
+   "Bader",
+   "Faisal",
+   "Talal",
+   "Meshari"
+  ],
+  "modern": [
+   "Abdullah",
+   "Yousef",
+   "Nawaf",
+   "Rakan"
+  ],
+  "surnames": [
+   "Al Sabah",
+   "Al Mutairi",
+   "Al Ajmi",
+   "Al Rashidi",
+   "Al Enezi",
+   "Al Shammari",
+   "Al Otaibi",
+   "Al Failakawi"
+  ]
+ },
+ "OMN": {
+  "rule": "plain",
+  "classic": [
+   "Said",
+   "Hilal",
+   "Salim",
+   "Nasser"
+  ],
+  "modern": [
+   "Ammar",
+   "Zayan",
+   "Faris",
+   "Talib"
+  ],
+  "surnames": [
+   "Al Balushi",
+   "Al Harthy",
+   "Al Kindi",
+   "Al Riyami",
+   "Al Busaidi",
+   "Al Hinai",
+   "Al Rawahi",
+   "Al Maskari"
+  ]
+ },
+ "JOR": {
+  "rule": "plain",
+  "classic": [
+   "Nabil",
+   "Fadi",
+   "Ziad",
+   "Raed"
+  ],
+  "modern": [
+   "Karim",
+   "Omar",
+   "Yazan",
+   "Laith"
+  ],
+  "surnames": [
+   "Al Khatib",
+   "Haddad",
+   "Nasser",
+   "Abu Ghazaleh",
+   "Barakat",
+   "Zoubi",
+   "Tarawneh",
+   "Masri"
+  ]
+ },
+ "LBN": {
+  "rule": "plain",
+  "classic": [
+   "Elie",
+   "Georges",
+   "Fadi",
+   "Riad"
+  ],
+  "modern": [
+   "Karim",
+   "Rami",
+   "Jad",
+   "Marc"
+  ],
+  "surnames": [
+   "Khoury",
+   "Haddad",
+   "Gemayel",
+   "Nassar",
+   "Sfeir",
+   "Chidiac",
+   "Rizk",
+   "Aoun"
+  ]
+ },
+ "EGY": {
+  "rule": "plain",
+  "classic": [
+   "Ahmed",
+   "Mohamed",
+   "Mahmoud",
+   "Sherif",
+   "Hossam"
+  ],
+  "modern": [
+   "Youssef",
+   "Omar",
+   "Karim",
+   "Ziad",
+   "Adam"
+  ],
+  "surnames": [
+   "Hassan",
+   "Ibrahim",
+   "El Sayed",
+   "Mansour",
+   "Fahmy",
+   "Zaki",
+   "Shafik",
+   "Rashad",
+   "Nagy",
+   "Sobhy",
+   "Ghoneim",
+   "Farag"
+  ]
+ },
+ "KEN": {
+  "rule": "plain",
+  "classic": [
+   "Joseph",
+   "Peter",
+   "Samuel",
+   "Wanjohi",
+   "Kipchoge"
+  ],
+  "modern": [
+   "Brian",
+   "Kevin",
+   "Collins",
+   "Dennis",
+   "Eric"
+  ],
+  "surnames": [
+   "Mwangi",
+   "Kamau",
+   "Ochieng",
+   "Otieno",
+   "Kiprono",
+   "Njoroge",
+   "Wanjiru",
+   "Chebet",
+   "Mutua",
+   "Kariuki",
+   "Odhiambo",
+   "Rotich"
+  ]
+ },
+ "AGO": {
+  "rule": "double",
+  "classic": [
+   "Manuel",
+   "Joao",
+   "Domingos",
+   "Antonio"
+  ],
+  "modern": [
+   "Bruno",
+   "Nelson",
+   "Ivo",
+   "Edson"
+  ],
+  "surnames": [
+   "dos Santos",
+   "Fernandes",
+   "Neto",
+   "Bengue",
+   "Cardoso",
+   "Kiala",
+   "Manuel",
+   "Lopes"
+  ]
+ }
+}
