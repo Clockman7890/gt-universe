@@ -1,0 +1,42 @@
+{
+  "name": "gt-universe",
+  "productName": "GT Universe",
+  "version": "0.1.0",
+  "description": "AMS2 GT career manager",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "postinstall": "electron-builder install-app-deps",
+    "dist": "electron-builder --win nsis"
+  },
+  "author": "Ilias Orologas",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.3.0"
+  },
+  "build": {
+    "appId": "gr.orologas.gtuniverse",
+    "productName": "GT Universe",
+    "directories": { "output": "dist" },
+    "files": [
+      "electron/**/*",
+      "renderer/**/*",
+      "resources/**/*",
+      "!**/*.map"
+    ],
+    "extraResources": [
+      { "from": "resources", "to": "." }
+    ],
+    "win": { "target": ["nsis"], "artifactName": "GTUniverse-Setup-${version}.${ext}" },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "GT Universe"
+    }
+  }
+}

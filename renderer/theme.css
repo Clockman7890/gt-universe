@@ -1,0 +1,151 @@
+:root {
+  --bg:            #0B0C0F;
+  --surface-0:     #101216;
+  --surface-1:     #15171B;
+  --surface-2:     #191B21;
+  --surface-3:     #282B33;
+  --border:        #3A3E49;
+  --border-strong: #4C515E;
+
+  --text:          #F2F0EA;
+  --text-2:        #9B9EA7;
+  --text-muted:    #6E717A;
+  --text-dim:      #4C515E;
+
+  --accent:        #BA7517;
+  --accent-ink:    #412402;
+  --accent-soft:   #EF9F27;
+  --accent-bg:     #3A2A12;
+
+  --green:         #639922;
+  --green-ink:     #173404;
+  --green-soft:    #97C459;
+  --red:           #E24B4A;
+  --red-ink:       #FCEBEB;
+
+  --r-btn:  8px;
+  --r-icon: 10px;
+  --r-card: 12px;
+  --bar-h:  46px;
+
+  --font: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0; height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13px;
+  overflow: hidden;
+  user-select: none;
+}
+
+button {
+  font: inherit; color: var(--text-2);
+  background: var(--surface-1); border: none;
+  border-radius: var(--r-btn); padding: 11px 16px; cursor: pointer;
+}
+button:hover:not(:disabled) { background: var(--surface-2); color: var(--text); }
+button:disabled { color: var(--text-dim); cursor: not-allowed; }
+button.primary { background: var(--accent); color: var(--accent-ink); font-weight: 500; }
+button.primary:hover { background: var(--accent-soft); }
+
+.screen { position: absolute; inset: 0; display: none; }
+.screen.active { display: block; }
+
+/* ---------- status bar ---------- */
+#bar {
+  height: var(--bar-h); background: #14161A;
+  border-bottom: .5px solid #2C2F38;
+  display: flex; align-items: center; gap: 22px; padding: 0 20px;
+}
+#bar .money { font-weight: 500; }
+#bar .sp { flex: 1; }
+#bar .badge { background: var(--accent-bg); color: var(--accent-soft);
+              padding: 3px 10px; border-radius: 4px; font-size: 12px; }
+#bar .news { color: var(--accent-soft); cursor: pointer; }
+#bar .count { background: var(--red); color: var(--red-ink);
+              border-radius: 9px; padding: 1px 7px; font-size: 11px; margin-left: 6px; }
+#bar .link { color: var(--text-2); cursor: pointer; }
+#bar .link:hover { color: var(--text); }
+
+/* ---------- hub ---------- */
+#hub-map { position: absolute; inset: var(--bar-h) 0 0 0; }
+.node {
+  position: absolute; text-align: center; cursor: pointer;
+  transform: translate(-50%, -50%);
+}
+.node .label  { font-size: 13px; font-weight: 500; margin-bottom: 8px; }
+.node .icon   { width: 40px; height: 40px; margin: 0 auto;
+                border-radius: var(--r-icon); background: var(--surface-3);
+                border: 1px solid var(--border-strong);
+                display: flex; align-items: center; justify-content: center;
+                font-family: ui-monospace, monospace; font-size: 16px; }
+.node .sub    { font-size: 11px; color: var(--text-2); margin-top: 7px; }
+.node.home  .icon { background: var(--accent); border-color: transparent; color: var(--accent-ink); }
+.node.race  .icon { background: var(--green);  border-color: transparent; color: var(--green-ink); }
+.node.race  .sub  { color: var(--green-soft); }
+.node.locked { opacity: .4; cursor: not-allowed; }
+
+#plaza {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 132px; height: 132px; border-radius: 50%;
+  background: var(--surface-2); border: 1px solid var(--border);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  cursor: pointer; gap: 2px;
+}
+#plaza:hover { background: var(--surface-3); }
+#plaza b { font-size: 14px; font-weight: 500; }
+#plaza span { font-size: 11px; color: var(--text-2); }
+
+#region { position: absolute; left: 28px; bottom: 20px;
+          color: #5C5F68; font-size: 12px; letter-spacing: 2px; }
+#exit   { position: absolute; right: 24px; bottom: 16px;
+          background: #1A1C21; border: .8px solid var(--border);
+          padding: 5px 16px; font-size: 12px; border-radius: 6px; }
+
+/* ---------- title ---------- */
+#title-inner { position: absolute; inset: 0; display: flex;
+               flex-direction: column; justify-content: center; padding: 0 60px; }
+#title-inner .kicker { font-size: 11px; letter-spacing: 5px; color: var(--text-muted); }
+#title-inner h1 { font-size: 38px; font-weight: 500; margin: 6px 0 4px; }
+#title-inner .sub { font-size: 14px; color: var(--text-2); margin-bottom: 26px; }
+#menu { display: flex; flex-direction: column; gap: 3px; width: 320px; }
+#menu button { text-align: left; display: flex; }
+#menu button .meta { margin-left: auto; font-size: 11px; color: var(--text-2); }
+#version { position: absolute; right: 20px; bottom: 14px; color: var(--text-dim); font-size: 11px; }
+
+/* ---------- create ---------- */
+#create-form { position: absolute; inset: var(--bar-h) 0 0 0; padding: 26px 60px; }
+#create-form h2 { font-size: 20px; font-weight: 500; margin: 0 0 18px; }
+.field { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+.field label { width: 150px; color: var(--text-2); }
+.field input, .field select {
+  background: var(--surface-1); border: 1px solid var(--border); color: var(--text);
+  border-radius: 6px; padding: 8px 10px; font: inherit; width: 220px;
+}
+.field .hint { color: var(--text-muted); font-size: 11px; }
+
+/* ---------- save slots ---------- */
+#slots { display: flex; flex-direction: column; gap: 3px; margin-bottom: 10px; }
+.slot {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--surface-2); border-radius: var(--r-btn);
+  padding: 11px 14px; cursor: pointer;
+}
+.slot:hover { background: var(--surface-3); }
+.slot .n     { color: var(--text-muted); font-size: 11px; width: 42px; letter-spacing: 1px; }
+.slot .who   { font-weight: 500; }
+.slot .where { color: var(--text-2); font-size: 11px; }
+.slot .sp    { flex: 1; }
+.slot .del   { color: var(--text-dim); font-size: 12px; padding: 2px 8px; border-radius: 4px; }
+.slot .del:hover { color: var(--red); background: #241416; }
+.slot.empty { background: var(--surface-1); }
+.slot.empty .who { color: var(--text-muted); font-weight: 400; }
+.slot.newest { background: var(--accent); }
+.slot.newest .n, .slot.newest .who, .slot.newest .where { color: var(--accent-ink); }
+.slot.newest:hover { background: var(--accent-soft); }
+#slot-tag { color: var(--text-muted); font-size: 13px; font-weight: 400; }
