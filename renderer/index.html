@@ -171,8 +171,10 @@
   <div id="bar">
     <span class="money" id="b-money">—</span>
     <span id="b-season">—</span>
-    <span class="badge" id="b-rating">Unrated</span>
-    <span id="b-rep">Unproven</span>
+    <span class="fia"></span>
+    <span class="rating" id="b-rating">Unrated</span>
+    <span class="rep-label">Reputation:</span>
+    <span class="rep-value" id="b-rep">Unproven</span>
     <span class="sp"></span>
     <span class="news" id="b-news">News<span class="count" id="b-count">0</span></span>
   </div>
@@ -181,26 +183,26 @@
 
     <div id="hub" class="view active">
       <canvas id="map-bg"></canvas>
-      <div class="node" data-go="home" style="left:17%;top:24%">
-        <div class="label">Home</div><div class="icon">H</div>
+      <div class="node home" data-go="home" style="left:17%;top:24%">
+        <div class="label" id="n-home-label">Home</div><div class="icon"></div>
         <div class="sub" id="n-home">Privateer</div></div>
       <div class="node" data-go="garage" style="left:17%;top:66%">
-        <div class="label">Garage</div><div class="icon">G</div>
+        <div class="label">Garage</div><div class="icon"></div>
         <div class="sub" id="n-garage">no cars</div></div>
       <div class="node" data-go="office" style="left:38%;top:82%">
-        <div class="label">Office</div><div class="icon">O</div>
+        <div class="label">Office</div><div class="icon"></div>
         <div class="sub" id="n-office">no offers</div></div>
       <div class="node" data-go="world" style="left:60%;top:78%">
-        <div class="label">World</div><div class="icon">W</div>
+        <div class="label">World</div><div class="icon"></div>
         <div class="sub">standings</div></div>
       <div class="node" data-go="market" style="left:82%;top:24%">
-        <div class="label">Market</div><div class="icon">M</div>
+        <div class="label">Market</div><div class="icon"></div>
         <div class="sub" id="n-market">closed</div></div>
       <div class="node race locked" data-go="race" style="left:83%;top:52%">
-        <div class="label">Race</div><div class="icon">R</div>
+        <div class="label">Race</div><div class="icon"></div>
         <div class="sub" id="n-race">no car</div></div>
       <div class="node locked" data-go="invitational" style="left:82%;top:76%">
-        <div class="label">Invitational</div><div class="icon">I</div>
+        <div class="label">Invitational</div><div class="icon"></div>
         <div class="sub">no invitation</div></div>
       <div id="plaza"><b>Advance</b><b>week</b><span id="p-next">→ week 2</span></div>
       <div id="region">—</div>

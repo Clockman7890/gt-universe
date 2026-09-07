@@ -141,6 +141,10 @@ async function refresh() {
       ? (off.team ? off.team.name : 'contracted')
       : (off.seats.length ? `${off.seats.length} seats for sale` : 'no offers');
     document.querySelector('[data-go="office"]').classList.toggle('locked', !off.open && !off.team);
+    const homeNode = document.querySelector('[data-go="home"]');
+    homeNode.classList.toggle('hq', !!off.team);
+    homeNode.classList.toggle('home', !off.team);
+    $('n-home-label').textContent = off.team ? 'HQ' : 'Home';
     $('n-home').textContent = off.team ? `${off.team.name} · ${off.team.engineering}`
       : (cars.length ? `Privateer · ${cars[0].championship}` : 'No entry yet');
   }
@@ -343,27 +347,33 @@ async function selectCar(m) {
     (m.liveries.length ? `<div class="numbers">ENTRY NUMBER</div><div class="nums" id="mk-nums"></div>` : '') +
     `<div class="buyrow"><span class="big">${eur(m.price)}</span><span class="sp"></span>` +
     (m.affordable && mk.open && mk.canBuy
-      ? `<button class="primary" id="mk-buy" disabled>Buy</button>`
+      ? `<span class="why" id="mk-hint"></span><button class="primary" id="mk-buy">Buy</button>`
       : `<span class="why">${m.why || (!mk.canBuy ? 'You already have a seat' : 'Market closed')}</span>`) +
     `</div>`;
 
   if (m.liveries.length) {
     const nums = $('mk-nums');
-    for (const lv of m.liveries) {
+    m.liveries.forEach((lv, i) => {
       const b = document.createElement('span');
-      b.className = 'num'; b.textContent = lv.livery_name;
+      b.className = 'num' + (i === 0 ? ' sel' : '');
+      b.textContent = lv.livery_name;
       b.onclick = () => {
         mkLivery = lv.id;
         [...nums.children].forEach(c => c.classList.remove('sel'));
         b.classList.add('sel');
-        const buy = $('mk-buy'); if (buy) buy.disabled = false;
+        const hint = $('mk-hint'); if (hint) hint.textContent = '';
       };
       nums.appendChild(b);
-    }
+    });
+    mkLivery = m.liveries[0].id;      // the first number is taken unless changed
   }
   const buy = $('mk-buy');
   if (buy) buy.onclick = async () => {
-    if (!mkLivery) return;
+    if (!mkLivery) {
+      const hint = $('mk-hint');
+      if (hint) hint.textContent = 'Choose an entry number first';
+      return;
+    }
     try {
       const res = await window.gt.buyCar(mkModel, mkLivery);
       alert(`${res.model}\n${res.livery}\n\n` +
