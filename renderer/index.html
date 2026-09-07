@@ -9,9 +9,8 @@
 </head>
 <body>
 
-<!-- ============================== TITLE ============================== -->
 <section id="title" class="screen active">
-  <canvas id="title-bg" style="position:absolute;inset:0;width:100%;height:100%"></canvas>
+  <canvas id="title-bg"></canvas>
   <div id="title-inner">
     <div class="kicker">AUTOMOBILISTA 2</div>
     <h1>GT Universe</h1>
@@ -25,18 +24,12 @@
   <div id="version">v0.1</div>
 </section>
 
-<!-- ============================== CREATE ============================= -->
 <section id="create" class="screen">
-  <div id="bar-create"></div>
   <div id="create-form">
     <h2>New career <span id="slot-tag"></span></h2>
-
-    <div class="field">
-      <label>Driver name</label>
-      <input id="f-name" placeholder="Enter a name" maxlength="28">
-    </div>
-    <div class="field">
-      <label>Nationality</label>
+    <div class="field"><label>Driver name</label>
+      <input id="f-name" placeholder="Enter a name" maxlength="28"></div>
+    <div class="field"><label>Nationality</label>
       <select id="f-country">
         <option value="" disabled selected>Choose a nationality…</option>
         <optgroup label="Trofeo Adriatico GT5">
@@ -150,44 +143,31 @@
           <option value="ZAF|africa_gulf">South Africa</option>
           <option value="ARE|africa_gulf">United Arab Emirates</option>
         </optgroup>
-      </select>
-    </div>
-    <div class="field">
-      <label>Age</label>
+      </select></div>
+    <div class="field"><label>Age</label>
       <input id="f-age" type="number" min="18" max="50" placeholder="18 – 50">
-      <span class="hint">18 – 50</span>
-    </div>
-    <div class="field">
-      <label>Starting capital</label>
+      <span class="hint">18 – 50</span></div>
+    <div class="field"><label>Starting capital</label>
       <input id="f-capital" type="number" min="150000" max="3000000" step="10000" placeholder="150000">
-      <span class="hint">€150,000 – €3,000,000</span>
-    </div>
-    <div class="field">
-      <label>Passive income</label>
+      <span class="hint">€150,000 – €3,000,000</span></div>
+    <div class="field"><label>Passive income</label>
       <input id="f-passive" type="number" min="10000" max="300000" step="5000" placeholder="10000">
-      <span class="hint">€10,000 – €300,000 per year</span>
-    </div>
-    <div class="field">
-      <label>Entry level</label>
+      <span class="hint">€10,000 – €300,000 per year</span></div>
+    <div class="field"><label>Entry level</label>
       <select id="f-entry">
         <option value="gt5">GT5 — experience 0.60 – 0.70</option>
         <option value="gt4">GT4 — experience 0.50 – 0.60</option>
-      </select>
-    </div>
-    <div class="field">
-      <label>Driving experience</label>
-      <input id="f-exp" type="number" min="0.60" max="0.70" step="0.01" placeholder="0.60 – 0.70">
-    </div>
-
-    <div style="display:flex;gap:8px;margin-top:22px">
+      </select></div>
+    <div class="field"><label>Driving experience</label>
+      <input id="f-exp" type="number" min="0.60" max="0.70" step="0.01" placeholder="0.60 – 0.70"></div>
+    <div class="row" style="margin-top:22px">
       <button class="primary" id="btn-create">Start career</button>
       <button id="btn-create-back">Back</button>
     </div>
   </div>
 </section>
 
-<!-- ================================ HUB ============================= -->
-<section id="hub" class="screen">
+<section id="shell" class="screen">
   <div id="bar">
     <span class="money" id="b-money">—</span>
     <span id="b-season">—</span>
@@ -197,40 +177,71 @@
     <span class="news" id="b-news">News<span class="count" id="b-count">0</span></span>
   </div>
 
-  <div id="hub-map">
-    <canvas id="map-bg" style="position:absolute;inset:0;width:100%;height:100%"></canvas>
+  <div id="views">
 
-    <div class="node home"  style="left:17%;top:24%">
-      <div class="label">Home</div><div class="icon">H</div>
-      <div class="sub" id="n-home">Privateer</div></div>
+    <div id="hub" class="view active">
+      <canvas id="map-bg"></canvas>
+      <div class="node" data-go="home" style="left:17%;top:24%">
+        <div class="label">Home</div><div class="icon">H</div>
+        <div class="sub" id="n-home">Privateer</div></div>
+      <div class="node" data-go="garage" style="left:17%;top:66%">
+        <div class="label">Garage</div><div class="icon">G</div>
+        <div class="sub" id="n-garage">no cars</div></div>
+      <div class="node" data-go="office" style="left:38%;top:82%">
+        <div class="label">Office</div><div class="icon">O</div>
+        <div class="sub" id="n-office">no offers</div></div>
+      <div class="node" data-go="world" style="left:60%;top:78%">
+        <div class="label">World</div><div class="icon">W</div>
+        <div class="sub">standings</div></div>
+      <div class="node" data-go="market" style="left:82%;top:24%">
+        <div class="label">Market</div><div class="icon">M</div>
+        <div class="sub" id="n-market">closed</div></div>
+      <div class="node race locked" data-go="race" style="left:83%;top:52%">
+        <div class="label">Race</div><div class="icon">R</div>
+        <div class="sub" id="n-race">no car</div></div>
+      <div class="node locked" data-go="invitational" style="left:82%;top:76%">
+        <div class="label">Invitational</div><div class="icon">I</div>
+        <div class="sub">no invitation</div></div>
+      <div id="plaza"><b>Advance</b><b>week</b><span id="p-next">→ week 2</span></div>
+      <div id="region">—</div>
+      <button id="to-menu">Main menu</button>
+    </div>
 
-    <div class="node"       style="left:17%;top:66%">
-      <div class="label">Garage</div><div class="icon">G</div>
-      <div class="sub" id="n-garage">no cars</div></div>
+    <div id="market" class="view">
+      <div class="head">
+        <h2>Market</h2>
+        <span class="tab on" id="tab-new">New</span>
+        <span class="tab off" id="tab-used">Used</span>
+        <span class="sp"></span>
+        <span class="deadline" id="mk-deadline"></span>
+      </div>
+      <div class="split">
+        <div class="list" id="mk-list"></div>
+        <div class="detail" id="mk-detail"></div>
+      </div>
+      <button class="back" data-back="hub">←</button>
+    </div>
 
-    <div class="node"       style="left:38%;top:82%">
-      <div class="label">Office</div><div class="icon">O</div>
-      <div class="sub" id="n-office">no offers</div></div>
+    <div id="garage" class="view">
+      <div class="head"><h2>Garage</h2><span class="sp"></span>
+        <span class="deadline" id="gr-count"></span></div>
+      <div id="gr-list"></div>
+      <button class="back" data-back="hub">←</button>
+    </div>
 
-    <div class="node"       style="left:60%;top:78%">
-      <div class="label">World</div><div class="icon">W</div>
-      <div class="sub">standings</div></div>
+    <div id="office" class="view">
+      <div class="head"><h2>Office</h2><span class="sp"></span>
+        <span class="deadline" id="of-deadline"></span></div>
+      <div id="of-body"></div>
+      <button class="back" data-back="hub">←</button>
+    </div>
 
-    <div class="node"       style="left:82%;top:24%">
-      <div class="label">Market</div><div class="icon">M</div>
-      <div class="sub" id="n-market">closed</div></div>
+    <div id="stub" class="view">
+      <div class="head"><h2 id="stub-title">—</h2></div>
+      <p class="stub-text" id="stub-text"></p>
+      <button class="back" data-back="hub">←</button>
+    </div>
 
-    <div class="node race locked" style="left:83%;top:52%">
-      <div class="label">Race</div><div class="icon">R</div>
-      <div class="sub" id="n-race">no race this week</div></div>
-
-    <div class="node locked" style="left:82%;top:76%">
-      <div class="label">Invitational</div><div class="icon">I</div>
-      <div class="sub">no invitation</div></div>
-
-    <div id="plaza"><b>Advance</b><b>week</b><span id="p-next">→ week 2</span></div>
-    <div id="region">—</div>
-    <button id="exit">Main menu</button>
   </div>
 </section>
 

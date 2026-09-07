@@ -5,6 +5,11 @@ const show = id => {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   $(id).classList.add('active');
 };
+const view = id => {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  $(id).classList.add('active');
+  if (id === 'hub') paint();
+};
 const eur = n => '€' + Number(n || 0).toLocaleString('en-GB');
 
 const REP = ['Unproven', 'Known', 'Established', 'Respected', 'Legend'];
@@ -103,7 +108,7 @@ function mulberry(a) {
 
 function paint() {
   drawCity($('title-bg'), true);
-  if ($('hub').classList.contains('active')) drawCity($('map-bg'), false);
+  if ($('shell').classList.contains('active')) drawCity($('map-bg'), false);
 }
 window.addEventListener('resize', paint);
 
@@ -121,6 +126,24 @@ async function refresh() {
   $('p-next').textContent   = `→ week ${s.career.week + 1 > 52 ? 1 : s.career.week + 1}`;
   $('region').textContent   = (d.country || '').toUpperCase();
   $('n-market').textContent = s.career.week <= 4 ? 'open · new & used' : 'closed';
+  const mkNode = document.querySelector('[data-go="market"]');
+  mkNode.classList.toggle('locked', s.career.week > 4);
+
+  const cars = await window.gt.garage();
+  $('n-garage').textContent = cars.length
+    ? `${cars.length} car${cars.length === 1 ? '' : 's'}` : 'no cars';
+  const raceNode = document.querySelector('[data-go="race"]');
+  raceNode.classList.toggle('locked', cars.length === 0);
+  $('n-race').textContent = cars.length ? 'no race this week' : 'no car';
+  const off = await window.gt.office();
+  if (off) {
+    $('n-office').textContent = off.hasSeat
+      ? (off.team ? off.team.name : 'contracted')
+      : (off.seats.length ? `${off.seats.length} seats for sale` : 'no offers');
+    document.querySelector('[data-go="office"]').classList.toggle('locked', !off.open && !off.team);
+    $('n-home').textContent = off.team ? `${off.team.name} · ${off.team.engineering}`
+      : (cars.length ? `Privateer · ${cars[0].championship}` : 'No entry yet');
+  }
 }
 
 let pendingSlot = null;   // which slot a new career is being created into
@@ -181,7 +204,7 @@ async function refreshSaves() {
         show('create');
       } else if (!s.corrupt) {
         await window.gt.loadCareer(s.slot);
-        show('hub'); paint(); refresh();
+        show('shell'); view('hub'); refresh();
       }
     };
     box.appendChild(row);
@@ -194,7 +217,7 @@ $('btn-settings').onclick = () => alert('Settings — not implemented yet.');
 $('btn-exit-title').onclick = () => window.gt.quit();
 
 // leaving the hub closes the career and returns to the title screen
-$('exit').onclick = async () => {
+$('to-menu').onclick = async () => {
   await window.gt.closeCareer();
   await refreshSaves();
   pendingSlot = null;
@@ -236,7 +259,7 @@ $('btn-create').onclick = async () => {
     experience: +$('f-exp').value
   });
   pendingSlot = null;
-  show('hub'); paint(); refresh();
+  show('shell'); view('hub'); refresh();
   } catch (err) {
     alert('Could not start the career:\n\n' + (err && err.message ? err.message : err));
   }
@@ -245,12 +268,245 @@ $('btn-create').onclick = async () => {
 $('plaza').onclick = async () => { await window.gt.advance(); refresh(); };
 
 document.querySelectorAll('.node').forEach(n => {
-  n.onclick = () => {
+  n.onclick = async () => {
     if (n.classList.contains('locked')) return;
-    const label = n.querySelector('.label').textContent;
-    console.log('open screen:', label);       // screens land here next
+    const go = n.dataset.go;
+    if (go === 'market')      { await openMarket(); view('market'); }
+    else if (go === 'garage') { await openGarage(); view('garage'); }
+    else if (go === 'office') { await openOffice(); view('office'); }
+    else {
+      $('stub-title').textContent = n.querySelector('.label').textContent;
+      $('stub-text').textContent  = 'Not built yet.';
+      view('stub');
+    }
   };
 });
+document.querySelectorAll('.back').forEach(b => b.onclick = () => view(b.dataset.back));
+
+// ---------------------------------------------------------------- market
+let mk = null, mkModel = null, mkLivery = null;
+
+async function openMarket() {
+  mk = await window.gt.market();
+  mkModel = null; mkLivery = null;
+  $('mk-deadline').textContent = mk.open
+    ? `entry list closes at the end of week 4`
+    : `closed — reopens next winter`;
+  renderMarketList();
+  $('mk-detail').innerHTML = mk.note
+    ? `<p class="note">${mk.note}</p>`
+    : `<p class="note">${mk.team
+        ? mk.team + ' can enter another car — buy one, then sign a driver in the Office.'
+        : (mk.canBuy ? 'Pick a car to enter the ' + mk.championship + '.'
+                     : 'You already have a seat this season.')}</p>`;
+}
+
+function renderMarketList() {
+  const box = $('mk-list');
+  box.innerHTML = '';
+  const order = ['gt3_gen2','gt3_gen1','gto','gt4','gt5'];
+  const label = { gt3_gen2:'GT3', gt3_gen1:'GT3', gto:'GT3', gt4:'GT4', gt5:'GT5' };
+  let last = null;
+  for (const cls of order) {
+    for (const m of mk.models.filter(x => x.cls === cls)) {
+      if (label[cls] !== last) {
+        const g = document.createElement('div');
+        g.className = 'group'; g.textContent = label[cls];
+        box.appendChild(g); last = label[cls];
+      }
+      const row = document.createElement('div');
+      row.className = 'car' + (m.affordable ? '' : ' no') + (mkModel === m.id ? ' sel' : '');
+      row.innerHTML = `<span>${m.name}</span><span class="sp"></span>` +
+                      `<span class="price">${eur(m.price)}</span>`;
+      row.onclick = () => selectCar(m);
+      box.appendChild(row);
+    }
+  }
+}
+
+async function selectCar(m) {
+  mkModel = m.id; mkLivery = null;
+  renderMarketList();
+  const [img, spec] = await Promise.all([window.gt.carImage(m.name), window.gt.carSpecs(m.name)]);
+  const d = $('mk-detail');
+  const specRow = (k, v) => `<div><span>${k}</span><span>${v}</span></div>`;
+  d.innerHTML =
+    `<h3>${m.name}</h3><div class="maker">${m.manufacturer} · ${m.liveries.length} entry number${m.liveries.length === 1 ? '' : 's'} free</div>` +
+    (img ? `<img src="${img}" alt="">` : '') +
+    (spec ? `<div class="specs">
+        ${specRow('Power', spec.power_hp + ' HP')}${specRow('Torque', spec.torque_nm + ' Nm')}
+        ${specRow('Weight', spec.weight_kg.toLocaleString('en-GB') + ' kg')}${specRow('Engine', spec.engine)}
+        ${specRow('Drive', spec.drive + ' · ' + spec.gears + ' ' + spec.shift.toLowerCase())}
+        ${specRow('Balance', spec.weight_dist)}</div>` : '') +
+    (m.liveries.length ? `<div class="numbers">ENTRY NUMBER</div><div class="nums" id="mk-nums"></div>` : '') +
+    `<div class="buyrow"><span class="big">${eur(m.price)}</span><span class="sp"></span>` +
+    (m.affordable && mk.open && mk.canBuy
+      ? `<button class="primary" id="mk-buy" disabled>Buy</button>`
+      : `<span class="why">${m.why || (!mk.canBuy ? 'You already have a seat' : 'Market closed')}</span>`) +
+    `</div>`;
+
+  if (m.liveries.length) {
+    const nums = $('mk-nums');
+    for (const lv of m.liveries) {
+      const b = document.createElement('span');
+      b.className = 'num'; b.textContent = lv.livery_name;
+      b.onclick = () => {
+        mkLivery = lv.id;
+        [...nums.children].forEach(c => c.classList.remove('sel'));
+        b.classList.add('sel');
+        const buy = $('mk-buy'); if (buy) buy.disabled = false;
+      };
+      nums.appendChild(b);
+    }
+  }
+  const buy = $('mk-buy');
+  if (buy) buy.onclick = async () => {
+    if (!mkLivery) return;
+    try {
+      const res = await window.gt.buyCar(mkModel, mkLivery);
+      alert(`${res.model}\n${res.livery}\n\n` +
+            (res.needsDriver ? 'Second car entered. Sign a driver in the Office.\n'
+                             : `Entered the ${res.championship}.\n`) +
+            `Spent ${eur(res.spent)} — ${eur(res.capital)} left.`);
+      await refresh();
+      await openMarket();
+    } catch (err) {
+      alert(err && err.message ? err.message.replace(/^Error: /, '') : String(err));
+    }
+  };
+}
+
+// ---------------------------------------------------------------- office
+async function openOffice() {
+  const o = await window.gt.office();
+  const box = $('of-body');
+  $('of-deadline').textContent = o.open
+    ? 'contracts close at the end of week 4' : 'closed until the winter';
+  box.innerHTML = '';
+  if (!o) { box.innerHTML = '<p class="note">Nothing here yet.</p>'; return; }
+
+  const h = (t) => { const d = document.createElement('div'); d.className = 'sect'; d.textContent = t; box.appendChild(d); };
+  const p = (t) => { const d = document.createElement('p'); d.className = 'note'; d.innerHTML = t; box.appendChild(d); };
+
+  // ---- paid drives -----------------------------------------------------
+  if (!o.hasSeat) {
+    h('PAID DRIVES — ' + o.championship.toUpperCase());
+    if (!o.seats.length) p('No team in this championship has a seat to sell.');
+    for (const s of o.seats) {
+      const el = document.createElement('div');
+      el.className = 'offer' + (s.affordable && o.open ? '' : ' no');
+      el.innerHTML = `<span class="who">${s.team}</span>` +
+        `<span class="sub2">${s.car} · ${s.livery} · ${s.engineering}</span>` +
+        `<span class="sp"></span><span class="fee">${eur(s.fee)}</span>`;
+      const b = document.createElement('button');
+      b.textContent = 'Sign'; b.disabled = !(s.affordable && o.open);
+      b.onclick = async () => {
+        try {
+          const r = await window.gt.takeSeat(s.entry_id);
+          alert(`Signed with ${r.team}\n${r.car}\n\nSeat fee ${eur(r.fee)} — ${eur(r.capital)} left.`);
+          await refresh(); await openOffice();
+        } catch (e) { alert(String(e.message || e).replace(/^Error: /, '')); }
+      };
+      el.appendChild(b);
+      box.appendChild(el);
+    }
+  }
+
+  // ---- team ------------------------------------------------------------
+  if (o.team) {
+    h('YOUR TEAM');
+    p(`<b>${o.team.name}</b> — engineering: ${o.team.engineering}`);
+  } else {
+    h('FORM A TEAM');
+    if (!o.canFormTeam) {
+      p(`Running a team in the ${o.championship} needs at least ` +
+        `${eur(o.minCapital)} in capital. You have ${eur(o.capital)}.`);
+    } else {
+      p('A team pays a fixed engineering core each season, but can enter more than ' +
+        'one car and take on drivers who pay for their seat.');
+      const row = document.createElement('div'); row.className = 'eng';
+      for (const [lvl, cost] of Object.entries(o.coreCost)) {
+        const el = document.createElement('div');
+        const ok = cost <= o.capital && o.open;
+        el.className = 'opt' + (ok ? '' : ' no');
+        el.innerHTML = `<b>${lvl[0].toUpperCase() + lvl.slice(1)}</b><span>${eur(cost)} one-off core</span>`;
+        if (ok) el.onclick = async () => {
+          try {
+            const r = await window.gt.formTeam(lvl);
+            alert(`${r.team} founded.\nEngineering: ${r.engineering}\n` +
+                  `Cost ${eur(r.cost)} — ${eur(r.capital)} left.`);
+            await refresh(); await openOffice();
+          } catch (e) { alert(String(e.message || e).replace(/^Error: /, '')); }
+        };
+        row.appendChild(el);
+      }
+      box.appendChild(row);
+    }
+  }
+
+  // ---- scouting --------------------------------------------------------
+  if (o.team) {
+    const mine = await window.gt.myEntries();
+    const openSeats = mine.filter(e => e.filled < e.need);
+    h('SCOUTING' + (openSeats.length ? '' : ' — no free seat in your cars'));
+    if (!o.scouting.length) p('No free drivers in this region.');
+    for (const d of o.scouting) {
+      const el = document.createElement('div');
+      el.className = 'offer' + (openSeats.length && o.open ? '' : ' no');
+      el.innerHTML = `<span class="who">${d.name}</span>` +
+        `<span class="sub2">${d.country} · ${d.age}` +
+        (d.rating ? ` · ${d.rating}` : '') + `</span>` +
+        (d.home ? '<span class="homeflag">home</span>' : '') +
+        `<span class="sp"></span><span class="fee">pays ${eur(d.pays)}</span>`;
+      const b = document.createElement('button');
+      b.textContent = 'Offer seat'; b.disabled = !(openSeats.length && o.open);
+      b.onclick = async () => {
+        try {
+          const r = await window.gt.signDriver(d.id, openSeats[0].id);
+          alert(`${r.driver} signed.\nBrings ${eur(r.fee)} — you now have ${eur(r.capital)}.`);
+          await refresh(); await openOffice();
+        } catch (e) { alert(String(e.message || e).replace(/^Error: /, '')); }
+      };
+      el.appendChild(b);
+      box.appendChild(el);
+    }
+  }
+}
+
+// ---------------------------------------------------------------- garage
+async function openGarage() {
+  const cars = await window.gt.garage();
+  $('gr-count').textContent = cars.length
+    ? `${cars.length} car${cars.length === 1 ? '' : 's'}` : '';
+  const box = $('gr-list');
+  box.innerHTML = '';
+  if (!cars.length) {
+    box.innerHTML = '<p class="note">No cars. Buy one in the Market, ' +
+                    'or take a paid drive from the Office.</p>';
+    return;
+  }
+  for (const c of cars) {
+    const img = await window.gt.carImage(c.model);
+    const eng = Math.min(1, c.engine_hours / 30);
+    const cls = eng > .85 ? 'bad' : eng > .6 ? 'warn' : '';
+    const el = document.createElement('div');
+    el.className = 'gcar' + (c.mine ? '' : ' theirs');
+    el.innerHTML =
+      (img ? `<img src="${img}" alt="">` : '') +
+      `<div class="info">
+         <h3>${c.model}</h3>
+         <div class="meta">${c.livery} · ${c.championship} · ${c.team}` +
+         (c.mine ? ` · value ${eur(c.value)}` : '') + `</div>
+         <div class="bar-wrap">Engine hours
+           <div class="bar-out"><div class="bar-in ${cls}" style="width:${(eng*100).toFixed(0)}%"></div></div>
+           ${c.engine_hours.toFixed(1)} / 30</div>
+         <div class="tagline">` +
+         (c.mine ? 'Servicing and sale are handled here.'
+                 : 'Team property — you can see its condition but cannot work on it.') +
+         `</div></div>`;
+    box.appendChild(el);
+  }
+}
 
 // entry level switches the allowed experience range
 $('f-entry').onchange = e => {

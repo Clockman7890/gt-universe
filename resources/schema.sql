@@ -48,7 +48,8 @@ CREATE TABLE car_models (
   manufacturer_id INTEGER REFERENCES manufacturers(id),
   class          TEXT NOT NULL,                -- gt5 | gt4 | gt3_gen1 | gt3_gen2 | gto | lmdh
   ai_file        TEXT NOT NULL,                -- 'GT3_Gen2.xml' — where its entries are written
-  price_new      INTEGER NOT NULL,
+  price_new      INTEGER,                     -- NULL = never sold (LMDh, ARC franchise cars)
+  purchasable    INTEGER NOT NULL DEFAULT 1,
   running_cost_index REAL NOT NULL DEFAULT 1.0,
   works_support  INTEGER NOT NULL DEFAULT 1,   -- 0 = no factory backing available
   -- measured BoP baseline (Barcelona, uniform 0.85 drivers)
@@ -142,6 +143,7 @@ CREATE TABLE career (
   calendar_year     INTEGER NOT NULL DEFAULT 2020,  -- internal only, drives in-game weather
   player_driver_id  INTEGER,                        -- FK set after generation
   player_team_id    INTEGER,
+  player_championship_id TEXT,           -- the seat being held for them
   ams2_path         TEXT,
   time_multiplier   INTEGER NOT NULL DEFAULT 2
 );

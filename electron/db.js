@@ -1,5 +1,10 @@
 'use strict';
 const Database = require('better-sqlite3');
+const { buildWorld } = require('./world');
+const { generatePopulation } = require('./population');
+const { buildEntries, placePlayer } = require('./entries');
+const market = require('./market');
+const office = require('./office');
 
 let handle = null;
 let dirty = false;
@@ -138,7 +143,7 @@ function peek(file) {
   } finally { d.close(); }
 }
 
-function create(file, schemaSql, profile) {
+function create(file, schemaSql, profile, world, namesDb) {
   close();
   handle = new Database(file);
   handle.pragma('journal_mode = WAL');
@@ -156,6 +161,7 @@ function create(file, schemaSql, profile) {
   handle.prepare(`INSERT INTO seasons (season, calendar_year) VALUES (1, 2020)`).run();
 
   seedReference(handle);
+
 
   // the player is just another row in drivers; generation of the rest comes later
   if (profile) {
@@ -178,6 +184,20 @@ function create(file, schemaSql, profile) {
     handle.prepare(`UPDATE career SET player_driver_id = ? WHERE id = 1`)
           .run(info.lastInsertRowid);
   }
+
+  // one transaction: either the whole world exists or the file is discarded
+  const seed = (Date.now() ^ 0x5f3759df) >>> 0;
+  handle.transaction(() => {
+    buildWorld(handle, world, BLOCKS.map(b => ({
+      id: b[0], name: b[1], continent: b[2], weight: b[3], passive: b[4]
+    })), COUNTRIES.map(c => ({ code: c[0], name: c[1], block: c[2] })), true);
+    const ctx = generatePopulation(handle, world, BLOCKS.map(b => ({
+      id: b[0], name: b[1], continent: b[2], weight: b[3], passive: b[4]
+    })), COUNTRIES.map(c => ({ code: c[0], name: c[1], block: c[2] })), namesDb, seed);
+    buildEntries(handle, world, ctx, profile);
+    if (profile) placePlayer(handle, world, ctx, profile);
+  })();
+
 
   dirty = false;
   return { file, ok: true };
@@ -224,4 +244,53 @@ function save() {
 
 const isDirty = () => dirty;
 
-module.exports = { create, open, peek, state, advanceWeek, save, close, isDirty };
+function marketList() { return handle ? market.list(handle) : null; }
+function marketBuy(modelId, liveryId) {
+  if (!handle) throw new Error('No career open.');
+  const res = market.buy(handle, modelId, liveryId);
+  dirty = true;
+  return res;
+}
+function officeOffers() { return handle ? office.offers(handle) : null; }
+function officeTakeSeat(entryId) { const r = office.takeSeat(handle, entryId); dirty = true; return r; }
+function officeFormTeam(level)   { const r = office.formTeam(handle, level);   dirty = true; return r; }
+function officeSign(d, e)        { const r = office.signDriver(handle, d, e);  dirty = true; return r; }
+
+function myEntries() {
+  if (!handle) return [];
+  return handle.prepare(`
+    SELECT e.id, cm.name car, l.livery_name livery, c.name championship,
+           (SELECT COUNT(*) FROM entry_drivers ed WHERE ed.entry_id = e.id) filled,
+           cl.drivers_per_car need
+    FROM entries e
+    JOIN teams t ON t.id = e.team_id
+    JOIN chassis ch ON ch.id = e.chassis_id
+    JOIN car_models cm ON cm.id = ch.model_id
+    JOIN liveries l ON l.id = e.livery_id
+    JOIN championships c ON c.id = e.championship_id
+    JOIN championship_levels cl ON cl.id = c.level_id
+    WHERE t.owner_driver_id = (SELECT player_driver_id FROM career WHERE id = 1)
+      AND t.status = 'active' AND e.season = (SELECT season FROM career WHERE id = 1)`).all();
+}
+
+function garage() {
+  if (!handle) return null;
+  return handle.prepare(`
+    SELECT ch.id, cm.name model, cm.class, l.livery_name livery, ch.value,
+           ch.engine_hours, ch.chassis_hours, t.is_privateer mine, t.name team,
+           c.name championship
+    FROM entry_drivers ed
+    JOIN entries e ON e.id = ed.entry_id
+    JOIN chassis ch ON ch.id = e.chassis_id
+    JOIN car_models cm ON cm.id = ch.model_id
+    JOIN liveries l ON l.id = e.livery_id
+    JOIN teams t ON t.id = e.team_id
+    JOIN championships c ON c.id = e.championship_id
+    JOIN drivers d ON d.id = ed.driver_id
+    WHERE d.is_player = 1 AND e.season = (SELECT season FROM career WHERE id = 1)`).all();
+}
+
+module.exports = { create, open, peek, state, advanceWeek, save, close, isDirty,
+                   marketList, marketBuy, garage, myEntries,
+                   officeOffers, officeTakeSeat, officeFormTeam, officeSign,
+                   handle: () => handle };

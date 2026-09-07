@@ -1,0 +1,2443 @@
+{
+ "tracks": [
+  {
+   "name": "Adelaide",
+   "km": 3.219,
+   "max_grid": 39
+  },
+  {
+   "name": "Azure Circuit",
+   "km": 3.34,
+   "max_grid": 26
+  },
+  {
+   "name": "Barcelona",
+   "km": 4.655,
+   "max_grid": 48
+  },
+  {
+   "name": "Bathurst",
+   "km": 6.213,
+   "max_grid": 48
+  },
+  {
+   "name": "Brands Hatch",
+   "km": 3.916,
+   "max_grid": 32
+  },
+  {
+   "name": "Buenos Aires No6",
+   "km": 3.345,
+   "max_grid": 32
+  },
+  {
+   "name": "Buenos Aires No15",
+   "km": 4.259,
+   "max_grid": 32
+  },
+  {
+   "name": "Cadwell Park",
+   "km": 3.484,
+   "max_grid": 26
+  },
+  {
+   "name": "Campo Grande",
+   "km": 3.433,
+   "max_grid": 48
+  },
+  {
+   "name": "Cascais",
+   "km": 4.182,
+   "max_grid": 48
+  },
+  {
+   "name": "Cascavel",
+   "km": 3.3,
+   "max_grid": 48
+  },
+  {
+   "name": "Cleveland GP",
+   "km": 3.862,
+   "max_grid": 32
+  },
+  {
+   "name": "Curvelo Long",
+   "km": 3.7,
+   "max_grid": 48
+  },
+  {
+   "name": "Cordoba No4",
+   "km": 4.3,
+   "max_grid": 26
+  },
+  {
+   "name": "Daytona Sports",
+   "km": 5.729,
+   "max_grid": 48
+  },
+  {
+   "name": "Donington GP",
+   "km": 4.02,
+   "max_grid": 38
+  },
+  {
+   "name": "Fontana Club",
+   "km": 2.4,
+   "max_grid": 30
+  },
+  {
+   "name": "Goiania",
+   "km": 3.835,
+   "max_grid": 48
+  },
+  {
+   "name": "Guapore",
+   "km": 2.8,
+   "max_grid": 40
+  },
+  {
+   "name": "Hockenheim",
+   "km": 4.574,
+   "max_grid": 48
+  },
+  {
+   "name": "Hungaroring",
+   "km": 4.381,
+   "max_grid": 48
+  },
+  {
+   "name": "Ibarra",
+   "km": 2.9,
+   "max_grid": 30
+  },
+  {
+   "name": "Imola",
+   "km": 4.909,
+   "max_grid": 48
+  },
+  {
+   "name": "Indianapolis Road",
+   "km": 3.925,
+   "max_grid": 48
+  },
+  {
+   "name": "Interlagos",
+   "km": 4.309,
+   "max_grid": 48
+  },
+  {
+   "name": "Jerez Moto",
+   "km": 4.423,
+   "max_grid": 42
+  },
+  {
+   "name": "Kansai GP",
+   "km": 5.807,
+   "max_grid": 48
+  },
+  {
+   "name": "Kansai West",
+   "km": 3.5,
+   "max_grid": 26
+  },
+  {
+   "name": "Kyalami",
+   "km": 4.522,
+   "max_grid": 48
+  },
+  {
+   "name": "Laguna Seca",
+   "km": 3.602,
+   "max_grid": 48
+  },
+  {
+   "name": "Le Mans 24 Hour",
+   "km": 13.626,
+   "max_grid": 48
+  },
+  {
+   "name": "Le Mans Bugatti",
+   "km": 4.185,
+   "max_grid": 32
+  },
+  {
+   "name": "Long Beach",
+   "km": 3.167,
+   "max_grid": 48
+  },
+  {
+   "name": "Montreal",
+   "km": 4.361,
+   "max_grid": 40
+  },
+  {
+   "name": "Monza",
+   "km": 5.793,
+   "max_grid": 48
+  },
+  {
+   "name": "Mosport",
+   "km": 3.957,
+   "max_grid": 48
+  },
+  {
+   "name": "Nordschleife 24 Hour",
+   "km": 25.378,
+   "max_grid": 48
+  },
+  {
+   "name": "Nurburgring",
+   "km": 5.148,
+   "max_grid": 48
+  },
+  {
+   "name": "Oulton Park International",
+   "km": 4.307,
+   "max_grid": 42
+  },
+  {
+   "name": "Road America",
+   "km": 6.515,
+   "max_grid": 48
+  },
+  {
+   "name": "Road Atlanta",
+   "km": 4.088,
+   "max_grid": 48
+  },
+  {
+   "name": "Santa Cruz",
+   "km": 3.2,
+   "max_grid": 48
+  },
+  {
+   "name": "Sebring",
+   "km": 6.019,
+   "max_grid": 48
+  },
+  {
+   "name": "Silverstone",
+   "km": 5.891,
+   "max_grid": 48
+  },
+  {
+   "name": "Snetterton",
+   "km": 4.779,
+   "max_grid": 26
+  },
+  {
+   "name": "Spa",
+   "km": 7.004,
+   "max_grid": 48
+  },
+  {
+   "name": "Spielberg",
+   "km": 4.318,
+   "max_grid": 32
+  },
+  {
+   "name": "Termas de Rio Hondo",
+   "km": 4.806,
+   "max_grid": 48
+  },
+  {
+   "name": "Velo Citta",
+   "km": 3.3,
+   "max_grid": 34
+  },
+  {
+   "name": "Virginia Grand",
+   "km": 5.262,
+   "max_grid": 48
+  },
+  {
+   "name": "Watkins Glen",
+   "km": 5.552,
+   "max_grid": 48
+  }
+ ],
+ "levels": [
+  {
+   "id": "gt5",
+   "races": 2,
+   "km": 55,
+   "two_leg": false,
+   "drivers": 1,
+   "practice": 30,
+   "quali": 10,
+   "private": false,
+   "pole": 2,
+   "stops": 0,
+   "window": null,
+   "latest_start": "14:00"
+  },
+  {
+   "id": "gt4",
+   "races": 2,
+   "km": 70,
+   "two_leg": false,
+   "drivers": 1,
+   "practice": 30,
+   "quali": 10,
+   "private": false,
+   "pole": 2,
+   "stops": 1,
+   "window": [
+    0.4,
+    0.6
+   ],
+   "latest_start": null
+  },
+  {
+   "id": "gt3_sprint",
+   "races": 2,
+   "km": 100,
+   "two_leg": false,
+   "drivers": 1,
+   "practice": 30,
+   "quali": 15,
+   "private": false,
+   "pole": 2,
+   "stops": 1,
+   "window": [
+    0.4,
+    0.6
+   ],
+   "latest_start": null
+  },
+  {
+   "id": "gt3_endurance",
+   "races": 1,
+   "km": 100,
+   "two_leg": true,
+   "drivers": 2,
+   "practice": 45,
+   "quali": 15,
+   "private": false,
+   "pole": 2,
+   "stops": 1,
+   "window": null,
+   "latest_start": null
+  },
+  {
+   "id": "gt3_big",
+   "races": 1,
+   "km": 250,
+   "two_leg": true,
+   "drivers": 2,
+   "practice": 45,
+   "quali": 15,
+   "private": true,
+   "pole": 2,
+   "stops": 2,
+   "window": null,
+   "latest_start": null
+  },
+  {
+   "id": "lmdh",
+   "races": 1,
+   "km": 200,
+   "two_leg": true,
+   "drivers": 2,
+   "practice": 45,
+   "quali": 15,
+   "private": false,
+   "pole": 2,
+   "stops": 1,
+   "window": null,
+   "latest_start": null
+  },
+  {
+   "id": "lmdh_big",
+   "races": 1,
+   "km": 250,
+   "two_leg": true,
+   "drivers": 2,
+   "practice": 45,
+   "quali": 15,
+   "private": true,
+   "pole": 2,
+   "stops": 2,
+   "window": null,
+   "latest_start": null
+  }
+ ],
+ "points": [
+  50,
+  36,
+  30,
+  24,
+  20,
+  16,
+  12,
+  8,
+  4,
+  2
+ ],
+ "big_tracks": [
+  "Nordschleife 24 Hour",
+  "Spa"
+ ],
+ "mixed": {
+  "Nurburgring": "gt4",
+  "Bathurst": "lmdh",
+  "Spa": "lmdh",
+  "Kansai GP": "lmdh",
+  "Indianapolis Road": "lmdh"
+ },
+ "championships": [
+  {
+   "id": "trofeo_adriatico",
+   "name": "Trofeo Adriatico GT5",
+   "level": "gt5",
+   "cls": "gt5",
+   "model": "Puma P052",
+   "continent": "europe",
+   "prestige": 0.7,
+   "rounds": 6,
+   "winter": false,
+   "active_from": 1,
+   "calendar": [
+    "Imola",
+    "Monza",
+    "Hungaroring",
+    "Spielberg",
+    "Azure Circuit",
+    "Barcelona"
+   ],
+   "weeks": [
+    11,
+    18,
+    25,
+    31,
+    38,
+    45
+   ],
+   "grid": 20,
+   "shares_entries_with": null,
+   "drivers_per_car": 1,
+   "grid_first": 20
+  },
+  {
+   "id": "nordisk",
+   "name": "Nordisk GT5 Cup",
+   "level": "gt5",
+   "cls": "gt5",
+   "model": "Ginetta G40 GT5",
+   "continent": "europe",
+   "prestige": 0.7,
+   "rounds": 6,
+   "winter": false,
+   "active_from": 1,
+   "calendar": [
+    "Snetterton",
+    "Donington GP",
+    "Oulton Park International",
+    "Brands Hatch",
+    "Hockenheim",
+    "Nurburgring"
+   ],
+   "weeks": [
+    11,
+    18,
+    25,
+    31,
+    38,
+    45
+   ],
+   "grid": 20,
+   "shares_entries_with": null,
+   "drivers_per_car": 1,
+   "grid_first": 20
+  },
+  {
+   "id": "british_benelux",
+   "name": "British & Benelux GT5 Championship",
+   "level": "gt5",
+   "cls": "gt5",
+   "model": "Ginetta G40 GT5",
+   "continent": "europe",
+   "prestige": 0.75,
+   "rounds": 6,
+   "winter": false,
+   "active_from": 1,
+   "calendar": [
+    "Brands Hatch",
+    "Snetterton",
+    "Oulton Park International",
+    "Cadwell Park",
+    "Donington GP",
+    "Silverstone"
+   ],
+   "weeks": [
+    11,
+    18,
+    25,
+    31,
+    38,
+    45
+   ],
+   "grid": 20,
+   "shares_entries_with": null,
+   "drivers_per_car": 1,
+   "grid_first": 20
+  },
+  {
+   "id": "alpen_pokal",
+   "name": "Alpen GT5 Pokal",
+   "level": "gt5",
+   "cls": "gt5",
+   "model": "Ginetta G40 Cup",
+   "continent": "europe",
+   "prestige": 0.75,
+   "rounds": 6,
+   "winter": false,
+   "active_from": 1,
+   "calendar": [
+    "Hockenheim",
+    "Nurburgring",
+    "Spielberg",
+    "Hungaroring",
+    "Imola",
+    "Silverstone"
+   ],
+   "weeks": [
+    11,
+    18,
+    25,
+    31,
+    38,
+    45
+   ],
+   "grid": 23,
+   "shares_entries_with": null,
+   "drivers_per_car": 1,
+   "grid_first": 23
+  },
+  {
+   "id": "central_european",
+   "name": "Central European GT5 Trophy",
+   "level": "gt5",
+   "cls": "gt5",
+   "model": "Ginetta G40 Cup",
+   "continent": "europe",
+   "prestige": 0.6,
+   "rounds": 6,
+   "winter": false,
+   "active_from": 1,
+   "calendar": [
+    "Hungaroring",
+    "Spielberg",
+    "Imola",
+    "Hockenheim",
+    "Nurburgring",
+    "Monza"
+   ],
+   "weeks": [
+    11,
+    18,
+    25,
+    31,
+    38,
+    45
+   ],
+   "grid": 23,
+   "shares_entries_with": null,
+   "drivers_per_car": 1,
+   "grid_first": 23
+  },
+  {
+   "id": "coupe_latine",
+   "name": "Coupe Latine GT5",
+   "level": "gt5",
+   "cls": "gt5",
+   "model": "Puma P052",
+   "continent": "europe",
+   "prestige": 0.7,
+   "rounds": 6,
+   "winter": false,
+   "active_from": 1,
+   "calendar": [
+    "Le Mans Bugatti",
+    "Jerez Moto",
+    "Cascais",
+    "Barcelona",
+    "Azure Circuit",
+    "Monza"
+   ],
+   "weeks": [
+    11,
+    18,
+    25,
+    31,
+    38,
+    45
+   ],
+   "grid": 20,
+   "shares_entries_with": null,
+   "drivers_per_car": 1,
+   "grid_first": 20
+  },
+  {
+   "id": "eurasian",
+   "name": "Eurasian GT5 Series",
+   "level": "gt5",
+   "cls": "gt5",
+   "model": "Ginetta G40 GT5",
+   "continent": "europe",
+   "prestige": 0.5,
+   "rounds": 4,
+   "winter": false,
+   "active_from": 1,
+   "calendar": [
+    "Hungaroring",
+    "Spielberg",
+    "Hockenheim",
+    "Imola"
+   ],
+   "weeks": [
+    11,
+    22,
+    34,
+    45
+   ],
+   "grid": 20,
+   "shares_entries_with": null,
+   "drivers_per_car": 1,
+   "grid_first": 20
+  },
+  {
+   "id": "gt5_north_america",
+   "name": "GT5 North America Cup",
+   "level": "gt5",
+   "cls": "gt5",
+   "model": "Ginetta G40 Cup",
+   "continent": "americas",
+   "prestige": 0.7,
+   "rounds": 6,
+   "winter": false,
+   "active_from": 1,
+   "calendar": [
+    "Virginia Grand",
+    "Road Atlanta",
+    "Watkins Glen",
+    "Mosport",
+    "Laguna Seca",
+    "Road America"
+   ],
+   "weeks": [
+    11,
+    18,
+    25,
+    31,
+    38,
+    45
+   ],
+   "grid": 23,
+   "shares_entries_with": null,
+   "drivers_per_car": 1,
+   "grid_first": 23
+  },
+  {
+   "id": "copa_sudamericana",
+   "name": "Copa Sudamericana GT5",
+   "level": "gt5",
+   "cls": "gt5",
+   "model": "Puma P052",
+   "continent": "americas",
+   "prestige": 0.6,
+   "rounds": 6,
+   "winter": false,
+   "active_from": 1,
+   "calendar": [
+    "Interlagos",
+    "Curvelo Long",
+    "Velo Citta",
+    "Goiania",
+    "Buenos Aires No15",
+    "Termas de Rio Hondo"
+   ],
+   "weeks": [
+    11,
+    18,
+    25,
+    31,
+    38,
+    45
+   ],
+   "grid": 20,
+   "shares_entries_with": null,
+   "drivers_per_car": 1,
+   "grid_first": 20
+  },
+  {
+   "id": "lancer_japan",
+   "name": "Lancer R Cup Japan",
+   "level": "gt5",
+   "cls": "gt5",
+   "model": "Mitsubishi Lancer R",
+   "continent": "asia_pacific",
+   "prestige": 0.65,
+   "rounds": 4,
+   "winter": false,
+   "active_from": 1,
+   "calendar": [
+    "Kansai GP",
+    "Kansai West",
+    "Kansai GP",
+    "Kansai West"
+   ],
+   "weeks": [
+    11,
+    22,
+    34,
+    45
+   ],
+   "grid": 16,
+   "shares_entries_with": null,
+   "drivers_per_car": 1,
+   "grid_first": 16
+  },
+  {
+   "id": "east_asia_lancer",
+   "name": "East Asia Lancer Series",
+   "level": "gt5",
+   "cls": "gt5",
+   "model": "Mitsubishi Lancer R",
+   "continent": "asia_pacific",
+   "prestige": 0.5,
+   "rounds": 4,
+   "winter": false,
+   "active_from": 1,
+   "calendar": [
+    "Kansai West",
+    "Kansai GP",
+    "Adelaide",
+    "Bathurst"
+   ],
+   "weeks": [
+    11,
+    22,
+    34,
+    45
+   ],
+   "grid": 16,
+   "shares_entries_with": null,
+   "drivers_per_car": 1,
+   "grid_first": 16
+  },
+  {
+   "id": "asian_gt5_trophy",
+   "name": "Asian GT5 Trophy",
+   "level": "gt5",
+   "cls": "gt5",
+   "model": "Ginetta G40 GT5",
+   "continent": "asia_pacific",
+   "prestige": 0.5,
+   "rounds": 4,
+   "winter": false,
+   "active_from": 1,
+   "calendar": [
+    "Kansai West",
+    "Kansai GP",
+    "Adelaide",
+    "Bathurst"
+   ],
+   "weeks": [
+    11,
+    22,
+    34,
+    45
+   ],
+   "grid": 20,
+   "shares_entries_with": null,
+   "drivers_per_car": 1,
+   "grid_first": 20
+  },
+  {
+   "id": "australasian_arc",
+   "name": "Australasian ARC Series",
+   "level": "gt5",
+   "cls": "gt5",
+   "model": "ARC Camaro",
+   "continent": "asia_pacific",
+   "prestige": 0.6,
+   "rounds": 4,
+   "winter": false,
+   "active_from": 1,
+   "calendar": [
+    "Bathurst",
+    "Adelaide",
+    "Kansai GP",
+    "Kyalami"
+   ],
+   "weeks": [
+    11,
+    22,
+    34,
+    45
+   ],
+   "grid": 22,
+   "shares_entries_with": null,
+   "drivers_per_car": 1,
+   "grid_first": 22
+  },
+  {
+   "id": "africa_gulf",
+   "name": "Africa & Gulf Lancer Cup",
+   "level": "gt5",
+   "cls": "gt5",
+   "model": "Mitsubishi Lancer R",
+   "continent": "africa_gulf",
+   "prestige": 0.45,
+   "rounds": 4,
+   "winter": true,
+   "active_from": 1,
+   "calendar": [
+    "Kyalami",
+    "Jerez Moto",
+    "Cascais",
+    "Kyalami"
+   ],
+   "weeks": [
+    5,
+    7,
+    9,
+    10
+   ],
+   "grid": 16,
+   "shares_entries_with": null,
+   "drivers_per_car": 1,
+   "grid_first": 16
+  },
+  {
+   "id": "gt4_european",
+   "name": "GT4 European Series",
+   "level": "gt4",
+   "cls": "gt4",
+   "model": null,
+   "continent": "europe",
+   "prestige": 1.0,
+   "rounds": 6,
+   "winter": false,
+   "active_from": 1,
+   "calendar": [
+    "Imola",
+    "Silverstone",
+    "Nurburgring",
+    "Hockenheim",
+    "Barcelona",
+    "Spa"
+   ],
+   "weeks": [
+    11,
+    18,
+    25,
+    31,
+    38,
+    45
+   ],
+   "grid": 26,
+   "shares_entries_with": null,
+   "drivers_per_car": 1,
+   "grid_first": 20
+  },
+  {
+   "id": "gt4_americas",
+   "name": "GT4 Americas",
+   "level": "gt4",
+   "cls": "gt4",
+   "model": null,
+   "continent": "americas",
+   "prestige": 0.85,
+   "rounds": 6,
+   "winter": false,
+   "active_from": 1,
+   "calendar": [
+    "Watkins Glen",
+    "Road America",
+    "Virginia Grand",
+    "Interlagos",
+    "Laguna Seca",
+    "Mosport"
+   ],
+   "weeks": [
+    11,
+    18,
+    25,
+    31,
+    38,
+    45
+   ],
+   "grid": 22,
+   "shares_entries_with": null,
+   "drivers_per_car": 1,
+   "grid_first": 17
+  },
+  {
+   "id": "gt4_asia_pacific",
+   "name": "GT4 Asia-Pacific",
+   "level": "gt4",
+   "cls": "gt4",
+   "model": null,
+   "continent": "asia_pacific",
+   "prestige": 0.8,
+   "rounds": 4,
+   "winter": false,
+   "active_from": 1,
+   "calendar": [
+    "Kansai GP",
+    "Bathurst",
+    "Adelaide",
+    "Kyalami"
+   ],
+   "weeks": [
+    11,
+    22,
+    34,
+    45
+   ],
+   "grid": 18,
+   "shares_entries_with": null,
+   "drivers_per_car": 1,
+   "grid_first": 13
+  },
+  {
+   "id": "gt4_africa_me",
+   "name": "GT4 Africa & Middle East",
+   "level": "gt4",
+   "cls": "gt4",
+   "model": null,
+   "continent": "africa_gulf",
+   "prestige": 0.55,
+   "rounds": 4,
+   "winter": true,
+   "active_from": 1,
+   "calendar": [
+    "Kyalami",
+    "Jerez Moto",
+    "Cascais",
+    "Barcelona"
+   ],
+   "weeks": [
+    5,
+    7,
+    9,
+    10
+   ],
+   "grid": 16,
+   "shares_entries_with": null,
+   "drivers_per_car": 1,
+   "grid_first": 12
+  },
+  {
+   "id": "gtwc_europe_sprint",
+   "name": "GT World Challenge Europe Sprint",
+   "level": "gt3_sprint",
+   "cls": "gt3",
+   "model": null,
+   "continent": "europe",
+   "prestige": 1.0,
+   "rounds": 5,
+   "winter": false,
+   "active_from": 2,
+   "calendar": [
+    "Imola",
+    "Hockenheim",
+    "Hungaroring",
+    "Barcelona",
+    "Silverstone"
+   ],
+   "weeks": [
+    11,
+    19,
+    28,
+    37,
+    45
+   ],
+   "grid": 30,
+   "shares_entries_with": null,
+   "drivers_per_car": 2,
+   "grid_first": 22
+  },
+  {
+   "id": "gtwc_europe_endurance",
+   "name": "GT World Challenge Europe Endurance",
+   "level": "gt3_endurance",
+   "cls": "gt3",
+   "model": null,
+   "continent": "europe",
+   "prestige": 1.0,
+   "rounds": 5,
+   "winter": false,
+   "active_from": 2,
+   "calendar": [
+    "Le Mans 24 Hour",
+    "Monza",
+    "Spa",
+    "Nurburgring",
+    "Cascais"
+   ],
+   "weeks": [
+    11,
+    19,
+    28,
+    37,
+    45
+   ],
+   "grid": 30,
+   "shares_entries_with": "gtwc_europe_sprint",
+   "drivers_per_car": 2,
+   "grid_first": 30
+  },
+  {
+   "id": "gtwc_america",
+   "name": "GT World Challenge America",
+   "level": "gt3_endurance",
+   "cls": "gt3",
+   "model": null,
+   "continent": "americas",
+   "prestige": 0.85,
+   "rounds": 6,
+   "winter": false,
+   "active_from": 2,
+   "calendar": [
+    "Sebring",
+    "Watkins Glen",
+    "Road America",
+    "Virginia Grand",
+    "Laguna Seca",
+    "Indianapolis Road"
+   ],
+   "weeks": [
+    11,
+    18,
+    25,
+    31,
+    38,
+    45
+   ],
+   "grid": 24,
+   "shares_entries_with": null,
+   "drivers_per_car": 2,
+   "grid_first": 18
+  },
+  {
+   "id": "gtwc_asia_pacific",
+   "name": "GT World Challenge Asia-Pacific",
+   "level": "gt3_endurance",
+   "cls": "gt3",
+   "model": null,
+   "continent": "asia_pacific",
+   "prestige": 0.8,
+   "rounds": 4,
+   "winter": false,
+   "active_from": 2,
+   "calendar": [
+    "Kansai GP",
+    "Bathurst",
+    "Adelaide",
+    "Kyalami"
+   ],
+   "weeks": [
+    11,
+    22,
+    34,
+    45
+   ],
+   "grid": 18,
+   "shares_entries_with": null,
+   "drivers_per_car": 2,
+   "grid_first": 14
+  },
+  {
+   "id": "lmdh_world",
+   "name": "LMDh World Championship",
+   "level": "lmdh",
+   "cls": "lmdh",
+   "model": null,
+   "continent": "europe",
+   "prestige": 1.0,
+   "rounds": 8,
+   "winter": false,
+   "active_from": 7,
+   "calendar": [
+    "Le Mans 24 Hour",
+    "Monza",
+    "Silverstone",
+    "Sebring",
+    "Spa",
+    "Kansai GP",
+    "Bathurst",
+    "Indianapolis Road"
+   ],
+   "weeks": [
+    11,
+    16,
+    21,
+    26,
+    30,
+    35,
+    40,
+    45
+   ],
+   "grid": 18,
+   "shares_entries_with": null,
+   "drivers_per_car": 2,
+   "grid_first": 18
+  }
+ ],
+ "models": [
+  {
+   "name": "Chevrolet Corvette Z06 GT3.R",
+   "cls": "gt3_gen2",
+   "manufacturer": "Chevrolet",
+   "ai_file": "GT3_Gen2.xml",
+   "price": 700000,
+   "purchasable": true,
+   "works": true,
+   "run_cost": 1.0,
+   "power": 561,
+   "torque": 671,
+   "weight": 1425,
+   "engine": "V8",
+   "placement": "Mid-Rear",
+   "drive": "RWD",
+   "gears": 6,
+   "shift": "Sequential",
+   "displacement": "5.50L",
+   "dist": "44.2/55.8",
+   "wheelbase": "2.72m",
+   "image": "Chevrolet_Corvette_Z06_GT3.png",
+   "scalars": {
+    "weight": 1.008,
+    "power": 1.001,
+    "drag": 1.022
+   },
+   "liveries": [
+    "Chevrolet Corvette Z06 GT3.R #3 (IMSA 2024)",
+    "Chevrolet Corvette Z06 GT3.R #4 (IMSA 2024)",
+    "Chevrolet Corvette Z06 GT3.R #13 (IMSA 2024)",
+    "Chevrolet Corvette Z06 GT3.R #17 (IMSA 2024)"
+   ]
+  },
+  {
+   "name": "McLaren 720S GT3 Evo",
+   "cls": "gt3_gen2",
+   "manufacturer": "McLaren",
+   "ai_file": "GT3_Gen2.xml",
+   "price": 660000,
+   "purchasable": true,
+   "works": true,
+   "run_cost": 1.0,
+   "power": 541,
+   "torque": 632,
+   "weight": 1385,
+   "engine": "V8",
+   "placement": "Mid-Rear",
+   "drive": "RWD",
+   "gears": 6,
+   "shift": "Sequential",
+   "displacement": "3.99L",
+   "dist": "44.0/56.0",
+   "wheelbase": "2.70m",
+   "image": "McLaren_720S_Evo_GT3.png",
+   "scalars": {
+    "weight": 0.981,
+    "power": 1.039,
+    "drag": 0.975
+   },
+   "liveries": [
+    "McLaren 720S GT3 Evo #9 (IMSA 2024)",
+    "McLaren 720S GT3 Evo #70 (IMSA 2024)",
+    "McLaren 720S GT3 Evo #25",
+    "McLaren 720S GT3 Evo #32",
+    "McLaren 720S GT3 Evo #41",
+    "McLaren 720S GT3 Evo #59"
+   ]
+  },
+  {
+   "name": "Porsche 992 GT3 R",
+   "cls": "gt3_gen2",
+   "manufacturer": "Porsche",
+   "ai_file": "GT3_Gen2.xml",
+   "price": 640000,
+   "purchasable": true,
+   "works": true,
+   "run_cost": 1.0,
+   "power": 544,
+   "torque": 508,
+   "weight": 1390,
+   "engine": "Flat 6",
+   "placement": "Mid-Rear",
+   "drive": "RWD",
+   "gears": 6,
+   "shift": "Sequential",
+   "displacement": "4.19L",
+   "dist": "43.8/56.2",
+   "wheelbase": "2.51m",
+   "image": "Porsche_992_GT3.png",
+   "scalars": {
+    "weight": 1.0,
+    "power": 1.0,
+    "drag": 1.0
+   },
+   "liveries": [
+    "Porsche 992 GT3 R #43 (IMSA 2024)",
+    "Porsche 992 GT3 R #77 (IMSA 2024)",
+    "Porsche 992 GT3 R #86 (IMSA 2024)",
+    "Porsche 992 GT3 R #92 (IMSA 2024)",
+    "Porsche 992 GT3 R #120 (IMSA 2024)",
+    "Porsche 992 GT3 R #14",
+    "Porsche 992 GT3 R #992"
+   ]
+  },
+  {
+   "name": "Lamborghini Huracan GT3 EVO2",
+   "cls": "gt3_gen2",
+   "manufacturer": "Lamborghini",
+   "ai_file": "GT3_Gen2.xml",
+   "price": 640000,
+   "purchasable": true,
+   "works": true,
+   "run_cost": 1.0,
+   "power": 565,
+   "torque": 528,
+   "weight": 1410,
+   "engine": "V10",
+   "placement": "Mid-Rear",
+   "drive": "RWD",
+   "gears": 6,
+   "shift": "Sequential",
+   "displacement": "5.20L",
+   "dist": "45.4/54.6",
+   "wheelbase": "2.65m",
+   "image": "Lamborghini_Huracan_Evo_2_GT3.png",
+   "scalars": {
+    "weight": 0.996,
+    "power": 1.015,
+    "drag": 0.994
+   },
+   "liveries": [
+    "Lamborghini Huracan GT3 EVO2 #19 (IMSA 2024)",
+    "Lamborghini Huracan GT3 EVO2 #45 (IMSA 2024)",
+    "Lamborghini Huracan GT3 EVO2 #60 (IMSA 2024)",
+    "Lamborghini Huracan GT3 EVO2 #78 (IMSA 2024)",
+    "Lamborghini Huracan GT3 EVO2 #83 (IMSA 2024)"
+   ]
+  },
+  {
+   "name": "AMR Vantage GT3 Evo",
+   "cls": "gt3_gen2",
+   "manufacturer": "Aston Martin",
+   "ai_file": "GT3_Gen2.xml",
+   "price": 620000,
+   "purchasable": true,
+   "works": true,
+   "run_cost": 1.0,
+   "power": 548,
+   "torque": 622,
+   "weight": 1370,
+   "engine": "V8",
+   "placement": "Mid-Front",
+   "drive": "RWD",
+   "gears": 6,
+   "shift": "Sequential",
+   "displacement": "4.00L",
+   "dist": "50.0/50.0",
+   "wheelbase": "2.60m",
+   "image": "Aston_Martin_Vantage_Evo_GT3.png",
+   "scalars": {
+    "weight": 1.002,
+    "power": 0.998,
+    "drag": 1.002
+   },
+   "liveries": [
+    "AMR Vantage GT3 Evo #23 (IMSA 2024)",
+    "AMR Vantage GT3 Evo #27 (IMSA 2024)",
+    "AMR Vantage GT3 Evo #44 (IMSA 2024)",
+    "AMR Vantage GT3 Evo #007",
+    "AMR Vantage GT3 Evo #42",
+    "AMR Vantage GT3 Evo #73",
+    "AMR Vantage GT3 Evo #98",
+    "AMR Vantage GT3 Evo #999"
+   ]
+  },
+  {
+   "name": "BMW M4 GT3",
+   "cls": "gt3_gen2",
+   "manufacturer": "BMW",
+   "ai_file": "GT3_Gen2.xml",
+   "price": 610000,
+   "purchasable": true,
+   "works": true,
+   "run_cost": 1.0,
+   "power": 549,
+   "torque": 636,
+   "weight": 1385,
+   "engine": "Straight 6",
+   "placement": "Mid-Front",
+   "drive": "RWD",
+   "gears": 6,
+   "shift": "Sequential",
+   "displacement": "2.99L",
+   "dist": "50.8/49.2",
+   "wheelbase": "2.92m",
+   "image": "BMW_M4_GT3.png",
+   "scalars": {
+    "weight": 0.984,
+    "power": 1.024,
+    "drag": 0.978
+   },
+   "liveries": [
+    "BMW M4 GT3 #1a (IMSA 2024)",
+    "BMW M4 GT3 #1b (IMSA 2024)",
+    "BMW M4 GT3 #96 (IMSA 2024)",
+    "BMW M4 GT3 #7",
+    "BMW M4 GT3 #10",
+    "BMW M4 GT3 #55"
+   ]
+  },
+  {
+   "name": "Mercedes-AMG GT3 Evo",
+   "cls": "gt3_gen2",
+   "manufacturer": "Mercedes-AMG",
+   "ai_file": "GT3_Gen2.xml",
+   "price": 600000,
+   "purchasable": true,
+   "works": true,
+   "run_cost": 1.0,
+   "power": 541,
+   "torque": 671,
+   "weight": 1440,
+   "engine": "V8",
+   "placement": "Mid-Front",
+   "drive": "RWD",
+   "gears": 6,
+   "shift": "Sequential",
+   "displacement": "6.21L",
+   "dist": "48.0/52.0",
+   "wheelbase": "2.64m",
+   "image": "Mercedes-AMG_Evo_GT3.png",
+   "scalars": {
+    "weight": 0.995,
+    "power": 1.015,
+    "drag": 0.993
+   },
+   "liveries": [
+    "Mercedes-AMG GT3 Evo #32 (IMSA 2024)",
+    "Mercedes-AMG GT3 Evo #57 (IMSA 2024)",
+    "Mercedes-AMG GT3 Evo #75 (IMSA 2024)",
+    "Mercedes-AMG GT3 Evo #80 (IMSA 2024)",
+    "Mercedes-AMG GT3 Evo #01",
+    "Mercedes-AMG GT3 Evo #70"
+   ]
+  },
+  {
+   "name": "Audi R8 LMS GT3 evo II",
+   "cls": "gt3_gen2",
+   "manufacturer": "Audi",
+   "ai_file": "GT3_Gen2.xml",
+   "price": 570000,
+   "purchasable": true,
+   "works": true,
+   "run_cost": 1.0,
+   "power": 565,
+   "torque": 528,
+   "weight": 1390,
+   "engine": "V10",
+   "placement": "Mid-Rear",
+   "drive": "RWD",
+   "gears": 6,
+   "shift": "Sequential",
+   "displacement": "5.20L",
+   "dist": "45.5/54.5",
+   "wheelbase": "2.70m",
+   "image": "Audi_R8_LMS_Evo_2_GT3.png",
+   "scalars": {
+    "weight": 0.999,
+    "power": 1.001,
+    "drag": 0.999
+   },
+   "liveries": [
+    "Audi R8 LMS GT3 evo II #24",
+    "Audi R8 LMS GT3 evo II #28",
+    "Audi R8 LMS GT3 evo II #33",
+    "Audi R8 LMS GT3 evo II #87",
+    "Audi R8 LMS GT3 evo II #99",
+    "Audi R8 LMS GT3 evo II #181"
+   ]
+  },
+  {
+   "name": "BMW M6 GT3",
+   "cls": "gt3_gen1",
+   "manufacturer": "BMW",
+   "ai_file": "GT3.xml",
+   "price": 305000,
+   "purchasable": true,
+   "works": false,
+   "run_cost": 1.0,
+   "power": 526,
+   "torque": 693,
+   "weight": 1400,
+   "engine": "V8",
+   "placement": "Mid-Front",
+   "drive": "RWD",
+   "gears": 6,
+   "shift": "Sequential",
+   "displacement": "4.39L",
+   "dist": "52.0/48.0",
+   "wheelbase": "2.88m",
+   "image": "BMW_M6_GT3.png",
+   "scalars": {
+    "weight": 0.965,
+    "power": 1.047,
+    "drag": 0.968
+   },
+   "liveries": [
+    "BMW M6 GT3 #2",
+    "BMW M6 GT3 #11",
+    "BMW M6 GT3 #61",
+    "BMW M6 GT3 #83",
+    "BMW M6 GT3 #91",
+    "BMW M6 GT3 #96"
+   ]
+  },
+  {
+   "name": "Porsche 911 GT3 R",
+   "cls": "gt3_gen1",
+   "manufacturer": "Porsche",
+   "ai_file": "GT3.xml",
+   "price": 300000,
+   "purchasable": true,
+   "works": false,
+   "run_cost": 1.0,
+   "power": 530,
+   "torque": 498,
+   "weight": 1328,
+   "engine": "Flat 6",
+   "placement": "Rear",
+   "drive": "RWD",
+   "gears": 6,
+   "shift": "Sequential",
+   "displacement": "4.00L",
+   "dist": "42.2/57.8",
+   "wheelbase": "2.46m",
+   "image": "Porsche_911_GT3.png",
+   "scalars": {
+    "weight": 1.005,
+    "power": 0.994,
+    "drag": 1.007
+   },
+   "liveries": [
+    "Porsche 911 GT3 R #05",
+    "Porsche 911 GT3 R #10",
+    "Porsche 911 GT3 R #17",
+    "Porsche 911 GT3 R #41",
+    "Porsche 911 GT3 R #75",
+    "Porsche 911 GT3 R #82",
+    "Porsche 911 GT3 R #93"
+   ]
+  },
+  {
+   "name": "McLaren 720S GT3",
+   "cls": "gt3_gen1",
+   "manufacturer": "McLaren",
+   "ai_file": "GT3.xml",
+   "price": 290000,
+   "purchasable": true,
+   "works": false,
+   "run_cost": 1.0,
+   "power": 522,
+   "torque": 635,
+   "weight": 1380,
+   "engine": "V8",
+   "placement": "Mid-Rear",
+   "drive": "RWD",
+   "gears": 6,
+   "shift": "Sequential",
+   "displacement": "3.80L",
+   "dist": "44.0/56.0",
+   "wheelbase": "2.70m",
+   "image": "McLaren_720S_GT3.png",
+   "scalars": {
+    "weight": 0.985,
+    "power": 1.031,
+    "drag": 0.983
+   },
+   "liveries": [
+    "McLaren 720S GT3 #04",
+    "McLaren 720S GT3 #12",
+    "McLaren 720S GT3 #27",
+    "McLaren 720S GT3 #90",
+    "McLaren 720S GT3 #92",
+    "McLaren 720S GT3 #94"
+   ]
+  },
+  {
+   "name": "Mercedes-AMG GT3",
+   "cls": "gt3_gen1",
+   "manufacturer": "Mercedes-AMG",
+   "ai_file": "GT3.xml",
+   "price": 280000,
+   "purchasable": true,
+   "works": false,
+   "run_cost": 1.0,
+   "power": 521,
+   "torque": 604,
+   "weight": 1370,
+   "engine": "V8",
+   "placement": "Mid-Front",
+   "drive": "RWD",
+   "gears": 6,
+   "shift": "Sequential",
+   "displacement": "6.21L",
+   "dist": "48.0/52.0",
+   "wheelbase": "2.64m",
+   "image": "Mercedes-AMG_GT3.png",
+   "scalars": {
+    "weight": 0.994,
+    "power": 1.016,
+    "drag": 0.992
+   },
+   "liveries": [
+    "Mercedes-AMG GT3 #01",
+    "Mercedes-AMG GT3 #09",
+    "Mercedes-AMG GT3 #60",
+    "Mercedes-AMG GT3 #77",
+    "Mercedes-AMG GT3 #81",
+    "Mercedes-AMG GT3 #85",
+    "Mercedes-AMG GT3 #99"
+   ]
+  },
+  {
+   "name": "Audi R8 LMS GT3",
+   "cls": "gt3_gen1",
+   "manufacturer": "Audi",
+   "ai_file": "GT3.xml",
+   "price": 270000,
+   "purchasable": true,
+   "works": false,
+   "run_cost": 1.0,
+   "power": 559,
+   "torque": 523,
+   "weight": 1395,
+   "engine": "V10",
+   "placement": "Mid-Rear",
+   "drive": "RWD",
+   "gears": 6,
+   "shift": "Sequential",
+   "displacement": "5.20L",
+   "dist": "45.2/54.8",
+   "wheelbase": "2.70m",
+   "image": "Audi_R8_LMS_GT3.png",
+   "scalars": {
+    "weight": 1.004,
+    "power": 0.974,
+    "drag": 1.006
+   },
+   "liveries": [
+    "Audi R8 LMS GT3 #22",
+    "Audi R8 LMS GT3 #69",
+    "Audi R8 LMS GT3 #79",
+    "Audi R8 LMS GT3 #86",
+    "Audi R8 LMS GT3 #89",
+    "Audi R8 LMS GT3 #95",
+    "Audi R8 LMS GT3 #97"
+   ]
+  },
+  {
+   "name": "Nissan Nismo GT-R GT3",
+   "cls": "gt3_gen1",
+   "manufacturer": "Nissan",
+   "ai_file": "GT3.xml",
+   "price": 255000,
+   "purchasable": true,
+   "works": false,
+   "run_cost": 1.0,
+   "power": 542,
+   "torque": 649,
+   "weight": 1385,
+   "engine": "V6",
+   "placement": "Mid-Front",
+   "drive": "RWD",
+   "gears": 6,
+   "shift": "Sequential",
+   "displacement": "3.80L",
+   "dist": "54.0/46.0",
+   "wheelbase": "2.77m",
+   "image": "Nissan_GT-R_Nismo_GT3.png",
+   "scalars": {
+    "weight": 0.98,
+    "power": 1.019,
+    "drag": 0.988
+   },
+   "liveries": [
+    "Nissan Nismo GT-R GT3 #201",
+    "Nissan Nismo GT-R GT3 #202",
+    "Nissan Nismo GT-R GT3 #205",
+    "Nissan Nismo GT-R GT3 #207",
+    "Nissan Nismo GT-R GT3 #209",
+    "Nissan Nismo GT-R GT3 #211",
+    "Nissan Nismo GT-R GT3 #212"
+   ]
+  },
+  {
+   "name": "Ginetta G55 GT3",
+   "cls": "gto",
+   "manufacturer": "Ginetta",
+   "ai_file": "GTOpen.xml",
+   "price": 235000,
+   "purchasable": true,
+   "works": false,
+   "run_cost": 1.0,
+   "power": 536,
+   "torque": 524,
+   "weight": 1185,
+   "engine": "V8",
+   "placement": "Mid-Front",
+   "drive": "RWD",
+   "gears": 6,
+   "shift": "Sequential",
+   "displacement": "4.35L",
+   "dist": "52.0/48.0",
+   "wheelbase": "2.49m",
+   "image": "Ginetta_G55_GT3.png",
+   "scalars": {
+    "weight": 0.923,
+    "power": 1.086,
+    "drag": 0.92
+   },
+   "liveries": [
+    "Ginetta G55 #06",
+    "Ginetta G55 #10",
+    "Ginetta G55 #11",
+    "Ginetta G55 #13",
+    "Ginetta G55 #14",
+    "Ginetta G55 #15",
+    "Ginetta G55 #16",
+    "Ginetta G55 #19"
+   ]
+  },
+  {
+   "name": "Ultima GTR Race",
+   "cls": "gto",
+   "manufacturer": "Ultima",
+   "ai_file": "GTOpen.xml",
+   "price": 210000,
+   "purchasable": true,
+   "works": false,
+   "run_cost": 1.0,
+   "power": 538,
+   "torque": 626,
+   "weight": 1185,
+   "engine": "V8",
+   "placement": "Mid-Rear",
+   "drive": "RWD",
+   "gears": 6,
+   "shift": "Sequential",
+   "displacement": "6.30L",
+   "dist": "42.6/57.4",
+   "wheelbase": "2.60m",
+   "image": "Ultima_GTR_GT3.png",
+   "scalars": {
+    "weight": 0.947,
+    "power": 1.09,
+    "drag": 0.928
+   },
+   "liveries": [
+    "Shenway GT #1",
+    "Team eXtreme #2",
+    "Team eXtreme #91",
+    "Interlink M-Sport #3",
+    "Interlink M-Sport #5",
+    "Simmersons Motorsports #4",
+    "Simmersons Motorsports #77",
+    "DKS Engineering #9",
+    "JGT Racing #12",
+    "Bisley Autosports #17",
+    "Team Reiza #21",
+    "Team Reiza #22",
+    "Moorefield Motorsports #27",
+    "RevLine Racing #32",
+    "RevLine Racing #42",
+    "Parkway Racing #35",
+    "Parkway Racing #99",
+    "Team NorthStar Cars #82"
+   ]
+  },
+  {
+   "name": "Camaro GT4.R",
+   "cls": "gt4",
+   "manufacturer": "Chevrolet",
+   "ai_file": "GT4.xml",
+   "price": 258000,
+   "purchasable": true,
+   "works": true,
+   "run_cost": 1.1,
+   "power": 465,
+   "torque": 634,
+   "weight": 1495,
+   "engine": "V8",
+   "placement": "Mid-Front",
+   "drive": "RWD",
+   "gears": 6,
+   "shift": "Sequential",
+   "displacement": "6.20L",
+   "dist": "54.0/46.0",
+   "wheelbase": "2.81m",
+   "image": "Chevrolet_Camaro_GT4.png",
+   "scalars": {
+    "weight": 1.022,
+    "power": 0.972,
+    "drag": 1.029
+   },
+   "liveries": [
+    "Camaro GT4.R #49",
+    "Camaro GT4.R #53",
+    "Camaro GT4.R #55",
+    "Camaro GT4.R #66",
+    "Camaro GT4.R #97"
+   ]
+  },
+  {
+   "name": "Mercedes-AMG GT4",
+   "cls": "gt4",
+   "manufacturer": "Mercedes-AMG",
+   "ai_file": "GT4.xml",
+   "price": 245000,
+   "purchasable": true,
+   "works": true,
+   "run_cost": 1.0,
+   "power": 460,
+   "torque": 568,
+   "weight": 1475,
+   "engine": "V8",
+   "placement": "Mid-Front",
+   "drive": "RWD",
+   "gears": 6,
+   "shift": "Sequential",
+   "displacement": "4.00L",
+   "dist": "48.0/52.0",
+   "wheelbase": "2.66m",
+   "image": "Mercedes-AMG_GT4.png",
+   "scalars": {
+    "weight": 1.0,
+    "power": 1.0,
+    "drag": 1.0
+   },
+   "liveries": [
+    "Mercedes-AMG GT4 #31",
+    "Mercedes-AMG GT4 #33",
+    "Mercedes-AMG GT4 #34",
+    "Mercedes-AMG GT4 #35",
+    "Mercedes-AMG GT4 #37",
+    "Mercedes-AMG GT4 #39"
+   ]
+  },
+  {
+   "name": "BMW M4 GT4",
+   "cls": "gt4",
+   "manufacturer": "BMW",
+   "ai_file": "GT4.xml",
+   "price": 238000,
+   "purchasable": true,
+   "works": true,
+   "run_cost": 1.0,
+   "power": 463,
+   "torque": 633,
+   "weight": 1510,
+   "engine": "Straight 6",
+   "placement": "Front",
+   "drive": "RWD",
+   "gears": 7,
+   "shift": "Sequential",
+   "displacement": "3.00L",
+   "dist": "50.8/49.2",
+   "wheelbase": "2.81m",
+   "image": "BMW_M4_GT4.png",
+   "scalars": {
+    "weight": 0.988,
+    "power": 1.018,
+    "drag": 0.984
+   },
+   "liveries": [
+    "BMW M4 GT4 #1",
+    "BMW M4 GT4 #7",
+    "BMW M4 GT4 #8",
+    "BMW M4 GT4 #9",
+    "BMW M4 GT4 #10",
+    "BMW M4 GT4 #11"
+   ]
+  },
+  {
+   "name": "Porsche Cayman GT4 CS MR",
+   "cls": "gt4",
+   "manufacturer": "Porsche",
+   "ai_file": "GT4.xml",
+   "price": 232000,
+   "purchasable": true,
+   "works": true,
+   "run_cost": 1.0,
+   "power": 404,
+   "torque": 420,
+   "weight": 1390,
+   "engine": "Flat 6",
+   "placement": "Mid-Rear",
+   "drive": "RWD",
+   "gears": 6,
+   "shift": "Sequential",
+   "displacement": "3.80L",
+   "dist": "44.0/56.0",
+   "wheelbase": "2.48m",
+   "image": "Porche_Cayman_GT4.png",
+   "scalars": {
+    "weight": 0.996,
+    "power": 1.005,
+    "drag": 0.995
+   },
+   "liveries": [
+    "Porsche Cayman GT4 CS MR #100",
+    "Porsche Cayman GT4 CS MR #101",
+    "Porsche Cayman GT4 CS MR #102",
+    "Porsche Cayman GT4 CS MR #104",
+    "Porsche Cayman GT4 CS MR #105",
+    "Porsche Cayman GT4 CS MR #107"
+   ]
+  },
+  {
+   "name": "AMR Vantage GT4 Evo",
+   "cls": "gt4",
+   "manufacturer": "Aston Martin",
+   "ai_file": "GT4.xml",
+   "price": 228000,
+   "purchasable": true,
+   "works": true,
+   "run_cost": 1.0,
+   "power": 468,
+   "torque": 568,
+   "weight": 1550,
+   "engine": "V8",
+   "placement": "Mid-Front",
+   "drive": "RWD",
+   "gears": 6,
+   "shift": "Sequential",
+   "displacement": "4.00L",
+   "dist": "50.0/50.0",
+   "wheelbase": "2.70m",
+   "image": "Aston_Martin_Vantage_GT4.png",
+   "scalars": {
+    "weight": 1.0,
+    "power": 1.0,
+    "drag": 1.0
+   },
+   "liveries": [
+    "AMR Vantage GT4 Evo #301",
+    "AMR Vantage GT4 Evo #302",
+    "AMR Vantage GT4 Evo #303",
+    "AMR Vantage GT4 Evo #304",
+    "AMR Vantage GT4 Evo #305",
+    "AMR Vantage GT4 Evo #306"
+   ]
+  },
+  {
+   "name": "McLaren 570S GT4",
+   "cls": "gt4",
+   "manufacturer": "McLaren",
+   "ai_file": "GT4.xml",
+   "price": 222000,
+   "purchasable": true,
+   "works": true,
+   "run_cost": 1.0,
+   "power": 455,
+   "torque": 475,
+   "weight": 1530,
+   "engine": "V8",
+   "placement": "Mid-Rear",
+   "drive": "RWD",
+   "gears": 7,
+   "shift": "Sequential",
+   "displacement": "3.80L",
+   "dist": "43.2/56.8",
+   "wheelbase": "2.67m",
+   "image": "McLaren_570S_GT4.png",
+   "scalars": {
+    "weight": 1.0,
+    "power": 1.0,
+    "drag": 1.0
+   },
+   "liveries": [
+    "McLaren 570S GT4 #001",
+    "McLaren 570S GT4 #002",
+    "McLaren 570S GT4 #003",
+    "McLaren 570S GT4 #006",
+    "McLaren 570S GT4 #007",
+    "McLaren 570S GT4 #22"
+   ]
+  },
+  {
+   "name": "Alpine A110 GT4 Evo",
+   "cls": "gt4",
+   "manufacturer": "Alpine",
+   "ai_file": "GT4.xml",
+   "price": 210000,
+   "purchasable": true,
+   "works": true,
+   "run_cost": 1.0,
+   "power": 396,
+   "torque": 463,
+   "weight": 1165,
+   "engine": "Straight 4",
+   "placement": "Mid-Rear",
+   "drive": "RWD",
+   "gears": 6,
+   "shift": "Sequential",
+   "displacement": "1.80L",
+   "dist": "44.0/56.0",
+   "wheelbase": "2.42m",
+   "image": "Alphine_A110_GT4.png",
+   "scalars": {
+    "weight": 1.0,
+    "power": 1.0,
+    "drag": 1.0
+   },
+   "liveries": [
+    "Alpine A110 GT4 Evo #36",
+    "Alpine A110 GT4 Evo #36b",
+    "Alpine A110 GT4 Evo #63",
+    "Alpine A110 GT4 Evo #64",
+    "Alpine A110 GT4 Evo #65"
+   ]
+  },
+  {
+   "name": "Audi R8 LMS GT4",
+   "cls": "gt4",
+   "manufacturer": "Audi",
+   "ai_file": "GT4.xml",
+   "price": 208000,
+   "purchasable": true,
+   "works": true,
+   "run_cost": 1.0,
+   "power": 459,
+   "torque": 529,
+   "weight": 1545,
+   "engine": "V10",
+   "placement": "Mid-Rear",
+   "drive": "RWD",
+   "gears": 7,
+   "shift": "Sequential",
+   "displacement": "5.20L",
+   "dist": "43.2/56.8",
+   "wheelbase": "2.65m",
+   "image": "Audi_R8_LMS_GT4.png",
+   "scalars": {
+    "weight": 1.0,
+    "power": 1.0,
+    "drag": 1.0
+   },
+   "liveries": [
+    "Audi R8 LMS GT4 #00",
+    "Audi R8 LMS GT4 #12",
+    "Audi R8 LMS GT4 #15",
+    "Audi R8 LMS GT4 #20",
+    "Audi R8 LMS GT4 #24",
+    "Audi R8 LMS GT4 #28"
+   ]
+  },
+  {
+   "name": "Ginetta G55 GT4",
+   "cls": "gt4",
+   "manufacturer": "Ginetta",
+   "ai_file": "GT4.xml",
+   "price": 198000,
+   "purchasable": true,
+   "works": false,
+   "run_cost": 0.9,
+   "power": 373,
+   "torque": 469,
+   "weight": 1240,
+   "engine": "V6",
+   "placement": "Mid-Front",
+   "drive": "RWD",
+   "gears": 6,
+   "shift": "Sequential",
+   "displacement": "3.70L",
+   "dist": "52.0/48.0",
+   "wheelbase": "2.46m",
+   "image": "Ginetta_G55_GT4.png",
+   "scalars": {
+    "weight": 1.033,
+    "power": 0.957,
+    "drag": 1.045
+   },
+   "liveries": [
+    "Ginetta G55 GT4 #01",
+    "Ginetta G55 GT4 #13",
+    "Ginetta G55 GT4 #19",
+    "Ginetta G55 GT4 #79",
+    "Ginetta G55 GT4 #117"
+   ]
+  },
+  {
+   "name": "Mitsubishi Lancer R",
+   "cls": "gt5",
+   "manufacturer": "Mitsubishi",
+   "ai_file": "LancerCup.xml",
+   "price": 68000,
+   "purchasable": true,
+   "works": false,
+   "run_cost": 1.0,
+   "power": 290,
+   "torque": 370,
+   "weight": 1490,
+   "engine": "Straight 4",
+   "placement": "Front",
+   "drive": "4WD",
+   "gears": 5,
+   "shift": "H-Pattern",
+   "displacement": "2.00L",
+   "dist": "59.0/41.0",
+   "wheelbase": "2.65m",
+   "image": "Mitsubishi_Lancer_Cup.png",
+   "scalars": {
+    "weight": 1.0,
+    "power": 1.0,
+    "drag": 1.0
+   },
+   "liveries": [
+    "Privateer Sport #01",
+    "Privateer Sport #02",
+    "Privateer Sport #03",
+    "Privateer Sport #04",
+    "Ingato Sport #05",
+    "Privateer Sport #06",
+    "Privateer Sport #08",
+    "Monrils #19",
+    "Hakino Motorsport #27",
+    "Carbons #30",
+    "Jarno Motors #41",
+    "Valnoris Sport #54",
+    "Rominos #63",
+    "Algo Racing #72",
+    "Farpole #89",
+    "Garmozzi Sport #94"
+   ]
+  },
+  {
+   "name": "Ginetta G40 GT5",
+   "cls": "gt5",
+   "manufacturer": "Ginetta",
+   "ai_file": "GT5.xml",
+   "price": 62000,
+   "purchasable": true,
+   "works": false,
+   "run_cost": 1.0,
+   "power": 159,
+   "torque": 188,
+   "weight": 890,
+   "engine": "Straight 4",
+   "placement": "Mid-Front",
+   "drive": "RWD",
+   "gears": 6,
+   "shift": "Sequential",
+   "displacement": "1.80L",
+   "dist": "52.0/48.0",
+   "wheelbase": "2.25m",
+   "image": "Ginetta_G40_GT5.png",
+   "scalars": {
+    "weight": 1.0,
+    "power": 1.0,
+    "drag": 1.0
+   },
+   "liveries": [
+    "Ginetta G40 GT5 #01",
+    "Ginetta G40 GT5 #02",
+    "Ginetta G40 GT5 #09",
+    "Ginetta G40 GT5 #10",
+    "Ginetta G40 GT5 #17",
+    "Ginetta G40 GT5 #22",
+    "Ginetta G40 GT5 #25",
+    "Ginetta G40 GT5 #27",
+    "Ginetta G40 GT5 #28",
+    "Ginetta G40 GT5 #32",
+    "Ginetta G40 GT5 #42",
+    "Ginetta G40 GT5 #46",
+    "Ginetta G40 GT5 #50",
+    "Ginetta G40 GT5 #53",
+    "Ginetta G40 GT5 #58",
+    "Ginetta G40 GT5 #62",
+    "Ginetta G40 GT5 #66",
+    "Ginetta G40 GT5 #77",
+    "Ginetta G40 GT5 #88",
+    "Ginetta G40 GT5 #92"
+   ]
+  },
+  {
+   "name": "Puma P052",
+   "cls": "gt5",
+   "manufacturer": "Puma",
+   "ai_file": "GT5.xml",
+   "price": 60000,
+   "purchasable": true,
+   "works": false,
+   "run_cost": 1.0,
+   "power": 173,
+   "torque": 237,
+   "weight": 940,
+   "engine": "Straight 4",
+   "placement": "Mid-Rear",
+   "drive": "RWD",
+   "gears": 5,
+   "shift": "H-Pattern",
+   "displacement": "1.60L",
+   "dist": "48.0/52.0",
+   "wheelbase": "2.47m",
+   "image": "Puma_P052_GT5.png",
+   "scalars": {
+    "weight": 1.0,
+    "power": 1.0,
+    "drag": 1.0
+   },
+   "liveries": [
+    "Puma P052 #4",
+    "Puma P052 #6",
+    "Puma P052 #7",
+    "Puma P052 #11",
+    "Puma P052 #12",
+    "Puma P052 #13",
+    "Puma P052 #19",
+    "Puma P052 #35",
+    "Puma P052 #36",
+    "Puma P052 #55 - A.Maia Skin",
+    "Puma P052 #56 - F.Karstens Skin",
+    "Puma P052 #60 - R.Fleury Skin",
+    "Puma P052 #69",
+    "Puma P052 #78",
+    "Puma P052 #90 - L.Fernando Skin",
+    "Puma P052 #91 - A.Teixeira Skin",
+    "Puma P052 #94",
+    "Puma P052 #95 - E.Freshi Skin",
+    "Puma P052 #96",
+    "Puma P052 #99"
+   ]
+  },
+  {
+   "name": "Ginetta G40 Cup",
+   "cls": "gt5",
+   "manufacturer": "Ginetta",
+   "ai_file": "G40Cup.xml",
+   "price": 56000,
+   "purchasable": true,
+   "works": false,
+   "run_cost": 1.0,
+   "power": 142,
+   "torque": 176,
+   "weight": 925,
+   "engine": "Straight 4",
+   "placement": "Mid-Front",
+   "drive": "RWD",
+   "gears": 5,
+   "shift": "H-Pattern",
+   "displacement": "1.80L",
+   "dist": "52.0/48.0",
+   "wheelbase": "2.25m",
+   "image": "Ginetta_G40_Cup.png",
+   "scalars": {
+    "weight": 1.0,
+    "power": 1.0,
+    "drag": 1.0
+   },
+   "liveries": [
+    "Ginetta G40 Cup #01",
+    "Ginetta G40 Cup #02",
+    "Ginetta G40 Cup #05",
+    "Ginetta G40 Cup #09",
+    "Ginetta G40 Cup #10",
+    "Ginetta G40 Cup #17",
+    "Ginetta G40 Cup #22",
+    "Ginetta G40 Cup #25",
+    "Ginetta G40 Cup #27",
+    "Ginetta G40 Cup #28",
+    "Ginetta G40 Cup #32",
+    "Ginetta G40 Cup #34",
+    "Ginetta G40 Cup #38",
+    "Ginetta G40 Cup #42",
+    "Ginetta G40 Cup #46",
+    "Ginetta G40 Cup #50",
+    "Ginetta G40 Cup #53",
+    "Ginetta G40 Cup #58",
+    "Ginetta G40 Cup #62",
+    "Ginetta G40 Cup #66",
+    "Ginetta G40 Cup #77",
+    "Ginetta G40 Cup #88",
+    "Ginetta G40 Cup #92"
+   ]
+  },
+  {
+   "name": "ARC Camaro",
+   "cls": "gt5",
+   "manufacturer": "Chevrolet",
+   "ai_file": "ARC_Cam.xml",
+   "price": null,
+   "purchasable": false,
+   "works": false,
+   "run_cost": 0.9,
+   "power": 122,
+   "torque": 118,
+   "weight": 595,
+   "engine": "Straight 4",
+   "placement": "Mid-Front",
+   "drive": "RWD",
+   "gears": 5,
+   "shift": "Sequential",
+   "displacement": "1.30L",
+   "dist": "53.0/47.0",
+   "wheelbase": "1.84m",
+   "image": "ARC_Camaro_Cup.png",
+   "scalars": {
+    "weight": 1.0,
+    "power": 1.0,
+    "drag": 1.0
+   },
+   "liveries": [
+    "Leo Panthera Autosports #1",
+    "Leo Panthera Autosports #2",
+    "Team Hudson Hire Racing #3",
+    "Team Hudson Hire Racing #4",
+    "Apex Motorsports #08",
+    "Apex Motorsports #09",
+    "Dev Star Racing #11",
+    "Dev Star Racing #12",
+    "Reiza Racing #13",
+    "Reiza Racing #14",
+    "Team Racer Rubber #22",
+    "Team Racer Rubber #23",
+    "Team Redlight #36",
+    "Team Redlight #37",
+    "Bebeto Tyres #41",
+    "Bebeto Tyres #42",
+    "Eagle Ray Motorsport #51",
+    "Eagle Ray Motorsport #52",
+    "Brookfield Motorsports #72",
+    "Brookfield Motorsports #73",
+    "Mobius Autosports #98",
+    "Mobius Autosports #99"
+   ]
+  },
+  {
+   "name": "Alpine A424",
+   "cls": "lmdh",
+   "manufacturer": "Alpine",
+   "ai_file": "LMDh.xml",
+   "price": null,
+   "purchasable": false,
+   "works": true,
+   "run_cost": 1.0,
+   "power": 670,
+   "torque": 596,
+   "weight": 1130,
+   "engine": "V6",
+   "placement": "Mid-Rear",
+   "drive": "RWD",
+   "gears": 7,
+   "shift": "Sequential",
+   "displacement": "3.40L",
+   "dist": "45.8/54.2",
+   "wheelbase": "3.15m",
+   "image": "Alpine_LMDh.png",
+   "scalars": {
+    "weight": 1.0,
+    "power": 1.0,
+    "drag": 1.0
+   },
+   "liveries": [
+    "Alpine A424 #36",
+    "Alpine A424 #37",
+    "Alpine A424 #38",
+    "Alpine A424 #39"
+   ]
+  },
+  {
+   "name": "Aston Martin Valkyrie Hypercar",
+   "cls": "lmdh",
+   "manufacturer": "Aston Martin",
+   "ai_file": "LMDh.xml",
+   "price": null,
+   "purchasable": false,
+   "works": true,
+   "run_cost": 1.0,
+   "power": 693,
+   "torque": 627,
+   "weight": 1140,
+   "engine": "V12",
+   "placement": "Mid-Rear",
+   "drive": "RWD",
+   "gears": 7,
+   "shift": "Sequential",
+   "displacement": "6.50L",
+   "dist": "45.2/54.8",
+   "wheelbase": "3.15m",
+   "image": "Aston_Martin_Valkyrie_LMDh.png",
+   "scalars": {
+    "weight": 1.0,
+    "power": 1.0,
+    "drag": 1.0
+   },
+   "liveries": [
+    "Aston Martin Valkyrie Hypercar #23 (IMSA 2025)",
+    "Aston Martin Valkyrie Hypercar #007",
+    "Aston Martin Valkyrie Hypercar #009",
+    "Aston Martin Valkyrie Hypercar #909"
+   ]
+  },
+  {
+   "name": "BMW M Hybrid V8",
+   "cls": "lmdh",
+   "manufacturer": "BMW",
+   "ai_file": "LMDh.xml",
+   "price": null,
+   "purchasable": false,
+   "works": true,
+   "run_cost": 1.0,
+   "power": 670,
+   "torque": 670,
+   "weight": 1120,
+   "engine": "V8",
+   "placement": "Mid-Rear",
+   "drive": "RWD",
+   "gears": 7,
+   "shift": "Sequential",
+   "displacement": "4.00L",
+   "dist": "46.0/54.0",
+   "wheelbase": "3.15m",
+   "image": "BMW_M_Hybrid_V8_LMDh.png",
+   "scalars": {
+    "weight": 1.0,
+    "power": 1.0,
+    "drag": 1.0
+   },
+   "liveries": [
+    "BMW M Hybrid V8 #24 (IMSA 2024)",
+    "BMW M Hybrid V8 #25 (IMSA 2024)",
+    "BMW M Hybrid V8 #42",
+    "BMW M Hybrid V8 #43"
+   ]
+  },
+  {
+   "name": "Cadillac V-Series.R",
+   "cls": "lmdh",
+   "manufacturer": "Cadillac",
+   "ai_file": "LMDh.xml",
+   "price": null,
+   "purchasable": false,
+   "works": true,
+   "run_cost": 1.0,
+   "power": 670,
+   "torque": 610,
+   "weight": 1130,
+   "engine": "V8",
+   "placement": "Mid-Rear",
+   "drive": "RWD",
+   "gears": 7,
+   "shift": "Sequential",
+   "displacement": "5.50L",
+   "dist": "45.8/54.2",
+   "wheelbase": "3.14m",
+   "image": "Cadillac_V-Series_R_LMDh.png",
+   "scalars": {
+    "weight": 1.0,
+    "power": 1.0,
+    "drag": 1.0
+   },
+   "liveries": [
+    "Cadillac V-Series.R #01 (IMSA 2024)",
+    "Cadillac V-Series.R #31 (IMSA 2024)",
+    "Cadillac V-Series.R #5",
+    "Cadillac V-Series.R #9"
+   ]
+  },
+  {
+   "name": "Lamborghini SC63",
+   "cls": "lmdh",
+   "manufacturer": "Lamborghini",
+   "ai_file": "LMDh.xml",
+   "price": null,
+   "purchasable": false,
+   "works": true,
+   "run_cost": 1.0,
+   "power": 670,
+   "torque": 650,
+   "weight": 1130,
+   "engine": "V8",
+   "placement": "Mid-Rear",
+   "drive": "RWD",
+   "gears": 7,
+   "shift": "Sequential",
+   "displacement": "3.80L",
+   "dist": "45.8/54.2",
+   "wheelbase": "3.15m",
+   "image": "Lamborghini_SC63_LMDh.png",
+   "scalars": {
+    "weight": 1.0,
+    "power": 1.0,
+    "drag": 1.0
+   },
+   "liveries": [
+    "Lamborghini SC63 #63 (IMSA 2024)",
+    "Lamborghini SC63 #64",
+    "Lamborghini SC63 #46",
+    "Lamborghini SC63 #47"
+   ]
+  },
+  {
+   "name": "Porsche 963",
+   "cls": "lmdh",
+   "manufacturer": "Porsche",
+   "ai_file": "LMDh.xml",
+   "price": null,
+   "purchasable": false,
+   "works": true,
+   "run_cost": 1.0,
+   "power": 670,
+   "torque": 658,
+   "weight": 1130,
+   "engine": "V8",
+   "placement": "Mid-Rear",
+   "drive": "RWD",
+   "gears": 7,
+   "shift": "Sequential",
+   "displacement": "4.59L",
+   "dist": "45.8/54.2",
+   "wheelbase": "3.15m",
+   "image": "Porsche_963_LMDh.png",
+   "scalars": {
+    "weight": 1.0,
+    "power": 1.0,
+    "drag": 1.0
+   },
+   "liveries": [
+    "Porsche 963 #5 (IMSA 2024)",
+    "Porsche 963 #6 (IMSA 2024)",
+    "Porsche 963 #7 (IMSA 2024)",
+    "Porsche 963 #85 (IMSA 2024)"
+   ]
+  }
+ ],
+ "manufacturers": [
+  "Alpine",
+  "Aston Martin",
+  "Audi",
+  "BMW",
+  "Cadillac",
+  "Chevrolet",
+  "Ginetta",
+  "Lamborghini",
+  "McLaren",
+  "Mercedes-AMG",
+  "Mitsubishi",
+  "Nissan",
+  "Porsche",
+  "Puma",
+  "Ultima"
+ ]
+}

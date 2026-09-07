@@ -71,8 +71,10 @@ ipcMain.handle('career:new', (_e, slot, profile) => {
   const file = slotPath(slot);
   if (fs.existsSync(file)) throw new Error('slot in use');   // caller must delete first
   const schema = fs.readFileSync(path.join(RESOURCES, 'schema.sql'), 'utf8');
+  const world  = JSON.parse(fs.readFileSync(path.join(RESOURCES, 'world.json'), 'utf8'));
+  const names  = JSON.parse(fs.readFileSync(path.join(RESOURCES, 'names_db.json'), 'utf8'));
   try {
-    return db.create(file, schema, profile);
+    return db.create(file, schema, profile, world, names);
   } catch (err) {
     // a partly written save is worse than none at all
     db.close();
@@ -104,6 +106,28 @@ ipcMain.handle('career:delete', async (_e, slot) => {
 });
 
 ipcMain.handle('career:state', () => db.state());
+
+ipcMain.handle('market:list', () => db.marketList());
+
+ipcMain.handle('market:buy', (_e, modelId, liveryId) => db.marketBuy(modelId, liveryId));
+
+ipcMain.handle('market:image', (_e, modelName) => {
+  const specs = JSON.parse(fs.readFileSync(path.join(RESOURCES, 'car_specs.json'), 'utf8'));
+  return require('./market').image(RESOURCES, modelName, specs);
+});
+
+ipcMain.handle('car:specs', (_e, modelName) => {
+  const specs = JSON.parse(fs.readFileSync(path.join(RESOURCES, 'car_specs.json'), 'utf8'));
+  return specs.find(s => s.model === modelName) || null;
+});
+
+ipcMain.handle('garage:list', () => db.garage());
+
+ipcMain.handle('office:list',     () => db.officeOffers());
+ipcMain.handle('office:takeSeat', (_e, id) => db.officeTakeSeat(id));
+ipcMain.handle('office:formTeam', (_e, lvl) => db.officeFormTeam(lvl));
+ipcMain.handle('office:sign',     (_e, d, en) => db.officeSign(d, en));
+ipcMain.handle('entries:mine',    () => db.myEntries());
 
 ipcMain.handle('career:advance', () => db.advanceWeek());
 
