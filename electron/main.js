@@ -128,6 +128,8 @@ ipcMain.handle('office:takeSeat', (_e, id) => db.officeTakeSeat(id));
 ipcMain.handle('office:formTeam', (_e, lvl) => db.officeFormTeam(lvl));
 ipcMain.handle('office:sign',     (_e, d, en) => db.officeSign(d, en));
 ipcMain.handle('entries:mine',    () => db.myEntries());
+ipcMain.handle('news:list',       () => db.newsList());
+ipcMain.handle('news:read',       () => db.newsRead());
 
 ipcMain.handle('career:advance', () => db.advanceWeek());
 

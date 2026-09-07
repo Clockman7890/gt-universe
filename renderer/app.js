@@ -265,13 +265,15 @@ $('btn-create').onclick = async () => {
   }
 };
 
-$('plaza').onclick = async () => { await window.gt.advance(); refresh(); };
+$('plaza').onclick = async () => { await window.gt.advance(); await refresh(); };
+$('b-news').onclick = async () => { await openNews(); view('news'); };
 
 document.querySelectorAll('.node').forEach(n => {
   n.onclick = async () => {
     if (n.classList.contains('locked')) return;
     const go = n.dataset.go;
     if (go === 'market')      { await openMarket(); view('market'); }
+    else if (go === 'news')   { await openNews(); view('news'); }
     else if (go === 'garage') { await openGarage(); view('garage'); }
     else if (go === 'office') { await openOffice(); view('office'); }
     else {
@@ -376,6 +378,27 @@ async function selectCar(m) {
   };
 }
 
+// ---------------------------------------------------------------- news
+const CAT = { market: 'Market', team: 'Team', driver: 'Driver',
+              result: 'Result', manufacturer: 'Manufacturer' };
+
+async function openNews() {
+  const items = await window.gt.news();
+  const box = $('nw-list');
+  $('nw-count').textContent = items.length ? `${items.length} stories` : '';
+  box.innerHTML = items.length ? '' : '<p class="note">Nothing has happened yet.</p>';
+  for (const n of items) {
+    const el = document.createElement('div');
+    el.className = 'item' + (n.read ? '' : ' unread');
+    el.innerHTML = `<div class="when">Season ${n.season} · week ${n.week} · ${CAT[n.category] || n.category}</div>` +
+                   `<div class="title">${n.headline}</div>` +
+                   (n.body ? `<div class="body">${n.body}</div>` : '');
+    box.appendChild(el);
+  }
+  await window.gt.markRead();
+  await refresh();
+}
+
 // ---------------------------------------------------------------- office
 async function openOffice() {
   const o = await window.gt.office();
@@ -391,6 +414,11 @@ async function openOffice() {
   // ---- paid drives -----------------------------------------------------
   if (!o.hasSeat) {
     h('PAID DRIVES — ' + o.championship.toUpperCase());
+    const pc = o.privateerCost;
+    if (pc && pc.car) p(
+      `Running your own car costs ${eur(pc.car)} to buy plus ${eur(pc.crewLow)}–${eur(pc.crewHigh)} ` +
+      `in crew hire over the season, and every repair is yours. ` +
+      `A bought seat costs less and carries no risk, but you own nothing at the end of it.`);
     if (!o.seats.length) p('No team in this championship has a seat to sell.');
     for (const s of o.seats) {
       const el = document.createElement('div');

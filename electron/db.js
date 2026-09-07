@@ -273,6 +273,19 @@ function myEntries() {
       AND t.status = 'active' AND e.season = (SELECT season FROM career WHERE id = 1)`).all();
 }
 
+function newsList() {
+  if (!handle) return [];
+  return handle.prepare(`
+    SELECT id, season, week, category, headline, body, read
+    FROM news ORDER BY season DESC, week DESC, id DESC LIMIT 60`).all();
+}
+function newsRead() {
+  if (!handle) return 0;
+  const n = handle.prepare(`UPDATE news SET read = 1 WHERE read = 0`).run().changes;
+  if (n) dirty = true;
+  return n;
+}
+
 function garage() {
   if (!handle) return null;
   return handle.prepare(`
@@ -291,6 +304,6 @@ function garage() {
 }
 
 module.exports = { create, open, peek, state, advanceWeek, save, close, isDirty,
-                   marketList, marketBuy, garage, myEntries,
+                   marketList, marketBuy, garage, myEntries, newsList, newsRead,
                    officeOffers, officeTakeSeat, officeFormTeam, officeSign,
                    handle: () => handle };

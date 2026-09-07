@@ -9,14 +9,23 @@ const CORE_BY_CLASS = {
 };
 const MIN_CAPITAL = { gt5: 250000, gt4: 850000, gt3: 2600000 };
 
+// what a privateer pays to rent a crew, per round
+const CREW_PER_ROUND = { gt5: [8000, 14000], gt4: [30000, 45000], gt3: [70000, 110000] };
+
 const tier = cls => (cls === 'gt5' || cls === 'gt4') ? cls : 'gt3';
 
-// What the driver would pay for a seat, before any discount.
+// What the driver pays for a full season. A team spreads one engineering core
+// across several cars and carries the damage risk itself, so a bought seat is
+// always cheaper than running the same car alone — the trade is that nothing
+// belongs to the driver at the end of it.
+// The base already reflects the tier, so prestige only nudges it: a minor
+// regional series is a little cheaper than the flagship, not half the price.
 function seatPrice(cls, prestige, rating, reputation) {
-  const base = cls === 'gt5' ? 118000 : cls === 'gt4' ? 165000 : 480000;
+  const base = cls === 'gt5' ? 86000 : cls === 'gt4' ? 225000 : 520000;
+  const standing = 0.78 + (prestige || 1) * 0.30;
   const byRating = rating === 'Gold' || rating === 'Platinum' ? 0
                  : rating === 'Silver' ? 0.55 : 1.0;
-  return Math.round(base * prestige * byRating * (1 - (reputation || 0) * 0.45) / 1000) * 1000;
+  return Math.round(base * standing * byRating * (1 - (reputation || 0) * 0.45) / 1000) * 1000;
 }
 
 // ---------------------------------------------------------------- reading
@@ -68,7 +77,22 @@ function offers(db) {
     })) : [];
 
   const t = tier(champ.class);
+  const rounds = db.prepare(`SELECT rounds FROM championships WHERE id = ?`).get(champ.id).rounds;
+  // one-make series quote their own car; open classes quote the cheapest
+  const cheapCar = champ.model_id
+    ? db.prepare(`SELECT price_new p FROM car_models WHERE id = ?`).get(champ.model_id).p
+    : db.prepare(`SELECT MIN(price_new) p FROM car_models
+        WHERE purchasable = 1 AND class IN (${
+          champ.class === 'gt4' ? "'gt4'" : "'gt3_gen1','gt3_gen2','gto'"})`).get().p;
+  const crew = CREW_PER_ROUND[t];
+
   return {
+    privateerCost: {
+      car: cheapCar,
+      crewLow: crew[0] * rounds, crewHigh: crew[1] * rounds,
+      totalLow: (cheapCar || 0) + crew[0] * rounds,
+      totalHigh: (cheapCar || 0) + crew[1] * rounds
+    },
     championship: champ.name, championshipClass: champ.class,
     week: season.week, open: season.week <= 4,
     capital: player.capital, hasSeat: !!seat,

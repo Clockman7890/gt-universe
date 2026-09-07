@@ -19,6 +19,8 @@ contextBridge.exposeInMainWorld('gt', {
   formTeam:   lvl       => ipcRenderer.invoke('office:formTeam', lvl),
   signDriver: (d, e)    => ipcRenderer.invoke('office:sign', d, e),
   myEntries:  ()        => ipcRenderer.invoke('entries:mine'),
+  news:       ()        => ipcRenderer.invoke('news:list'),
+  markRead:   ()        => ipcRenderer.invoke('news:read'),
   quit:       ()        => ipcRenderer.invoke('app:quit'),
   paths:      ()        => ipcRenderer.invoke('app:paths')
 });
