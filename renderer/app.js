@@ -125,6 +125,7 @@ async function refresh() {
   $('b-count').style.display = s.unread ? '' : 'none';
   $('p-next').textContent   = `→ week ${s.career.week + 1 > 52 ? 1 : s.career.week + 1}`;
   $('region').textContent   = (d.country || '').toUpperCase();
+  tutStep = (s.tutorial === undefined || s.tutorial === null) ? 4 : s.tutorial;
   $('n-market').textContent = s.career.week <= 4 ? 'open · new & used' : 'closed';
   const mkNode = document.querySelector('[data-go="market"]');
   mkNode.classList.toggle('locked', s.career.week > 4);
@@ -150,6 +151,7 @@ async function refresh() {
     $('n-home').textContent = off.team ? `${off.team.name} · ${off.team.engineering}`
       : (cars.length ? `Privateer · ${cars[0].championship}` : 'No entry yet');
   }
+  applyTutorial();
 }
 
 let pendingSlot = null;   // which slot a new career is being created into
@@ -265,7 +267,10 @@ $('btn-create').onclick = async () => {
     experience: +$('f-exp').value
   });
   pendingSlot = null;
-  show('shell'); view('hub'); refresh();
+  show('shell'); view('hub');
+  await refresh();
+  tutStep = 0; applyTutorial();
+  setTimeout(() => showTutorialPanel(0, async () => { await tutorialAdvance(1); }), 1000);
   } catch (err) {
     alert('Could not start the career:\n\n' + (err && err.message ? err.message : err));
   }
@@ -277,6 +282,7 @@ $('b-news').onclick = async () => { await openNews(); view('news'); };
 document.querySelectorAll('.node').forEach(n => {
   n.onclick = async () => {
     if (n.classList.contains('locked')) return;
+    if (tutStep < 4 && !n.classList.contains('focus')) return;
     const go = n.dataset.go;
     if (go === 'market')      { await openMarket(); view('market'); }
     else if (go === 'news')   { await openNews(); view('news'); }
@@ -290,7 +296,13 @@ document.querySelectorAll('.node').forEach(n => {
     }
   };
 });
-document.querySelectorAll('.back').forEach(b => b.onclick = () => view(b.dataset.back));
+document.querySelectorAll('.back').forEach(b => b.onclick = async () => {
+  view(b.dataset.back);
+  if (tutStep === 1 && entryDecided) await tutorialAdvance(2);
+  else if (tutStep === 2 && (await window.gt.garage()).length) await tutorialAdvance(3);
+  else if (tutStep === 3) await tutorialAdvance(4);
+  await refresh();
+});
 
 // ---------------------------------------------------------------- market
 let mk = null, mkModel = null, mkLivery = null;
@@ -391,12 +403,73 @@ async function selectCar(m) {
   };
 }
 
+// ---------------------------------------------------------------- introduction
+let tutStep = 4;                       // 4 means finished
+
+const TUT = {
+  0: { focus: null, title: 'Welcome to this journey, driver',
+       html: `<p>You start with nothing but a name, a licence and whatever money you brought
+                with you. Everything after that is yours to arrange.</p>
+              <p>First, go to <b>Home</b>. There you decide how you will go racing: as a
+                <b>privateer</b>, running one car on your own and hiring a crew race by race,
+                or by founding your own <b>team</b>, which costs more up front but can enter
+                several cars and take on drivers who pay for their seat.</p>
+              <p>What you can afford depends on the money you have. Neither road is wrong.</p>` },
+  1: { focus: 'home', title: 'Home', html: '' },
+  2: { focus: 'market', title: 'Market',
+       html: `<p>Now buy a car. Pick the model, then pick the entry number it will carry
+                for the season.</p>
+              <p>If you founded a team you may buy more than one, so long as the money lasts.</p>` },
+  3: { focus: 'office', title: 'Office',
+       html: `<p>The Office is where contracts live. If you have no car of your own you can
+                buy a seat from a team here.</p>
+              <p>If you run a team, this is where you scout free drivers and offer them a seat.
+                A driver from your own country brings local backing with him.</p>` },
+  4: { focus: null, title: 'Good luck out there',
+       html: `<p>Everything is open now. Advance the week when you are ready, and the season
+                will come to you.</p>
+              <p>Watch the money. The entry list closes at the end of week four, and nothing
+                you own is worth anything if you cannot afford to run it.</p>` }
+};
+
+function applyTutorial() {
+  const hub = $('hub'), bar = $('bar');
+  const done = tutStep >= 4;
+  hub.classList.toggle('tut', !done);
+  bar.classList.toggle('tut', !done);
+  document.querySelectorAll('.node').forEach(n => n.classList.remove('focus', 'due'));
+  if (done) return;
+  const t = TUT[tutStep];
+  if (t && t.focus) {
+    const n = document.querySelector(`[data-go="${t.focus}"]`);
+    if (n) { n.classList.add('focus', 'due'); n.classList.remove('locked'); }
+  }
+}
+
+function showTutorialPanel(step, after) {
+  const t = TUT[step];
+  $('tut-title').textContent = t.title;
+  $('tut-text').innerHTML = t.html;
+  $('tut').hidden = false;
+  $('tut-ok').onclick = async () => { $('tut').hidden = true; if (after) await after(); };
+}
+
+async function tutorialAdvance(to) {
+  tutStep = to;
+  await window.gt.setTutorial(to);
+  applyTutorial();
+  if (to === 4) setTimeout(() => showTutorialPanel(4, async () => { applyTutorial(); }), 400);
+  else setTimeout(() => { const t = TUT[to]; if (t.html) showTutorialPanel(to); }, 900);
+}
+
 // ---------------------------------------------------------------- home
 const ENG_LABEL = { amateurs: 'Amateurs', experienced: 'Experienced', specialist: 'Specialist' };
+let entryDecided = null;          // 'privateer' or 'team' once the player has chosen
 
 async function openHome() {
   const h = await window.gt.home();
   const o = await window.gt.office();
+  if (h.team) entryDecided = 'team';
   const box = $('hm-body');
   $('home-title').textContent = h.team ? 'Headquarters' : 'Home';
   $('hm-week').textContent = `Season ${h.season} · week ${h.week}`;
@@ -438,40 +511,71 @@ async function openHome() {
   ]));
   box.appendChild(cards);
 
-  // ---- upgrade to a headquarters ----
-  if (!h.team) {
+  // ---- how you go racing ----
+  if (!h.team && o) {
     const up = document.createElement('div');
     up.className = 'upgrade';
-    if (!o) { box.appendChild(up); return; }
-    up.innerHTML = `<h4>Upgrade to a headquarters</h4>` +
-      `<p class="note">A headquarters keeps its own engineering staff instead of hiring a crew ` +
-      `race by race, may enter more than one car, and can take on drivers who pay for their seat. ` +
-      `It costs a one-off core, and the season's running costs come out of your own pocket.</p>`;
-    if (!o.canFormTeam) {
-      up.innerHTML += `<p class="note">Needs at least ${eur(o.minCapital)} in capital. ` +
-        `You have ${eur(d.capital)}.</p>`;
-    } else {
-      const row = document.createElement('div');
-      row.className = 'eng';
+    up.innerHTML = `<h4>How will you go racing?</h4>` +
+      `<p class="note">A <b>privateer</b> owns one car and hires a crew for each round — ` +
+      `cheaper to start, every repair out of your own pocket. A <b>team</b> keeps its own ` +
+      `engineering staff, can enter several cars and can take on drivers who pay for a seat.</p>`;
+
+    const row = document.createElement('div');
+    row.className = 'choice';
+
+    const privOpt = document.createElement('div');
+    privOpt.className = 'opt' + (entryDecided === 'privateer' ? ' sel' : '');
+    privOpt.innerHTML = `<b>Privateer</b><span>No extra cost · one car · amateur crew</span>`;
+
+    const teamOpt = document.createElement('div');
+    const canTeam = o.canFormTeam && o.open;
+    teamOpt.className = 'opt' + (canTeam ? '' : ' no') + (entryDecided === 'team' ? ' sel' : '');
+    teamOpt.innerHTML = `<b>Create a team</b><span>` +
+      (canTeam ? `From ${eur(Math.min(...Object.values(o.coreCost)))} · several cars`
+               : `Needs ${eur(o.minCapital)} in capital`) + `</span>`;
+
+    row.appendChild(privOpt); row.appendChild(teamOpt);
+    up.appendChild(row);
+
+    const detail = document.createElement('div');
+    up.appendChild(detail);
+    box.appendChild(up);
+
+    privOpt.onclick = async () => {
+      entryDecided = 'privateer';
+      privOpt.classList.add('sel'); teamOpt.classList.remove('sel');
+      detail.innerHTML = `<p class="note">You will run your own car. ` +
+        `Buy one in the Market when you are ready.</p>`;
+    };
+
+    if (canTeam) teamOpt.onclick = () => {
+      entryDecided = 'team';
+      teamOpt.classList.add('sel'); privOpt.classList.remove('sel');
+      detail.innerHTML =
+        `<div class="namefield"><label>TEAM NAME</label>` +
+        `<input id="hm-teamname" maxlength="34" placeholder="${d.name.split(' ').pop()} Racing"></div>` +
+        `<p class="note">Now choose the engineering staff. Better people cost more every ` +
+        `season but break down less and read the car better.</p>`;
+      const eng = document.createElement('div');
+      eng.className = 'eng';
       for (const [lvl, cost] of Object.entries(o.coreCost)) {
-        const ok = cost <= d.capital && o.open;
+        const ok = cost <= d.capital;
         const el = document.createElement('div');
         el.className = 'opt' + (ok ? '' : ' no');
         el.innerHTML = `<b>${ENG_LABEL[lvl]}</b><span>${eur(cost)} one-off core</span>`;
         if (ok) el.onclick = async () => {
+          const nm = ($('hm-teamname') && $('hm-teamname').value.trim()) || '';
           try {
-            const r = await window.gt.formTeam(lvl);
+            const r = await window.gt.formTeam(lvl, nm);
             alert(`${r.team} founded.\nEngineering: ${ENG_LABEL[r.engineering]}\n` +
                   `Cost ${eur(r.cost)} — ${eur(r.capital)} left.`);
             await refresh(); await openHome();
           } catch (e) { alert(String(e.message || e).replace(/^Error: /, '')); }
         };
-        row.appendChild(el);
+        eng.appendChild(el);
       }
-      up.appendChild(row);
-      if (!o.open) up.innerHTML += `<p class="note">Teams can only be formed in the winter.</p>`;
-    }
-    box.appendChild(up);
+      detail.appendChild(eng);
+    };
   }
 }
 
@@ -522,6 +626,7 @@ async function openOffice() {
       el.className = 'offer' + (s.affordable && o.open ? '' : ' no');
       el.innerHTML = `<span class="who">${s.team}</span>` +
         `<span class="sub2">${s.car} · ${s.livery} · ${s.engineering}</span>` +
+        (s.home ? '<span class="homeflag">home</span>' : '') +
         `<span class="sp"></span><span class="fee">${eur(s.fee)}</span>`;
       const b = document.createElement('button');
       b.textContent = 'Sign'; b.disabled = !(s.affordable && o.open);

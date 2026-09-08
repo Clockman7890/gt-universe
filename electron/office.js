@@ -40,7 +40,7 @@ function offers(db) {
 
   // teams in the player's championship that could take one more driver
   const seats = seat ? [] : db.prepare(`
-    SELECT t.id team_id, t.name team, t.engineering, t.goals,
+    SELECT t.id team_id, t.name team, t.engineering, t.goals, t.country,
            cm.name car, l.livery_name livery, e.id entry_id,
            (SELECT COUNT(*) FROM entry_drivers ed WHERE ed.entry_id = e.id) filled
     FROM entries e
@@ -56,7 +56,8 @@ function offers(db) {
                  : row.engineering === 'experienced' ? 1.0 : 0.8;
       const fee = Math.round(seatPrice(champ.class, champ.prestige,
                                        player.fia_rating, player.reputation) * mult / 1000) * 1000;
-      return Object.assign(row, { fee, affordable: fee <= player.capital });
+      return Object.assign(row, { fee, affordable: fee <= player.capital,
+        home: row.country === player.country });
     }).sort((a, b) => a.fee - b.fee);
 
   // free drivers the player could sign into a second car
@@ -140,7 +141,7 @@ function takeSeat(db, entryId) {
   })();
 }
 
-function formTeam(db, engineering) {
+function formTeam(db, engineering, customName) {
   const ctx = context(db);
   if (!ctx || !ctx.champ) throw new Error('No championship.');
   if (ctx.season.week > 4) throw new Error('Teams can only be formed in the winter.');
@@ -156,7 +157,8 @@ function formTeam(db, engineering) {
   if (cost > ctx.player.capital) throw new Error('You cannot afford that engineering core.');
 
   return db.transaction(() => {
-    const name = `${ctx.player.name.split(' ').pop()} Racing`;
+    const name = (customName || '').trim() ||
+                 `${ctx.player.name.split(' ').pop()} Racing`;
     const teamId = db.prepare(`INSERT INTO teams
         (name,country,block_id,founded_season,is_privateer,owner_driver_id,capital,engineering,goals)
         VALUES (?,?,?,?,0,?,?,?, 'normal')`)

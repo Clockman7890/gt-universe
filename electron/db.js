@@ -223,7 +223,7 @@ function state() {
   }
   const unread = handle.prepare(
     `SELECT COUNT(*) n FROM news WHERE read = 0`).get().n;
-  return { career: c, sim, driver, unread };
+  return { career: c, sim, driver, unread, tutorial: c.tutorial_step };
 }
 
 function advanceWeek() {
@@ -253,7 +253,7 @@ function marketBuy(modelId, liveryId) {
 }
 function officeOffers() { return handle ? office.offers(handle) : null; }
 function officeTakeSeat(entryId) { const r = office.takeSeat(handle, entryId); dirty = true; return r; }
-function officeFormTeam(level)   { const r = office.formTeam(handle, level);   dirty = true; return r; }
+function officeFormTeam(level, name) { const r = office.formTeam(handle, level, name); dirty = true; return r; }
 function officeSign(d, e)        { const r = office.signDriver(handle, d, e);  dirty = true; return r; }
 
 function myEntries() {
@@ -271,6 +271,13 @@ function myEntries() {
     JOIN championship_levels cl ON cl.id = c.level_id
     WHERE t.owner_driver_id = (SELECT player_driver_id FROM career WHERE id = 1)
       AND t.status = 'active' AND e.season = (SELECT season FROM career WHERE id = 1)`).all();
+}
+
+function setTutorial(step) {
+  if (!handle) return null;
+  handle.prepare(`UPDATE career SET tutorial_step = ? WHERE id = 1`).run(step);
+  dirty = true;
+  return step;
 }
 
 function home() {
@@ -339,6 +346,6 @@ function garage() {
 }
 
 module.exports = { create, open, peek, state, advanceWeek, save, close, isDirty,
-                   marketList, marketBuy, garage, myEntries, newsList, newsRead, home,
+                   marketList, marketBuy, garage, myEntries, newsList, newsRead, home, setTutorial,
                    officeOffers, officeTakeSeat, officeFormTeam, officeSign,
                    handle: () => handle };

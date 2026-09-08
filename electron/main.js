@@ -125,10 +125,11 @@ ipcMain.handle('garage:list', () => db.garage());
 
 ipcMain.handle('office:list',     () => db.officeOffers());
 ipcMain.handle('office:takeSeat', (_e, id) => db.officeTakeSeat(id));
-ipcMain.handle('office:formTeam', (_e, lvl) => db.officeFormTeam(lvl));
+ipcMain.handle('office:formTeam', (_e, lvl, name) => db.officeFormTeam(lvl, name));
 ipcMain.handle('office:sign',     (_e, d, en) => db.officeSign(d, en));
 ipcMain.handle('entries:mine',    () => db.myEntries());
 ipcMain.handle('home:info',       () => db.home());
+ipcMain.handle('tutorial:set',    (_e, n) => db.setTutorial(n));
 ipcMain.handle('news:list',       () => db.newsList());
 ipcMain.handle('news:read',       () => db.newsRead());
 

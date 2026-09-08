@@ -145,6 +145,7 @@ CREATE TABLE career (
   player_team_id    INTEGER,
   player_championship_id TEXT,           -- the seat being held for them
   ams2_path         TEXT,
+  tutorial_step     INTEGER NOT NULL DEFAULT 0,  -- 0 welcome, 1 home, 2 market, 3 office, 4 done
   time_multiplier   INTEGER NOT NULL DEFAULT 2
 );
 
