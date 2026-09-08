@@ -11,7 +11,7 @@ let dirty = false;
 
 // the fourteen driver blocks, needed before any driver row can exist
 const BLOCKS = [
-  ['trofeo_adriatico',  'Trofeo Adriatico GT5',        'europe',       0.11, 1.0],
+  ['trofeo_adriatico',  'Trofeo Mediterraneo GT5',     'europe',       0.11, 1.0],
   ['nordisk',           'Nordisk GT5 Cup',             'europe',       0.07, 1.0],
   ['british_benelux',   'British & Benelux GT5',       'europe',       0.13, 1.0],
   ['alpen_pokal',       'Alpen GT5 Pokal',             'europe',       0.13, 1.0],
@@ -273,6 +273,41 @@ function myEntries() {
       AND t.status = 'active' AND e.season = (SELECT season FROM career WHERE id = 1)`).all();
 }
 
+function home() {
+  if (!handle) return null;
+  const c = handle.prepare(`SELECT * FROM career WHERE id = 1`).get();
+  const d = handle.prepare(`SELECT * FROM drivers WHERE id = ?`).get(c.player_driver_id);
+  if (!d) return null;
+  const sk = handle.prepare(`SELECT * FROM driver_skills WHERE driver_id = ?`).get(d.id);
+  const country = handle.prepare(`SELECT name FROM countries WHERE code = ?`).get(d.country);
+  const block = handle.prepare(`SELECT name FROM blocks WHERE id = ?`).get(d.block_id);
+  const team = handle.prepare(`SELECT * FROM teams WHERE owner_driver_id = ?
+      AND status = 'active' AND is_privateer = 0`).get(d.id);
+  const priv = handle.prepare(`SELECT * FROM teams WHERE owner_driver_id = ?
+      AND status = 'active' AND is_privateer = 1`).get(d.id);
+  const entry = handle.prepare(`
+    SELECT ch.name championship, cm.name car, l.livery_name livery, t.name team, t.is_privateer
+    FROM entry_drivers ed JOIN entries e ON e.id = ed.entry_id
+    JOIN championships ch ON ch.id = e.championship_id
+    JOIN chassis c2 ON c2.id = e.chassis_id JOIN car_models cm ON cm.id = c2.model_id
+    JOIN liveries l ON l.id = e.livery_id JOIN teams t ON t.id = e.team_id
+    WHERE ed.driver_id = ? AND e.season = ?`).get(d.id, c.season);
+  const spend = handle.prepare(`SELECT COALESCE(SUM(amount),0) n FROM ledger
+      WHERE entity_type = 'driver' AND entity_id = ? AND season = ?`).get(d.id, c.season).n;
+  const cars = handle.prepare(`SELECT COUNT(*) n FROM chassis ch JOIN teams t ON t.id = ch.owner_team_id
+      WHERE t.owner_driver_id = ? AND t.status = 'active'`).get(d.id).n;
+  return {
+    driver: {
+      name: d.name, country: country ? country.name : d.country, code: d.country,
+      age: c.calendar_year - d.birth_year, rating: d.fia_rating, reputation: d.reputation,
+      capital: d.capital, passive: d.passive_income, block: block ? block.name : d.block_id
+    },
+    skills: sk, entry, cars,
+    team: team ? { id: team.id, name: team.name, engineering: team.engineering } : null,
+    privateer: !!priv, season: c.season, week: c.week, netThisSeason: spend
+  };
+}
+
 function newsList() {
   if (!handle) return [];
   return handle.prepare(`
@@ -304,6 +339,6 @@ function garage() {
 }
 
 module.exports = { create, open, peek, state, advanceWeek, save, close, isDirty,
-                   marketList, marketBuy, garage, myEntries, newsList, newsRead,
+                   marketList, marketBuy, garage, myEntries, newsList, newsRead, home,
                    officeOffers, officeTakeSeat, officeFormTeam, officeSign,
                    handle: () => handle };

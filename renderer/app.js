@@ -134,9 +134,11 @@ async function refresh() {
     ? `${cars.length} car${cars.length === 1 ? '' : 's'}` : 'no cars';
   const raceNode = document.querySelector('[data-go="race"]');
   raceNode.classList.toggle('locked', cars.length === 0);
+  raceNode.classList.remove('live');            // lit only on a race weekend
   $('n-race').textContent = cars.length ? 'no race this week' : 'no car';
   const off = await window.gt.office();
   if (off) {
+    mkNode.classList.toggle('due', off.open && !off.hasSeat);
     $('n-office').textContent = off.hasSeat
       ? (off.team ? off.team.name : 'contracted')
       : (off.seats.length ? `${off.seats.length} seats for sale` : 'no offers');
@@ -280,6 +282,7 @@ document.querySelectorAll('.node').forEach(n => {
     else if (go === 'news')   { await openNews(); view('news'); }
     else if (go === 'garage') { await openGarage(); view('garage'); }
     else if (go === 'office') { await openOffice(); view('office'); }
+    else if (go === 'home')   { await openHome(); view('home'); }
     else {
       $('stub-title').textContent = n.querySelector('.label').textContent;
       $('stub-text').textContent  = 'Not built yet.';
@@ -388,6 +391,90 @@ async function selectCar(m) {
   };
 }
 
+// ---------------------------------------------------------------- home
+const ENG_LABEL = { amateurs: 'Amateurs', experienced: 'Experienced', specialist: 'Specialist' };
+
+async function openHome() {
+  const h = await window.gt.home();
+  const o = await window.gt.office();
+  const box = $('hm-body');
+  $('home-title').textContent = h.team ? 'Headquarters' : 'Home';
+  $('hm-week').textContent = `Season ${h.season} · week ${h.week}`;
+  box.innerHTML = '';
+
+  const card = (title, rows) => {
+    const el = document.createElement('div');
+    el.className = 'card';
+    el.innerHTML = `<h4>${title}</h4>` + rows.map(([k, v, cls]) =>
+      `<div class="kv"><span>${k}</span><span class="${cls || ''}">${v}</span></div>`).join('');
+    return el;
+  };
+
+  const cards = document.createElement('div');
+  cards.className = 'cards';
+  const d = h.driver;
+  cards.appendChild(card('DRIVER', [
+    ['Name', d.name], ['Nationality', d.country], ['Age', d.age],
+    ['FIA rating', d.rating || 'Unrated'],
+    ['Reputation', REP[Math.min(4, Math.floor((d.reputation || 0) * 5))]]
+  ]));
+  cards.appendChild(card('FINANCES', [
+    ['Capital', eur(d.capital), d.capital < 0 ? 'warn' : ''],
+    ['Passive income', eur(d.passive) + ' / year'],
+    ['Net this season', (h.netThisSeason >= 0 ? '+' : '') + eur(h.netThisSeason),
+      h.netThisSeason >= 0 ? 'good' : 'warn']
+  ]));
+  cards.appendChild(card('THIS SEASON', h.entry ? [
+    ['Championship', h.entry.championship],
+    ['Car', h.entry.car],
+    ['Entry', h.entry.livery],
+    ['Run by', h.entry.team],
+    ['Status', h.entry.is_privateer ? 'Privateer' : 'Contracted driver']
+  ] : [['Championship', o ? o.championship : '—'], ['Entry', 'none yet'],
+       ['Status', 'no seat', 'warn']]));
+  if (h.team) cards.appendChild(card('TEAM', [
+    ['Name', h.team.name], ['Engineering', ENG_LABEL[h.team.engineering]],
+    ['Cars owned', h.cars]
+  ]));
+  box.appendChild(cards);
+
+  // ---- upgrade to a headquarters ----
+  if (!h.team) {
+    const up = document.createElement('div');
+    up.className = 'upgrade';
+    if (!o) { box.appendChild(up); return; }
+    up.innerHTML = `<h4>Upgrade to a headquarters</h4>` +
+      `<p class="note">A headquarters keeps its own engineering staff instead of hiring a crew ` +
+      `race by race, may enter more than one car, and can take on drivers who pay for their seat. ` +
+      `It costs a one-off core, and the season's running costs come out of your own pocket.</p>`;
+    if (!o.canFormTeam) {
+      up.innerHTML += `<p class="note">Needs at least ${eur(o.minCapital)} in capital. ` +
+        `You have ${eur(d.capital)}.</p>`;
+    } else {
+      const row = document.createElement('div');
+      row.className = 'eng';
+      for (const [lvl, cost] of Object.entries(o.coreCost)) {
+        const ok = cost <= d.capital && o.open;
+        const el = document.createElement('div');
+        el.className = 'opt' + (ok ? '' : ' no');
+        el.innerHTML = `<b>${ENG_LABEL[lvl]}</b><span>${eur(cost)} one-off core</span>`;
+        if (ok) el.onclick = async () => {
+          try {
+            const r = await window.gt.formTeam(lvl);
+            alert(`${r.team} founded.\nEngineering: ${ENG_LABEL[r.engineering]}\n` +
+                  `Cost ${eur(r.cost)} — ${eur(r.capital)} left.`);
+            await refresh(); await openHome();
+          } catch (e) { alert(String(e.message || e).replace(/^Error: /, '')); }
+        };
+        row.appendChild(el);
+      }
+      up.appendChild(row);
+      if (!o.open) up.innerHTML += `<p class="note">Teams can only be formed in the winter.</p>`;
+    }
+    box.appendChild(up);
+  }
+}
+
 // ---------------------------------------------------------------- news
 const CAT = { market: 'Market', team: 'Team', driver: 'Driver',
               result: 'Result', manufacturer: 'Manufacturer' };
@@ -454,32 +541,6 @@ async function openOffice() {
   if (o.team) {
     h('YOUR TEAM');
     p(`<b>${o.team.name}</b> — engineering: ${o.team.engineering}`);
-  } else {
-    h('FORM A TEAM');
-    if (!o.canFormTeam) {
-      p(`Running a team in the ${o.championship} needs at least ` +
-        `${eur(o.minCapital)} in capital. You have ${eur(o.capital)}.`);
-    } else {
-      p('A team pays a fixed engineering core each season, but can enter more than ' +
-        'one car and take on drivers who pay for their seat.');
-      const row = document.createElement('div'); row.className = 'eng';
-      for (const [lvl, cost] of Object.entries(o.coreCost)) {
-        const el = document.createElement('div');
-        const ok = cost <= o.capital && o.open;
-        el.className = 'opt' + (ok ? '' : ' no');
-        el.innerHTML = `<b>${lvl[0].toUpperCase() + lvl.slice(1)}</b><span>${eur(cost)} one-off core</span>`;
-        if (ok) el.onclick = async () => {
-          try {
-            const r = await window.gt.formTeam(lvl);
-            alert(`${r.team} founded.\nEngineering: ${r.engineering}\n` +
-                  `Cost ${eur(r.cost)} — ${eur(r.capital)} left.`);
-            await refresh(); await openOffice();
-          } catch (e) { alert(String(e.message || e).replace(/^Error: /, '')); }
-        };
-        row.appendChild(el);
-      }
-      box.appendChild(row);
-    }
   }
 
   // ---- scouting --------------------------------------------------------
