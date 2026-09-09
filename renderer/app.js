@@ -184,7 +184,8 @@ async function refreshSaves() {
     where.className = 'where';
 
     if (s.empty) {
-      who.textContent = 'Empty — start a new career';
+      who.textContent = '+  New career';
+      row.classList.add('newgame');
     } else if (s.corrupt) {
       who.textContent = 'Damaged save';
       where.textContent = 'cannot be opened';
@@ -221,6 +222,18 @@ async function refreshSaves() {
     };
     box.appendChild(row);
   }
+
+  const full = slots.every(s => !s.empty);
+  let note = document.getElementById('slots-note');
+  if (!note) {
+    note = document.createElement('div');
+    note.id = 'slots-note';
+    box.parentNode.insertBefore(note, box.nextSibling);
+  }
+  note.textContent = full
+    ? 'All three slots are in use. Delete one to start a new career.'
+    : '';
+  note.style.display = full ? '' : 'none';
 }
 
 // ---------------------------------------------------------------- wiring
