@@ -135,8 +135,12 @@ async function refresh() {
     ? `${cars.length} car${cars.length === 1 ? '' : 's'}` : 'no cars';
   const raceNode = document.querySelector('[data-go="race"]');
   raceNode.classList.toggle('locked', cars.length === 0);
-  raceNode.classList.remove('live');            // lit only on a race weekend
-  $('n-race').textContent = cars.length ? 'no race this week' : 'no car';
+  const rc = cars.length ? await window.gt.raceInfo() : null;
+  raceNode.classList.toggle('live', !!(rc && rc.thisWeek));
+  $('n-race').textContent = !cars.length ? 'no car'
+    : rc ? (rc.thisWeek ? `${rc.track} · this weekend`
+                        : `${rc.track} in ${rc.weeksAway} week${rc.weeksAway === 1 ? '' : 's'}`)
+         : 'season over';
   const off = await window.gt.office();
   if (off) {
     mkNode.classList.toggle('due', off.open && !off.hasSeat);
@@ -289,6 +293,7 @@ document.querySelectorAll('.node').forEach(n => {
     else if (go === 'garage') { await openGarage(); view('garage'); }
     else if (go === 'office') { await openOffice(); view('office'); }
     else if (go === 'home')   { await openHome(); view('home'); }
+    else if (go === 'race')   { await openRace(); view('race'); }
     else {
       $('stub-title').textContent = n.querySelector('.label').textContent;
       $('stub-text').textContent  = 'Not built yet.';
@@ -296,20 +301,56 @@ document.querySelectorAll('.node').forEach(n => {
     }
   };
 });
-document.querySelectorAll('.back').forEach(b => b.onclick = async () => {
-  view(b.dataset.back);
-  if (tutStep === 1 && entryDecided) await tutorialAdvance(2);
-  else if (tutStep === 2 && (await window.gt.garage()).length) await tutorialAdvance(3);
-  else if (tutStep === 3) await tutorialAdvance(4);
-  await refresh();
-});
+document.querySelectorAll('.back').forEach(b => b.onclick = () => leaveView(b.dataset.back));
+
+async function leaveView(target) {
+  view(target || 'hub');
+  try {
+    if (tutStep < 4) {
+      let cars = 0;
+      try { cars = (await window.gt.garage()).length; } catch (_) {}
+      if (tutStep === 1) {
+        if (entryDecided) await tutorialAdvance(2);
+        else nudge('Choose how you will go racing first — privateer, or your own team.');
+      } else if (tutStep === 2) {
+        await tutorialAdvance(3);
+        if (!cars) nudge('No car, then. You can still buy a seat from a team — ' +
+                         'the Office is lit up for you.');
+      } else if (tutStep === 3) {
+        await tutorialAdvance(4);
+      }
+    }
+  } catch (e) {
+    console.error(e);
+    // never leave the player staring at a step that will not move
+    if (tutStep < 4) await tutorialAdvance(Math.min(4, tutStep + 1));
+  }
+  try { await refresh(); } catch (e) { console.error('refresh failed', e); }
+}
+
+// a one-line reminder when the player leaves a step unfinished
+function nudge(text) {
+  $('tut-title').textContent = 'Not finished yet';
+  $('tut-text').innerHTML = `<p>${text}</p>` +
+    `<p style="color:var(--text-muted);font-size:12px">` +
+    `You can also skip the rest of the introduction and find your own way around.</p>`;
+  $('tut-ok').textContent = 'Got it';
+  $('tut').hidden = false;
+  $('tut-ok').onclick = () => { $('tut').hidden = true; };
+  const skip = $('tut-skip');
+  if (skip) skip.onclick = async () => { $('tut').hidden = true; await tutorialAdvance(4); };
+}
 
 // ---------------------------------------------------------------- market
-let mk = null, mkModel = null, mkLivery = null;
+let mk = null, mkModel = null, mkLivery = null, mkTab = 'new';
 
 async function openMarket() {
   mk = await window.gt.market();
   mkModel = null; mkLivery = null;
+  $('tab-new').className  = 'tab ' + (mkTab === 'new'  ? 'on' : 'off');
+  $('tab-used').className = 'tab ' + (mkTab === 'used' ? 'on' : 'off');
+  $('tab-used').textContent = mk.used ? `Used · ${mk.used} listed` : 'Used';
+  if (mkTab === 'used') { renderUsed(); return; }
   $('mk-deadline').textContent = mk.open
     ? `entry list closes at the end of week 4`
     : `closed — reopens next winter`;
@@ -403,6 +444,126 @@ async function selectCar(m) {
   };
 }
 
+// ---------------------------------------------------------------- race weekend
+let rcLeg = 1, rcData = null;
+
+async function openRace() {
+  const info = await window.gt.raceInfo();
+  const box = $('rc-body');
+  box.innerHTML = '';
+  if (!info) {
+    $('rc-when').textContent = '';
+    box.innerHTML = '<p class="note">You are not entered in anything yet.</p>';
+    return;
+  }
+  $('rc-when').textContent = info.thisWeek ? 'this weekend'
+    : `${info.weeksAway} week${info.weeksAway === 1 ? '' : 's'} away`;
+
+  const head = document.createElement('div');
+  head.innerHTML =
+    `<div class="rc-head">${info.championship} · round ${info.round}</div>` +
+    `<div class="rc-sub">${info.track} · ${info.lengthKm} km lap · ` +
+    `${info.gridSize} cars · week ${info.week}</div>`;
+  box.appendChild(head);
+
+  if (!info.thisWeek) {
+    const p = document.createElement('p');
+    p.className = 'note';
+    p.textContent = 'Advance the week until the round comes round, then the setup and the ' +
+                    'AI files will be ready here.';
+    box.appendChild(p);
+    return;
+  }
+
+  // ---- where the files go ----
+  const dir = await window.gt.ams2Path();
+  const bar = document.createElement('div');
+  bar.className = 'pathbar';
+  bar.innerHTML = dir
+    ? `Custom AI folder: <code>${dir}</code>`
+    : `<span class="warn">No Automobilista 2 folder set yet.</span>`;
+  const pick = document.createElement('button');
+  pick.textContent = dir ? 'Change folder' : 'Choose folder';
+  pick.onclick = async () => { await window.gt.pickAms2(); await openRace(); };
+  bar.appendChild(pick);
+  box.appendChild(bar);
+
+  // ---- leg tabs ----
+  if (info.legs > 1) {
+    const tabs = document.createElement('div');
+    tabs.className = 'legtabs';
+    for (let i = 1; i <= info.legs; i++) {
+      const t = document.createElement('span');
+      t.className = i === rcLeg ? 'on' : '';
+      t.textContent = `Race ${i}`;
+      t.onclick = async () => { rcLeg = i; await openRace(); };
+      tabs.appendChild(t);
+    }
+    box.appendChild(tabs);
+  }
+
+  rcData = await window.gt.racePrepare(rcLeg);
+  const d = rcData;
+  const line = (k, v, warn) =>
+    `<div class="line"><span>${k}</span><b class="${warn ? 'warn' : ''}">${v}</b></div>`;
+
+  const setup = document.createElement('div');
+  setup.className = 'setup';
+  setup.innerHTML = `<h5>SINGLE RACE — COPY THESE SETTINGS</h5>` +
+    line('Track', info.track) +
+    line('Date', d.date) +
+    line('Time of day', d.startTime) +
+    line('Time progression', '×' + d.timeMultiplier) +
+    line('AI opponents', d.aiOpponents) +
+    line('Practice', d.practice + ' min') +
+    (d.qualifying ? line('Qualifying', d.qualifying + ' min' +
+        (d.qualifyingPrivate ? ' · private' : ' · public')) 
+      : line('Qualifying', 'SKIP — start from the grid below', true)) +
+    line('Race', d.distance + ' km · ' + d.laps + ' laps') +
+    line('Mandatory pit stops', d.stops === 0 ? 'none'
+        : d.stops + (d.window ? ` · window ${d.window[0] * 100}–${d.window[1] * 100}%` : '')) +
+    line('Damage', d.damage) +
+    line('Tyre wear', '×' + d.tyreWear) +
+    line('Fuel usage', '×' + d.fuelUsage) +
+    line('Your car', d.playerLivery || '—') +
+    (d.playerGrid ? line('Your starting position', d.playerGrid, true) : '');
+  box.appendChild(setup);
+
+  const files = document.createElement('div');
+  files.className = 'setup';
+  files.innerHTML = `<h5>FILES TO WRITE</h5>` +
+    d.files.map(f => `<div class="filelist"><code>${f.name}</code> — ` +
+      `${(f.xml.match(/<driver /g) || []).length} entries</div>`).join('');
+  box.appendChild(files);
+
+  const actions = document.createElement('div');
+  actions.className = 'rc-actions';
+
+  const write = document.createElement('button');
+  write.className = 'primary';
+  write.textContent = 'Write AI files';
+  write.disabled = !dir;
+  write.onclick = async () => {
+    try {
+      const r = await window.gt.writeFiles(d.files);
+      alert('Written to\n' + r.dir + '\n\n' +
+            r.written.map(w => w.name + '  (' + w.bytes + ' bytes)').join('\n'));
+    } catch (e) { alert(String(e.message || e).replace(/^Error: /, '')); }
+  };
+  actions.appendChild(write);
+
+  const copy = document.createElement('button');
+  copy.textContent = 'Copy settings';
+  copy.onclick = () => {
+    const txt = setup.innerText.replace(/\n{2,}/g, '\n');
+    navigator.clipboard.writeText(txt).then(
+      () => { copy.textContent = 'Copied'; setTimeout(() => copy.textContent = 'Copy settings', 1400); },
+      () => alert('Could not reach the clipboard.'));
+  };
+  actions.appendChild(copy);
+  box.appendChild(actions);
+}
+
 // ---------------------------------------------------------------- introduction
 let tutStep = 4;                       // 4 means finished
 
@@ -421,15 +582,21 @@ const TUT = {
                 for the season.</p>
               <p>If you founded a team you may buy more than one, so long as the money lasts.</p>` },
   3: { focus: 'office', title: 'Office',
-       html: `<p>The Office is where contracts live. If you have no car of your own you can
-                buy a seat from a team here.</p>
-              <p>If you run a team, this is where you scout free drivers and offer them a seat.
-                A driver from your own country brings local backing with him.</p>` },
+       html: `<p>The Office is where contracts live. If you did not buy a car, you can buy a
+                <b>seat</b> from a team here instead — cheaper than running your own, but
+                nothing belongs to you at the end of the season.</p>
+              <p>If you run a team, this is also where you scout free drivers and offer them a
+                seat. A driver from your own country brings local backing with him.</p>` },
   4: { focus: null, title: 'Good luck out there',
        html: `<p>Everything is open now. Advance the week when you are ready, and the season
                 will come to you.</p>
               <p>Watch the money. The entry list closes at the end of week four, and nothing
-                you own is worth anything if you cannot afford to run it.</p>` }
+                you own is worth anything if you cannot afford to run it.</p>` },
+  '4-noseat': { focus: null, title: 'You still have no entry',
+       html: `<p>Everything is open now, but you are not on any grid yet. The entry list
+                closes at the end of <b>week four</b> — buy a car in the Market, or a seat
+                in the Office, before then.</p>
+              <p>Miss it and you sit out the season.</p>` }
 };
 
 function applyTutorial() {
@@ -450,15 +617,33 @@ function showTutorialPanel(step, after) {
   const t = TUT[step];
   $('tut-title').textContent = t.title;
   $('tut-text').innerHTML = t.html;
+  $('tut-ok').textContent = 'Got it';
   $('tut').hidden = false;
-  $('tut-ok').onclick = async () => { $('tut').hidden = true; if (after) await after(); };
+  $('tut-ok').onclick = async () => {
+    $('tut').hidden = true;
+    if (after) { try { await after(); } catch (e) { console.error(e); } }
+  };
+  const skip = $('tut-skip');
+  if (skip) {
+    skip.style.display = step === 4 || step === '4-noseat' ? 'none' : '';
+    skip.onclick = async () => {
+      $('tut').hidden = true;
+      await tutorialAdvance(4);
+      try { await refresh(); } catch (_) {}
+    };
+  }
 }
 
 async function tutorialAdvance(to) {
-  tutStep = to;
-  await window.gt.setTutorial(to);
+  tutStep = to;                       // move on first; saving is best effort
+  try { await window.gt.setTutorial(to); }
+  catch (e) { console.error('tutorial save failed', e); }
   applyTutorial();
-  if (to === 4) setTimeout(() => showTutorialPanel(4, async () => { applyTutorial(); }), 400);
+  if (to === 4) {
+    const seated = (await window.gt.garage()).length || (await window.gt.office() || {}).hasSeat;
+    setTimeout(() => showTutorialPanel(seated ? 4 : '4-noseat',
+      async () => { applyTutorial(); }), 400);
+  }
   else setTimeout(() => { const t = TUT[to]; if (t.html) showTutorialPanel(to); }, 900);
 }
 
@@ -677,6 +862,15 @@ async function openOffice() {
   }
 }
 
+function renderUsed() {
+  $('mk-list').innerHTML = '';
+  $('mk-detail').innerHTML =
+    `<div class="bubble"><b>No used cars yet</b><p>${mk.usedNote || ''}</p></div>`;
+}
+
+$('tab-new').onclick  = async () => { mkTab = 'new';  await openMarket(); };
+$('tab-used').onclick = async () => { mkTab = 'used'; await openMarket(); };
+
 // ---------------------------------------------------------------- garage
 async function openGarage() {
   const cars = await window.gt.garage();
@@ -700,12 +894,14 @@ async function openGarage() {
       `<div class="info">
          <h3>${c.model}</h3>
          <div class="meta">${c.livery} · ${c.championship} · ${c.team}` +
-         (c.mine ? ` · value ${eur(c.value)}` : '') + `</div>
+         (c.mine ? ` · value ${eur(c.value)}` : '') +
+         ` · ${c.driver ? c.driver : 'no driver yet'}</div>
          <div class="bar-wrap">Engine hours
            <div class="bar-out"><div class="bar-in ${cls}" style="width:${(eng*100).toFixed(0)}%"></div></div>
            ${c.engine_hours.toFixed(1)} / 30</div>
          <div class="tagline">` +
-         (c.mine ? 'Servicing and sale are handled here.'
+         (c.mine ? (c.driver ? 'Servicing and sale are handled here.'
+                             : 'Needs a driver — sign one in the Office.')
                  : 'Team property — you can see its condition but cannot work on it.') +
          `</div></div>`;
     box.appendChild(el);
