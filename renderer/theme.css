@@ -406,3 +406,12 @@ button.primary:hover { background: var(--accent-soft); }
 .legtabs span { font-size: 12px; padding: 6px 14px; border-radius: 6px;
                 background: var(--surface-1); color: var(--text-2); cursor: pointer; }
 .legtabs span.on { background: var(--accent); color: var(--accent-ink); font-weight: 500; }
+
+/* ---------- leave the market without buying ---------- */
+.skiprow { position: absolute; right: 92px; bottom: 18px; background: var(--surface-1);
+  border: .8px solid var(--border); color: var(--text-2); padding: 5px 16px;
+  border-radius: 6px; font-size: 12px; }
+.skiprow:hover { background: var(--surface-2); color: var(--text); }
+.skiprow[hidden] { display: none; }
+
+.back[hidden] { display: none; }

@@ -313,9 +313,7 @@ async function leaveView(target) {
         if (entryDecided) await tutorialAdvance(2);
         else nudge('Choose how you will go racing first — privateer, or your own team.');
       } else if (tutStep === 2) {
-        await tutorialAdvance(3);
-        if (!cars) nudge('No car, then. You can still buy a seat from a team — ' +
-                         'the Office is lit up for you.');
+        await tutorialAdvance(3, cars ? 3 : '3-nocar');
       } else if (tutStep === 3) {
         await tutorialAdvance(4);
       }
@@ -355,6 +353,13 @@ async function openMarket() {
     ? `entry list closes at the end of week 4`
     : `closed — reopens next winter`;
   renderMarketList();
+  // during the introduction the only way out is the named button, so the bare
+  // arrow does not read as "cancel"
+  const intro = tutStep === 2;
+  const skipRow = $('mk-skip');
+  if (skipRow) skipRow.hidden = !intro;
+  const arrow = document.querySelector('#market .back');
+  if (arrow) arrow.hidden = intro;
   $('mk-detail').innerHTML = mk.note
     ? `<p class="note">${mk.note}</p>`
     : `<p class="note">${mk.team
@@ -587,6 +592,13 @@ const TUT = {
                 nothing belongs to you at the end of the season.</p>
               <p>If you run a team, this is also where you scout free drivers and offer them a
                 seat. A driver from your own country brings local backing with him.</p>` },
+  '3-nocar': { focus: 'office', title: 'Office',
+       html: `<p>No car, then — and that is a perfectly good way to start. Here you can buy a
+                <b>seat</b> from a team instead. It costs less than running your own car and
+                the team carries the repair bills, but nothing belongs to you at the end of
+                the season.</p>
+              <p>The cheapest seats are listed first. A team from your own country brings
+                local backing with it.</p>` },
   4: { focus: null, title: 'Good luck out there',
        html: `<p>Everything is open now. Advance the week when you are ready, and the season
                 will come to you.</p>
@@ -634,7 +646,7 @@ function showTutorialPanel(step, after) {
   }
 }
 
-async function tutorialAdvance(to) {
+async function tutorialAdvance(to, variant) {
   tutStep = to;                       // move on first; saving is best effort
   try { await window.gt.setTutorial(to); }
   catch (e) { console.error('tutorial save failed', e); }
@@ -644,7 +656,10 @@ async function tutorialAdvance(to) {
     setTimeout(() => showTutorialPanel(seated ? 4 : '4-noseat',
       async () => { applyTutorial(); }), 400);
   }
-  else setTimeout(() => { const t = TUT[to]; if (t.html) showTutorialPanel(to); }, 900);
+  else {
+    const key = variant !== undefined ? variant : to;
+    setTimeout(() => { const t = TUT[key]; if (t && t.html) showTutorialPanel(key); }, 900);
+  }
 }
 
 // ---------------------------------------------------------------- home
@@ -868,6 +883,7 @@ function renderUsed() {
     `<div class="bubble"><b>No used cars yet</b><p>${mk.usedNote || ''}</p></div>`;
 }
 
+$('mk-skip').onclick = () => leaveView('hub');
 $('tab-new').onclick  = async () => { mkTab = 'new';  await openMarket(); };
 $('tab-used').onclick = async () => { mkTab = 'used'; await openMarket(); };
 
