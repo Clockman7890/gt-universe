@@ -1,6 +1,9 @@
 'use strict';
 
 const $ = id => document.getElementById(id);
+// bind a handler only if the element is actually there, so a stale index.html
+// can never stop the rest of the script from running
+const on = (id, ev, fn) => { const el = $(id); if (el) el[ev] = fn; };
 const show = id => {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   $(id).classList.add('active');
@@ -18,6 +21,7 @@ const repWord = r => REP[Math.min(4, Math.floor((r || 0) * 5))];
 // ---------------------------------------------------------------- map art
 // One generator, used dimmed behind the title and bright behind the hub.
 function drawCity(canvas, dim) {
+  if (!canvas || !canvas.getContext) return;
   const dpr = window.devicePixelRatio || 1;
   const w = canvas.clientWidth, h = canvas.clientHeight;
   if (!w || !h) return;
@@ -107,8 +111,11 @@ function mulberry(a) {
 }
 
 function paint() {
-  drawCity($('title-bg'), true);
-  if ($('shell').classList.contains('active')) drawCity($('map-bg'), false);
+  try { drawCity($('title-bg'), true); } catch (e) { console.error(e); }
+  const shell = $('shell');
+  if (shell && shell.classList.contains('active')) {
+    try { drawCity($('map-bg'), false); } catch (e) { console.error(e); }
+  }
 }
 window.addEventListener('resize', paint);
 
@@ -237,18 +244,18 @@ async function refreshSaves() {
 }
 
 // ---------------------------------------------------------------- wiring
-$('btn-create-back').onclick = () => { pendingSlot = null; show('title'); };
-$('btn-settings').onclick = () => alert('Settings — not implemented yet.');
-$('btn-exit-title').onclick = () => window.gt.quit();
+on('btn-create-back', 'onclick', () => { pendingSlot = null; show('title'); });
+on('btn-settings', 'onclick', () => alert('Settings — not implemented yet.'));
+on('btn-exit-title', 'onclick', () => window.gt.quit());
 
 // leaving the hub closes the career and returns to the title screen
-$('to-menu').onclick = async () => {
+on('to-menu', 'onclick', async () => {
   await window.gt.closeCareer();
   await refreshSaves();
   pendingSlot = null;
   show('title');
   paint();
-};
+});
 
 function invalid() {
   const name = $('f-name').value.trim();
@@ -268,7 +275,7 @@ function invalid() {
   return null;
 }
 
-$('btn-create').onclick = async () => {
+on('btn-create', 'onclick', async () => {
   if (!pendingSlot) return;
   const bad = invalid();
   if (bad) { alert(bad); return; }
@@ -291,10 +298,10 @@ $('btn-create').onclick = async () => {
   } catch (err) {
     alert('Could not start the career:\n\n' + (err && err.message ? err.message : err));
   }
-};
+});
 
-$('plaza').onclick = async () => { await window.gt.advance(); await refresh(); };
-$('b-news').onclick = async () => { await openNews(); view('news'); };
+on('plaza', 'onclick', async () => { await window.gt.advance(); await refresh(); });
+on('b-news', 'onclick', async () => { await openNews(); view('news'); });
 
 document.querySelectorAll('.node').forEach(n => {
   n.onclick = async () => {
@@ -896,9 +903,9 @@ function renderUsed() {
     `<div class="bubble"><b>No used cars yet</b><p>${mk.usedNote || ''}</p></div>`;
 }
 
-$('mk-skip').onclick = () => leaveView('hub');
-$('tab-new').onclick  = async () => { mkTab = 'new';  await openMarket(); };
-$('tab-used').onclick = async () => { mkTab = 'used'; await openMarket(); };
+on('mk-skip', 'onclick', () => leaveView('hub'));
+on('tab-new', 'onclick', async () => { mkTab = 'new';  await openMarket(); });
+on('tab-used', 'onclick', async () => { mkTab = 'used'; await openMarket(); });
 
 // ---------------------------------------------------------------- garage
 async function openGarage() {
@@ -938,17 +945,25 @@ async function openGarage() {
 }
 
 // entry level switches the allowed experience range
-$('f-entry').onchange = e => {
+on('f-entry', 'onchange', e => {
   const gt5 = e.target.value === 'gt5';
   const f = $('f-exp');
   f.min = gt5 ? 0.60 : 0.50;
   f.max = gt5 ? 0.70 : 0.60;
   f.value = gt5 ? 0.65 : 0.55;
-};
+});
 
 (async () => {
-  const p = await window.gt.paths();
-  $('version').textContent = 'v' + p.version;
-  await refreshSaves();
+  try {
+    const p = await window.gt.paths();
+    if ($('version')) $('version').textContent = 'v' + p.version;
+  } catch (e) { console.error('paths failed', e); }
+  try { await refreshSaves(); }
+  catch (e) {
+    console.error('could not read the save slots', e);
+    const box = $('slots');
+    if (box) box.innerHTML =
+      '<div class="slot empty"><span class="who">Could not read the save slots</span></div>';
+  }
   paint();
 })();
