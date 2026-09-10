@@ -910,6 +910,7 @@ on('tab-used', 'onclick', async () => { mkTab = 'used'; await openMarket(); });
 // ---------------------------------------------------------------- garage
 async function openGarage() {
   const cars = await window.gt.garage();
+  const lu = await window.gt.lineup();
   $('gr-count').textContent = cars.length
     ? `${cars.length} car${cars.length === 1 ? '' : 's'}` : '';
   const box = $('gr-list');
@@ -925,6 +926,7 @@ async function openGarage() {
     const cls = eng > .85 ? 'bad' : eng > .6 ? 'warn' : '';
     const el = document.createElement('div');
     el.className = 'gcar' + (c.mine ? '' : ' theirs');
+    const lineCar = lu && lu.cars ? lu.cars.find(x => x.livery === c.livery) : null;
     el.innerHTML =
       (img ? `<img src="${img}" alt="">` : '') +
       `<div class="info">
@@ -939,8 +941,52 @@ async function openGarage() {
          (c.mine ? (c.driver ? 'Servicing and sale are handled here.'
                              : 'Needs a driver — sign one in the Office.')
                  : 'Team property — you can see its condition but cannot work on it.') +
-         `</div></div>`;
+         `</div>` +
+      `<div class="seats" data-entry="${lineCar ? lineCar.entry_id : ''}"></div></div>`;
     box.appendChild(el);
+
+    // a picker per seat, for as long as line-ups can still be changed
+    if (lineCar && lu.team) {
+      const holder = el.querySelector('.seats');
+      for (let role = 1; role <= lineCar.seats; role++) {
+        const cur = lineCar.drivers.find(d => d.role === role);
+        const wrap = document.createElement('div');
+        wrap.className = 'seat';
+        wrap.innerHTML = `<label>${lineCar.seats > 1 ? 'DRIVER ' + role : 'DRIVER'}</label>`;
+        const sel = document.createElement('select');
+        sel.disabled = !lu.open;
+        const none = document.createElement('option');
+        none.value = ''; none.textContent = '— empty —';
+        sel.appendChild(none);
+        for (const d of lu.drivers) {
+          // a driver already sitting in another car is not offered twice
+          if (d.inCar && d.inCar !== lineCar.entry_id) continue;
+          const o = document.createElement('option');
+          o.value = d.id;
+          o.textContent = d.name + (d.isPlayer ? '  (you)' : '') +
+                          (d.fia_rating ? '  · ' + d.fia_rating : '');
+          sel.appendChild(o);
+        }
+        sel.value = cur ? String(cur.driver_id) : '';
+        sel.onchange = async () => {
+          try {
+            await window.gt.setDriver(lineCar.entry_id, role, sel.value ? +sel.value : null);
+            await refresh(); await openGarage();
+          } catch (e) {
+            alert(String(e.message || e).replace(/^Error: /, ''));
+            await openGarage();
+          }
+        };
+        wrap.appendChild(sel);
+        holder.appendChild(wrap);
+      }
+      if (!lu.open) {
+        const lock = document.createElement('div');
+        lock.className = 'seatnote';
+        lock.textContent = 'Line-ups locked for this season.';
+        holder.appendChild(lock);
+      }
+    }
   }
 }
 

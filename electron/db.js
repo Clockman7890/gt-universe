@@ -4,6 +4,7 @@ const { buildWorld } = require('./world');
 const { generatePopulation } = require('./population');
 const { buildEntries, placePlayer } = require('./entries');
 const market = require('./market');
+const weekend = require('./weekend');
 const office = require('./office');
 
 let handle = null;
@@ -196,6 +197,7 @@ function create(file, schemaSql, profile, world, namesDb) {
     })), COUNTRIES.map(c => ({ code: c[0], name: c[1], block: c[2] })), namesDb, seed);
     buildEntries(handle, world, ctx, profile);
     if (profile) placePlayer(handle, world, ctx, profile);
+    weekend.buildCalendar(handle, 1);
   })();
 
 
@@ -315,6 +317,40 @@ function home() {
   };
 }
 
+function ams2Path() {
+  if (!handle) return null;
+  const r = handle.prepare(`SELECT ams2_path FROM career WHERE id = 1`).get();
+  return r ? r.ams2_path : null;
+}
+function setAms2Path(p) {
+  if (!handle) return null;
+  handle.prepare(`UPDATE career SET ams2_path = ? WHERE id = 1`).run(p);
+  dirty = true;
+  return p;
+}
+
+function raceInfo() {
+  if (!handle) return null;
+  const r = weekend.nextRound(handle);
+  if (!r) return null;
+  return {
+    round: r.round_no, championship: r.championship, track: r.track,
+    week: r.week, weeksAway: r.weeksAway, thisWeek: r.thisWeek,
+    date: r.race_date, legs: r.legs.length,
+    gridSize: handle.prepare(`SELECT COUNT(*) n FROM entries
+        WHERE season = (SELECT season FROM career WHERE id=1) AND championship_id = ?`)
+        .get(r.championship_id).n,
+    lengthKm: r.length_km, roundId: r.id, played: r.played
+  };
+}
+function racePrepare(legNo) {
+  if (!handle) return null;
+  const r = weekend.nextRound(handle);
+  if (!r) return null;
+  return Object.assign({ championship: r.championship, track: r.track,
+                         round: r.round_no, roundId: r.id }, weekend.prepareLeg(handle, r, legNo || 1));
+}
+
 function newsList() {
   if (!handle) return [];
   return handle.prepare(`
@@ -328,24 +364,102 @@ function newsRead() {
   return n;
 }
 
+// Who may be put in the team's cars: everyone already signed, plus the player.
+function lineup() {
+  if (!handle) return null;
+  const c = handle.prepare(`SELECT season, week, player_driver_id FROM career WHERE id = 1`).get();
+  const team = handle.prepare(`SELECT * FROM teams WHERE owner_driver_id = ?
+      AND status = 'active' AND is_privateer = 0`).get(c.player_driver_id);
+  if (!team) return { team: null, open: c.week <= 4, cars: [], drivers: [] };
+
+  const cars = handle.prepare(`
+    SELECT e.id entry_id, cm.name car, l.livery_name livery, cl.drivers_per_car seats,
+           ch.name championship
+    FROM entries e
+    JOIN chassis c2 ON c2.id = e.chassis_id
+    JOIN car_models cm ON cm.id = c2.model_id
+    JOIN liveries l ON l.id = e.livery_id
+    JOIN championships ch ON ch.id = e.championship_id
+    JOIN championship_levels cl ON cl.id = ch.level_id
+    WHERE e.team_id = ? AND e.season = ?
+    ORDER BY e.id`).all(team.id, c.season);
+
+  const seatRows = handle.prepare(`
+    SELECT ed.entry_id, ed.role, d.id driver_id, d.name, d.fia_rating
+    FROM entry_drivers ed JOIN entries e ON e.id = ed.entry_id
+    JOIN drivers d ON d.id = ed.driver_id
+    WHERE e.team_id = ? AND e.season = ?`).all(team.id, c.season);
+  for (const car of cars)
+    car.drivers = seatRows.filter(r => r.entry_id === car.entry_id)
+                          .sort((a, b) => a.role - b.role);
+
+  // the pool is the team's own signed drivers plus the owner
+  const pool = handle.prepare(`
+    SELECT DISTINCT d.id, d.name, d.fia_rating, d.country
+    FROM drivers d
+    WHERE d.id = ?
+       OR d.id IN (SELECT ed.driver_id FROM entry_drivers ed
+                   JOIN entries e ON e.id = ed.entry_id
+                   WHERE e.team_id = ? AND e.season = ?)`)
+    .all(c.player_driver_id, team.id, c.season);
+  for (const d of pool) {
+    d.isPlayer = d.id === c.player_driver_id;
+    const at = seatRows.find(r => r.driver_id === d.id);
+    d.inCar = at ? at.entry_id : null;
+  }
+
+  return { team: { id: team.id, name: team.name }, open: c.week <= 4, cars, drivers: pool };
+}
+
+// Put a driver in a car, or empty the seat. Line-ups are locked after week 4.
+function setCarDriver(entryId, role, driverId) {
+  if (!handle) throw new Error('No career open.');
+  const c = handle.prepare(`SELECT season, week, player_driver_id FROM career WHERE id = 1`).get();
+  if (c.week > 4) throw new Error('Line-ups are locked once the season starts.');
+  const team = handle.prepare(`SELECT * FROM teams WHERE owner_driver_id = ?
+      AND status = 'active' AND is_privateer = 0`).get(c.player_driver_id);
+  if (!team) throw new Error('You do not run a team.');
+  const entry = handle.prepare(`SELECT * FROM entries WHERE id = ? AND team_id = ? AND season = ?`)
+    .get(entryId, team.id, c.season);
+  if (!entry) throw new Error('That car is not yours.');
+
+  return handle.transaction(() => {
+    handle.prepare(`DELETE FROM entry_drivers WHERE entry_id = ? AND role = ?`).run(entryId, role);
+    if (driverId) {
+      // a driver can only sit in one car, so free whatever they were in
+      handle.prepare(`DELETE FROM entry_drivers WHERE driver_id = ?
+          AND entry_id IN (SELECT id FROM entries WHERE team_id = ? AND season = ?)`)
+        .run(driverId, team.id, c.season);
+      handle.prepare(`INSERT INTO entry_drivers (entry_id,driver_id,role,seat_fee)
+          VALUES (?,?,?,0)`).run(entryId, driverId, role);
+    }
+    dirty = true;
+    return lineup();
+  })();
+}
+
 function garage() {
   if (!handle) return null;
+  const me = handle.prepare(`SELECT player_driver_id p FROM career WHERE id = 1`).get().p;
   return handle.prepare(`
     SELECT ch.id, cm.name model, cm.class, l.livery_name livery, ch.value,
-           ch.engine_hours, ch.chassis_hours, t.is_privateer mine, t.name team,
-           c.name championship
-    FROM entry_drivers ed
-    JOIN entries e ON e.id = ed.entry_id
+           ch.engine_hours, ch.chassis_hours, t.name team, c.name championship,
+           CASE WHEN t.owner_driver_id = @me THEN 1 ELSE 0 END mine,
+           (SELECT d2.name FROM entry_drivers ed2 JOIN drivers d2 ON d2.id = ed2.driver_id
+            WHERE ed2.entry_id = e.id ORDER BY ed2.role LIMIT 1) driver
+    FROM entries e
     JOIN chassis ch ON ch.id = e.chassis_id
     JOIN car_models cm ON cm.id = ch.model_id
     JOIN liveries l ON l.id = e.livery_id
     JOIN teams t ON t.id = e.team_id
     JOIN championships c ON c.id = e.championship_id
-    JOIN drivers d ON d.id = ed.driver_id
-    WHERE d.is_player = 1 AND e.season = (SELECT season FROM career WHERE id = 1)`).all();
+    WHERE e.season = (SELECT season FROM career WHERE id = 1)
+      AND ( t.owner_driver_id = @me
+            OR e.id IN (SELECT entry_id FROM entry_drivers WHERE driver_id = @me) )
+    ORDER BY mine DESC, ch.id`).all({ me });
 }
 
 module.exports = { create, open, peek, state, advanceWeek, save, close, isDirty,
-                   marketList, marketBuy, garage, myEntries, newsList, newsRead, home, setTutorial,
+                   marketList, marketBuy, garage, myEntries, lineup, setCarDriver, newsList, newsRead, home, setTutorial, raceInfo, racePrepare, ams2Path, setAms2Path,
                    officeOffers, officeTakeSeat, officeFormTeam, officeSign,
                    handle: () => handle };

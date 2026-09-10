@@ -128,8 +128,36 @@ ipcMain.handle('office:takeSeat', (_e, id) => db.officeTakeSeat(id));
 ipcMain.handle('office:formTeam', (_e, lvl, name) => db.officeFormTeam(lvl, name));
 ipcMain.handle('office:sign',     (_e, d, en) => db.officeSign(d, en));
 ipcMain.handle('entries:mine',    () => db.myEntries());
+ipcMain.handle('lineup:get',      () => db.lineup());
+ipcMain.handle('lineup:set',      (_e, en, role, dr) => db.setCarDriver(en, role, dr));
 ipcMain.handle('home:info',       () => db.home());
 ipcMain.handle('tutorial:set',    (_e, n) => db.setTutorial(n));
+ipcMain.handle('race:info',       () => db.raceInfo());
+ipcMain.handle('race:prepare',    (_e, leg) => db.racePrepare(leg));
+
+ipcMain.handle('ams2:pick', async () => {
+  const res = await dialog.showOpenDialog(win, {
+    title: 'Where does Automobilista 2 keep its custom AI files?',
+    properties: ['openDirectory', 'createDirectory']
+  });
+  if (res.canceled || !res.filePaths.length) return null;
+  db.setAms2Path(res.filePaths[0]);
+  return res.filePaths[0];
+});
+
+ipcMain.handle('ams2:path', () => db.ams2Path());
+
+ipcMain.handle('race:write', (_e, files) => {
+  const dir = db.ams2Path();
+  if (!dir) throw new Error('Set the Automobilista 2 folder first.');
+  const written = [];
+  for (const f of files) {
+    const target = path.join(dir, f.name);
+    fs.writeFileSync(target, f.xml, 'utf8');
+    written.push({ name: f.name, path: target, bytes: Buffer.byteLength(f.xml) });
+  }
+  return { dir, written };
+});
 ipcMain.handle('news:list',       () => db.newsList());
 ipcMain.handle('news:read',       () => db.newsRead());
 

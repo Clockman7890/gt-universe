@@ -77,8 +77,18 @@ function list(db) {
     };
   });
 
+  // second-hand stock only appears once cars have been raced and sold on
+  const used = db.prepare(`SELECT COUNT(*) n FROM chassis WHERE for_sale = 1`).get().n;
+
   return {
     models,
+    used,
+    usedNote: used ? null
+      : (season.season === 1
+          ? 'Nobody has a car to sell yet. Every chassis on the grid was bought new this winter, '
+            + 'so the second-hand market opens from season two onwards.'
+          : 'No cars are listed for sale at the moment. Teams usually sell in the winter, '
+            + 'after the season has decided who is moving up and who is folding.'),
     championship: champ.name,
     open: ctx.season.week <= 4,
     week: season.week,
@@ -111,7 +121,8 @@ function buy(db, modelId, liveryId) {
   if (!lv) throw new Error('That entry number has just been taken.');
 
   return db.transaction(() => {
-    // an extra car for an existing team, rather than a first entry
+    // a car for an existing team. The owner climbs into the first one themselves;
+    // anything after that needs a driver signing in the Office.
     if (ctx.team) {
       const chassisId = db.prepare(`INSERT INTO chassis
           (model_id,owner_team_id,bought_season,bought_new,value) VALUES (?,?,?,1,?)`)
@@ -124,11 +135,19 @@ function buy(db, modelId, liveryId) {
       db.prepare(`INSERT INTO ledger (season,week,entity_type,entity_id,amount,reason)
           VALUES (?,?,'driver',?,?, 'car_purchase')`)
         .run(ctx.season.season, ctx.season.week, p.id, -m.price_new);
+      const takesIt = !ctx.seat;
+      if (takesIt)
+        db.prepare(`INSERT INTO entry_drivers (entry_id,driver_id,role,seat_fee) VALUES (?,?,1,0)`)
+          .run(entryId, p.id);
+
+      db.prepare(`UPDATE news SET read = 1 WHERE headline = 'You have no car yet'`).run();
       db.prepare(`INSERT INTO news (season,week,category,headline,body) VALUES (?,?,'team',?,?)`)
         .run(ctx.season.season, ctx.season.week,
-             `${ctx.team.name} enters a second car`, `${m.name} as ${lv.livery_name}. Needs a driver.`);
+             takesIt ? `${ctx.team.name} enters the ${champ.name}`
+                     : `${ctx.team.name} enters another car`,
+             `${m.name} as ${lv.livery_name}.` + (takesIt ? '' : ' Needs a driver.'));
       return { model: m.name, livery: lv.livery_name, championship: champ.name,
-               spent: m.price_new, capital: p.capital - m.price_new, needsDriver: true };
+               spent: m.price_new, capital: p.capital - m.price_new, needsDriver: !takesIt };
     }
 
     const teamId = db.prepare(`INSERT INTO teams

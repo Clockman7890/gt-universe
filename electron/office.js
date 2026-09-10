@@ -49,8 +49,9 @@ function offers(db) {
     JOIN car_models cm ON cm.id = ch.model_id
     JOIN liveries l ON l.id = e.livery_id
     WHERE e.season = ? AND e.championship_id = ? AND t.is_privateer = 0
+      AND (t.owner_driver_id IS NULL OR t.owner_driver_id <> ?)
     ORDER BY CASE t.engineering WHEN 'amateurs' THEN 0 WHEN 'experienced' THEN 1 ELSE 2 END`)
-    .all(season.season, champ.id)
+    .all(season.season, champ.id, player.id)
     .map(row => {
       const mult = row.engineering === 'specialist' ? 1.25
                  : row.engineering === 'experienced' ? 1.0 : 0.8;
