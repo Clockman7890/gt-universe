@@ -11,11 +11,9 @@ function buildCalendar(db, season) {
     (season,event_type,championship_id,round_no,track_id,week,race_date,grid_size,mixed_with)
     VALUES (?,'championship',?,?,?,?,?,?,?)`);
   const insLeg = db.prepare(`INSERT INTO legs
-    (round_id,leg_no,distance_km,laps,start_time,ai_opponents,skip_quali)
-    VALUES (?,?,?,?,?,?,?)`);
-
-  // GT5 runs in the morning, everything else in the afternoon
-  const START = { gt5: ['11:30', '10:30'], other: ['14:30', '13:30'] };
+    (round_id,leg_no,distance_km,laps,race_date,start_time,practice_min,quali_min,
+     ai_opponents,skip_quali)
+    VALUES (?,?,?,?,?,?,?,?,?,?)`);
 
   for (const c of champs) {
     const lvl = db.prepare(`SELECT * FROM championship_levels WHERE id = ?`).get(c.level_id);
@@ -32,14 +30,62 @@ function buildCalendar(db, season) {
 
       const km = t.distance_override || lvl.distance_km;
       const laps = Math.ceil(km / track.length_km);
-      const times = START[c.class === 'gt5' ? 'gt5' : 'other'];
-      const legs = lvl.two_leg ? 2 : lvl.races_per_round;
-      for (let i = 1; i <= legs; i++) {
-        insLeg.run(roundId, i, km, laps, times[i - 1] || times[0],
-                   Math.max(0, entries - 1), i === 2 && lvl.two_leg ? 1 : 0);
+      const plan = weekendPlan(c.class, lvl, km, weekToDate(year, t.week));
+      for (const L of plan) {
+        insLeg.run(roundId, L.leg, km, laps, L.date, L.start,
+                   L.practice, L.quali, Math.max(0, entries - 1), L.skipQuali ? 1 : 0);
       }
     }
   }
+}
+
+// Average race pace, used to work out when the second leg can start.
+const SPEED = { gt5: 128, gt4: 150, gt3: 170, lmdh: 190 };
+
+// The clock runs at double speed, so a real minute costs two in-game minutes.
+const hhmm = m => `${String(Math.floor((m / 60) % 24)).padStart(2, '0')}:` +
+                  `${String(Math.round(m) % 60).padStart(2, '0')}`;
+const dayBefore = iso => {
+  const d = new Date(iso + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().slice(0, 10);
+};
+
+// Two short races run on Saturday and Sunday. One long race split in two runs
+// on the Sunday, the second half starting after the first has finished.
+function weekendPlan(cls, lvl, km, sunday) {
+  const saturday = dayBefore(sunday);
+  const tier = cls === 'gt5' ? 'gt5' : cls === 'gt4' ? 'gt4' : cls === 'lmdh' ? 'lmdh' : 'gt3';
+
+  if (!lvl.two_leg) {
+    // GT5 qualifies on both days; GT4 and GT3 Sprint take Sunday's grid
+    // from Saturday's finishing order
+    const open = cls === 'gt5' ? [9 * 60, 10 * 60] : [12 * 60, 13.5 * 60];
+    const qualiSunday = cls === 'gt5' || cls === 'gt3';
+    return [
+      { leg: 1, date: saturday, start: hhmm(open[0]),
+        practice: lvl.practice_minutes, quali: lvl.qualifying_minutes, skipQuali: 0 },
+      { leg: 2, date: sunday, start: hhmm(open[1]),
+        practice: 0, quali: qualiSunday ? lvl.qualifying_minutes : 0,
+        skipQuali: qualiSunday ? 0 : 1 }
+    ];
+  }
+
+  // one race, two stints, same day
+  const start = km >= 200 ? 10 * 60 : (tier === 'lmdh' ? 12 * 60 : 11 * 60);
+  let t = start;
+  t += lvl.practice_minutes * 2;                 // practice
+  t += 20 + lvl.qualifying_minutes * 2;          // gap and qualifying
+  t += 20;                                       // gap to the start
+  const legStart = t;
+  const legReal = km / SPEED[tier] * 60;
+  const secondStart = legStart + legReal * 2 + 50;   // first stint plus a break
+  return [
+    { leg: 1, date: sunday, start: hhmm(start),
+      practice: lvl.practice_minutes, quali: lvl.qualifying_minutes, skipQuali: 0 },
+    { leg: 2, date: sunday, start: hhmm(secondStart),
+      practice: 0, quali: 0, skipQuali: 1 }
+  ];
 }
 
 // Race day is the Sunday of that week; AMS2 only uses it to pick the weather.
@@ -172,10 +218,10 @@ function prepareLeg(db, round, legNo) {
   const sim = db.prepare(`SELECT * FROM sim_constants WHERE id = 1`).get();
   return {
     leg: legNo, laps: leg.laps, distance: leg.distance_km,
-    startTime: leg.start_time, date: round.race_date,
+    startTime: leg.start_time, date: leg.race_date || round.race_date,
     aiOpponents: rows.filter(r => !r.is_player).length,
-    practice: lvl.practice_minutes,
-    qualifying: leg.skip_quali ? null : lvl.qualifying_minutes,
+    practice: leg.practice_min,
+    qualifying: leg.quali_min || null,
     qualifyingPrivate: !!lvl.qualifying_private,
     stops: lvl.mandatory_stops,
     window: lvl.pit_window_from ? [lvl.pit_window_from, lvl.pit_window_to] : null,

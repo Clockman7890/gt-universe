@@ -110,6 +110,7 @@ ipcMain.handle('career:state', () => db.state());
 ipcMain.handle('market:list', () => db.marketList());
 
 ipcMain.handle('market:buy', (_e, modelId, liveryId) => db.marketBuy(modelId, liveryId));
+ipcMain.handle('market:buyMany', (_e, modelId, ids) => db.marketBuyMany(modelId, ids));
 
 ipcMain.handle('market:image', (_e, modelName) => {
   const specs = JSON.parse(fs.readFileSync(path.join(RESOURCES, 'car_specs.json'), 'utf8'));

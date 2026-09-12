@@ -534,13 +534,15 @@ async function openRace() {
 
   const setup = document.createElement('div');
   setup.className = 'setup';
+  const dayName = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
+    [new Date(d.date + 'T00:00:00Z').getUTCDay()];
   setup.innerHTML = `<h5>SINGLE RACE — COPY THESE SETTINGS</h5>` +
     line('Track', info.track) +
-    line('Date', d.date) +
+    line('Date', `${dayName} ${d.date}`) +
     line('Time of day', d.startTime) +
     line('Time progression', '×' + d.timeMultiplier) +
     line('AI opponents', d.aiOpponents) +
-    line('Practice', d.practice + ' min') +
+    line('Practice', d.practice ? d.practice + ' min' : 'none') +
     (d.qualifying ? line('Qualifying', d.qualifying + ' min' +
         (d.qualifyingPrivate ? ' · private' : ' · public')) 
       : line('Qualifying', 'SKIP — start from the grid below', true)) +

@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld('gt', {
   closeCareer:()        => ipcRenderer.invoke('career:close'),
   market:     ()        => ipcRenderer.invoke('market:list'),
   buyCar:     (m, l)    => ipcRenderer.invoke('market:buy', m, l),
+  buyCars:    (m, ids)  => ipcRenderer.invoke('market:buyMany', m, ids),
   carImage:   name      => ipcRenderer.invoke('market:image', name),
   carSpecs:   name      => ipcRenderer.invoke('car:specs', name),
   garage:     ()        => ipcRenderer.invoke('garage:list'),

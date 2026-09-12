@@ -253,6 +253,12 @@ function marketBuy(modelId, liveryId) {
   dirty = true;
   return res;
 }
+function marketBuyMany(modelId, liveryIds) {
+  if (!handle) throw new Error('No career open.');
+  const res = market.buyMany(handle, modelId, liveryIds);
+  dirty = true;
+  return res;
+}
 function officeOffers() { return handle ? office.offers(handle) : null; }
 function officeTakeSeat(entryId) { const r = office.takeSeat(handle, entryId); dirty = true; return r; }
 function officeFormTeam(level, name) { const r = office.formTeam(handle, level, name); dirty = true; return r; }
@@ -460,6 +466,6 @@ function garage() {
 }
 
 module.exports = { create, open, peek, state, advanceWeek, save, close, isDirty,
-                   marketList, marketBuy, garage, myEntries, lineup, setCarDriver, newsList, newsRead, home, setTutorial, raceInfo, racePrepare, ams2Path, setAms2Path,
+                   marketList, marketBuy, marketBuyMany, garage, myEntries, lineup, setCarDriver, newsList, newsRead, home, setTutorial, raceInfo, racePrepare, ams2Path, setAms2Path,
                    officeOffers, officeTakeSeat, officeFormTeam, officeSign,
                    handle: () => handle };

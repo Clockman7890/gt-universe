@@ -324,7 +324,10 @@ CREATE TABLE legs (                            -- one race, or one half of an en
   leg_no       INTEGER NOT NULL,               -- 1 or 2
   distance_km  INTEGER NOT NULL,
   laps         INTEGER NOT NULL,
+  race_date    TEXT,                          -- each race of a weekend has its own day
   start_time   TEXT NOT NULL,                  -- 'HH:MM' handed to AMS2
+  practice_min INTEGER NOT NULL DEFAULT 0,
+  quali_min    INTEGER NOT NULL DEFAULT 0,
   ai_opponents INTEGER NOT NULL,               -- entries - 1 when the player races
   skip_quali   INTEGER NOT NULL DEFAULT 0,
   player_grid  INTEGER,                        -- set manually in AMS2 on leg 2

@@ -194,4 +194,18 @@ function image(resourcesDir, modelName, specs) {
   } catch (_) { return null; }
 }
 
-module.exports = { list, buy, image, context };
+// Buy a run of cars in one go. Privateers are held to a single entry.
+function buyMany(db, modelId, liveryIds) {
+  const ctx = context(db);
+  if (!ctx) throw new Error('No career open.');
+  if (!Array.isArray(liveryIds) || !liveryIds.length) throw new Error('Pick an entry number.');
+  if (!ctx.team && liveryIds.length > 1)
+    throw new Error('A privateer runs one car. Found a team first if you want more.');
+  const out = [];
+  for (const lv of liveryIds) out.push(buy(db, modelId, lv));
+  return { cars: out.length, model: out[0].model,
+           liveries: out.map(o => o.livery), spent: out.reduce((n, o) => n + o.spent, 0),
+           capital: out[out.length - 1].capital, championship: out[0].championship };
+}
+
+module.exports = { list, buy, buyMany, image, context };
