@@ -98,7 +98,10 @@ ipcMain.handle('career:new', (_e, slot, profile) => {
   }
 });
 
-ipcMain.handle('career:load', (_e, slot) => db.open(slotPath(slot)));
+ipcMain.handle('career:load', (_e, slot) => {
+  const world = JSON.parse(fs.readFileSync(path.join(RESOURCES, 'world.json'), 'utf8'));
+  return db.open(slotPath(slot), world);
+});
 
 ipcMain.handle('career:delete', async (_e, slot) => {
   const file = slotPath(slot);
@@ -148,6 +151,8 @@ ipcMain.handle('home:info',       () => db.home());
 ipcMain.handle('tutorial:set',    (_e, n) => db.setTutorial(n));
 ipcMain.handle('race:info',       () => db.raceInfo());
 ipcMain.handle('race:prepare',    (_e, leg) => db.racePrepare(leg));
+ipcMain.handle('race:sheet',      (_e, r, l) => db.raceSheet(r, l));
+ipcMain.handle('race:save',       (_e, l, e) => db.raceSave(l, e));
 
 ipcMain.handle('settings:get', () => readSettings());
 

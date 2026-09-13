@@ -457,3 +457,18 @@ button.primary:hover { background: var(--accent-soft); }
 #rs-body { position: absolute; inset: 60px 24px 56px 24px; overflow-y: auto; }
 
 .offer .refuse { font-size: 11px; color: var(--text-muted); font-style: italic; }
+
+/* ---------- result sheet ---------- */
+.sheet { margin: 14px 0 4px; max-width: 760px; }
+.rrow { display: flex; align-items: center; gap: 12px; background: var(--surface-1);
+  border-radius: 7px; padding: 7px 12px; margin-bottom: 3px; font-size: 13px; }
+.rrow.head { background: none; color: var(--text-muted); font-size: 10px;
+  letter-spacing: 1px; padding-bottom: 2px; }
+.rrow.me { background: var(--surface-3); }
+.rrow .pos { width: 58px; }
+input.pos { background: var(--surface-0); border: 1px solid var(--border); color: var(--text);
+  border-radius: 5px; padding: 5px 7px; font: inherit; font-size: 13px; width: 58px; }
+.rrow .lv  { width: 240px; color: var(--text-2); }
+.rrow .drv { flex: 1; }
+select.st { background: var(--surface-0); border: 1px solid var(--border); color: var(--text-2);
+  border-radius: 5px; padding: 5px 7px; font: inherit; font-size: 12px; width: 150px; }

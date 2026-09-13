@@ -160,9 +160,12 @@ function buildEntries(db, world, ctx, profile) {
       .get(playerBlock, playerCls) : null;
 
   for (const c of champs) {
-    // two places are held in the player's championship: one for them, one for a
-    // second car if they ever run a team
-    const grid = c.grid_first - (playerChamp && playerChamp.id === c.id ? 2 : 0);
+    // One place is held in the player's championship so the grid is full once
+    // they enter. A franchise series holds nothing back: its cars already exist
+    // and the player buys a seat in one of them.
+    const isPlayers = playerChamp && playerChamp.id === c.id;
+    const franchise = c.id === 'australasian_arc';
+    const grid = c.grid_first - (isPlayers && !franchise ? 1 : 0);
     const perCar = c.drivers_per_car;
     const dbChamp = db.prepare(`SELECT * FROM championships WHERE id = ?`).get(c.id);
 
@@ -181,13 +184,11 @@ function buildEntries(db, world, ctx, profile) {
     // In the player's own championship, hold one plain number back per model so
     // there is always something to buy in the Market. Franchise series are
     // exempt: their cars belong to the teams and are never sold.
-    if (playerChamp && playerChamp.id === c.id && !isArc) {
+    if (isPlayers && !isArc) {
       for (const m of models) {
         const pl = pools[m.id];
-        for (let k = 0; k < 2; k++) {
-          const i = pl.findIndex(x => x.sponsor_level === 'low');
-          if (i >= 0) pl.splice(i, 1); else if (pl.length) pl.pop();
-        }
+        const i = pl.findIndex(x => x.sponsor_level === 'low');
+        if (i >= 0) pl.splice(i, 1); else if (pl.length) pl.pop();
       }
     }
 

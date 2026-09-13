@@ -624,15 +624,90 @@ async function openRace() {
 }
 
 // ---------------------------------------------------------------- results
+const STATUS = [
+  ['finished', 'Finished'],
+  ['dnf_mechanical', 'Mechanical'],
+  ['dnf_incident', 'Accident'],
+  ['damaged', 'Finished, damaged'],
+  ['dns', 'Did not start']
+];
+
 async function openResults(info, leg) {
+  const sheet = await window.gt.raceSheet(info.roundId, leg.leg);
   const box = $('rs-body');
   $('rs-title').textContent = `${info.championship} · round ${info.round}`;
-  $('rs-when').textContent = `${info.track} · race ${leg.leg}`;
-  box.innerHTML =
-    `<p class="note">Automobilista 2 is set to share its session data, so the finishing ` +
-    `order can be read straight from the game. That reader is not built yet — this screen ` +
-    `is where it will land, with the option to correct anything by hand before it is saved.</p>` +
-    `<p class="note">For now nothing is recorded, so the round stays open.</p>`;
+  $('rs-when').textContent = `${info.track} · race ${leg.leg}` +
+    (sheet && sheet.recorded ? ' · already recorded' : '');
+  box.innerHTML = '';
+  if (!sheet) { box.innerHTML = '<p class="note">Nothing to record.</p>'; return; }
+
+  const intro = document.createElement('p');
+  intro.className = 'note';
+  intro.innerHTML = `Put in where each car finished. Type the position next to the entry ` +
+    `number as it appears on the results screen in game — the order here is alphabetical, ` +
+    `not the finishing order.`;
+  box.appendChild(intro);
+
+  const table = document.createElement('div');
+  table.className = 'sheet';
+  table.innerHTML = `<div class="rrow head"><span class="pos">POS</span>` +
+    `<span class="lv">ENTRY</span><span class="drv">DRIVER</span>` +
+    `<span class="st">STATUS</span></div>`;
+
+  const state = sheet.grid.map(g => ({
+    entryId: g.entry_id, driverId: g.driver_id, livery: g.livery,
+    driver: g.driver, isPlayer: !!g.is_player, finish: null, status: 'finished'
+  }));
+
+  state.forEach((row, i) => {
+    const el = document.createElement('div');
+    el.className = 'rrow' + (row.isPlayer ? ' me' : '');
+    const posInput = `<input class="pos" type="number" min="1" max="${state.length}" ` +
+                     `data-i="${i}" inputmode="numeric">`;
+    el.innerHTML = posInput +
+      `<span class="lv">${row.livery}</span>` +
+      `<span class="drv">${row.driver || '—'}${row.isPlayer ? '  (you)' : ''}</span>`;
+    const sel = document.createElement('select');
+    sel.className = 'st';
+    for (const [v, label] of STATUS) {
+      const o = document.createElement('option');
+      o.value = v; o.textContent = label;
+      sel.appendChild(o);
+    }
+    sel.onchange = () => { row.status = sel.value; };
+    el.appendChild(sel);
+    el.querySelector('input.pos').oninput = e => {
+      row.finish = e.target.value ? +e.target.value : null;
+    };
+    table.appendChild(el);
+  });
+  box.appendChild(table);
+
+  const actions = document.createElement('div');
+  actions.className = 'rc-actions';
+  const save = document.createElement('button');
+  save.className = 'primary';
+  save.textContent = sheet.recorded ? 'Save again' : 'Save result';
+  save.onclick = async () => {
+    const running = state.filter(r => r.status === 'finished' || r.status === 'damaged');
+    const seen = new Set();
+    for (const r of running) {
+      if (!r.finish) { alert(`${r.livery} has no finishing position.`); return; }
+      if (seen.has(r.finish)) { alert(`Two cars are down as ${r.finish}.`); return; }
+      seen.add(r.finish);
+    }
+    try {
+      const res = await window.gt.raceSave(sheet.legId, state.map(r => ({
+        entryId: r.entryId, driverId: r.driverId,
+        finish: r.finish, status: r.status
+      })));
+      alert(`Result saved.` + (res.roundClosed ? '\nThe round is complete.' : ''));
+      await refresh();
+      view('hub');
+    } catch (e) { alert(String(e.message || e).replace(/^Error: /, '')); }
+  };
+  actions.appendChild(save);
+  box.appendChild(actions);
 }
 
 // ---------------------------------------------------------------- introduction

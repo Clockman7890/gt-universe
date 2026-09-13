@@ -122,31 +122,54 @@ const FIELDS = ['race_skill', 'qualifying_skill', 'aggression', 'defending', 'st
   'blue_flag_conceding', 'weather_tyre_changes', 'avoidance_of_mistakes',
   'avoidance_of_forced_mistakes'];
 
-// A short tag so the team is readable on the in-game timing screen.
-// "Vortex 59" -> V59, "Apex Racing Team" -> ART, "Hellenic Motorsport" -> HEM,
-// "Kowalski (privateer)" -> KOW
-function teamTag(name) {
-  const clean = String(name || '').replace(/\(.*?\)/g, ' ')
-                                  .replace(/[^A-Za-z0-9 ]/g, ' ')
-                                  .trim().split(/\s+/).filter(Boolean);
-  if (!clean.length) return 'IND';
-  const last = clean[clean.length - 1];
-  if (/^\d+$/.test(last) && clean.length > 1)
-    return (clean[0][0] + last).toUpperCase().slice(0, 3);
-  if (clean.length >= 3)
-    return clean.slice(0, 3).map(w => w[0]).join('').toUpperCase();
-  if (clean.length === 2)
-    return (clean[0].slice(0, 2) + clean[1][0]).toUpperCase();
-  return clean[0].slice(0, 3).toUpperCase();
+const f3 = v => Number(v).toFixed(3);
+// Automobilista 2 draws plain ASCII, so accents and the like are folded down
+// before the name ever reaches the file.
+const FOLD = {
+  'à':'a','á':'a','â':'a','ã':'a','ä':'a','å':'a','ā':'a','ă':'a','ą':'a',
+  'ç':'c','ć':'c','č':'c','ĉ':'c','ċ':'c',
+  'ď':'d','đ':'d','ð':'d',
+  'è':'e','é':'e','ê':'e','ë':'e','ē':'e','ĕ':'e','ė':'e','ę':'e','ě':'e',
+  'ĝ':'g','ğ':'g','ġ':'g','ģ':'g',
+  'ĥ':'h','ħ':'h',
+  'ì':'i','í':'i','î':'i','ï':'i','ĩ':'i','ī':'i','ĭ':'i','į':'i','ı':'i',
+  'ĵ':'j','ķ':'k',
+  'ĺ':'l','ļ':'l','ľ':'l','ł':'l',
+  'ñ':'n','ń':'n','ņ':'n','ň':'n',
+  'ò':'o','ó':'o','ô':'o','õ':'o','ö':'o','ø':'o','ō':'o','ŏ':'o','ő':'o',
+  'ŕ':'r','ŗ':'r','ř':'r',
+  'ś':'s','ŝ':'s','ş':'s','š':'s','ș':'s','ß':'ss',
+  'ţ':'t','ť':'t','ŧ':'t','ț':'t',
+  'ù':'u','ú':'u','û':'u','ü':'u','ũ':'u','ū':'u','ŭ':'u','ů':'u','ű':'u','ų':'u',
+  'ŵ':'w','ý':'y','ÿ':'y','ŷ':'y',
+  'ź':'z','ż':'z','ž':'z',
+  'æ':'ae','œ':'oe','þ':'th','ŀ':'l','ŉ':'n'
+};
+function ascii(str) {
+  let out = '';
+  for (const ch of String(str)) {
+    const low = ch.toLowerCase();
+    if (FOLD[low]) {
+      const folded = FOLD[low];
+      out += ch === low ? folded
+           : folded.charAt(0).toUpperCase() + folded.slice(1);
+    } else if (ch.charCodeAt(0) < 128) {
+      out += ch;
+    } else {
+      // anything still outside ASCII is dropped rather than drawn as a box
+      const norm = ch.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      out += /^[\x00-\x7F]+$/.test(norm) ? norm : '';
+    }
+  }
+  return out;
 }
 
-const f3 = v => Number(v).toFixed(3);
-const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-                          .replace(/"/g, '&quot;');
+const esc = s => ascii(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                         .replace(/"/g, '&quot;');
 
 function driverBlock(row, grid) {
   const lines = [`<driver livery_name="${esc(row.livery_name)}">`];
-  lines.push(`  <name>${esc(row.name)}${row.tag ? ' (' + row.tag + ')' : ''}</name>`);
+  lines.push(`  <name>${esc(row.name)}</name>`);
   lines.push(`  <country>${esc(row.country)}</country>`);
   for (const k of FIELDS) lines.push(`  <${k}>${f3(row[k])}</${k}>`);
   // an artificial grid order for the second leg, from the first leg's result
@@ -203,9 +226,6 @@ function gridFor(db, round, legNo) {
       r.power_scalar  = clamp(r.power_scalar  + dev / 0.13 * 0.01);
       r.weight_scalar = clamp(r.weight_scalar - dev / 0.10 * 0.004);
     }
-    // a lone owner-driver has no team to name, and the tag would only repeat
-    // their own surname
-    r.tag = r.is_privateer ? null : teamTag(r.team_name);
   }
   return rows;
 }

@@ -5,10 +5,12 @@ const { generatePopulation } = require('./population');
 const { buildEntries, placePlayer } = require('./entries');
 const market = require('./market');
 const weekend = require('./weekend');
+const season = require('./season');
 const office = require('./office');
 
 let handle = null;
 let dirty = false;
+let worldData = null;
 
 // the fourteen driver blocks, needed before any driver row can exist
 const BLOCKS = [
@@ -145,6 +147,7 @@ function peek(file) {
 }
 
 function create(file, schemaSql, profile, world, namesDb) {
+  worldData = world;
   close();
   handle = new Database(file);
   handle.pragma('journal_mode = WAL');
@@ -205,7 +208,8 @@ function create(file, schemaSql, profile, world, namesDb) {
   return { file, ok: true };
 }
 
-function open(file) {
+function open(file, world) {
+  if (world) worldData = world;
   close();
   handle = new Database(file, { fileMustExist: true });
   handle.pragma('journal_mode = WAL');
@@ -231,12 +235,23 @@ function state() {
 function advanceWeek() {
   if (!handle) return null;
   const c = handle.prepare(`SELECT season, week FROM career WHERE id = 1`).get();
-  let { season, week } = c;
-  week += 1;
-  if (week > 52) { week = 1; season += 1; }
-  handle.prepare(`UPDATE career SET season = ?, week = ? WHERE id = 1`).run(season, week);
+  let week = c.week + 1, s = c.season;
+  if (week > 52) { week = 1; s += 1; }
+  handle.prepare(`UPDATE career SET season = ?, week = ? WHERE id = 1`).run(s, week);
+
+  // the entry list closes at the end of week 4; anything still open is taken
+  let filled = null;
+  if (c.week === 4 && week === 5 && worldData) {
+    filled = season.lockEntries(handle, worldData);
+    const short = filled.filter(f => f.to < f.target);
+    handle.prepare(`INSERT INTO news (season,week,category,headline,body)
+        VALUES (?,?,'market',?,?)`).run(s, week, 'The entry lists are closed',
+      short.length ? `${short.length} championship${short.length === 1 ? '' : 's'} start short of cars.`
+                   : 'Every championship starts the season with a full grid.');
+  }
+
   dirty = true;
-  return { season, week };
+  return { season: s, week, filled };
 }
 
 function save() {
@@ -357,6 +372,16 @@ function racePrepare(legNo) {
                          round: r.round_no, roundId: r.id }, weekend.prepareLeg(handle, r, legNo || 1));
 }
 
+function raceSheet(roundId, legNo) {
+  return handle ? season.resultSheet(handle, roundId, legNo) : null;
+}
+function raceSave(legId, entries) {
+  if (!handle) throw new Error('No career open.');
+  const r = season.saveResults(handle, legId, entries);
+  dirty = true;
+  return r;
+}
+
 function newsList() {
   if (!handle) return [];
   return handle.prepare(`
@@ -466,6 +491,6 @@ function garage() {
 }
 
 module.exports = { create, open, peek, state, advanceWeek, save, close, isDirty,
-                   marketList, marketBuy, marketBuyMany, garage, myEntries, lineup, setCarDriver, newsList, newsRead, home, setTutorial, raceInfo, racePrepare, ams2Path, setAms2Path,
+                   marketList, marketBuy, marketBuyMany, garage, myEntries, lineup, setCarDriver, newsList, newsRead, home, setTutorial, raceInfo, racePrepare, raceSheet, raceSave,
                    officeOffers, officeTakeSeat, officeFormTeam, officeSign,
                    handle: () => handle };
