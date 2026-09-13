@@ -626,9 +626,7 @@ async function openRace() {
 // ---------------------------------------------------------------- results
 const STATUS = [
   ['finished', 'Finished'],
-  ['dnf_mechanical', 'Mechanical'],
-  ['dnf_incident', 'Accident'],
-  ['damaged', 'Finished, damaged'],
+  ['retired', 'Retired'],
   ['dns', 'Did not start']
 ];
 
@@ -645,7 +643,8 @@ async function openResults(info, leg) {
   intro.className = 'note';
   intro.innerHTML = `Put in where each car finished. Type the position next to the entry ` +
     `number as it appears on the results screen in game — the order here is alphabetical, ` +
-    `not the finishing order.`;
+    `not the finishing order. Any car marked <b>Retired</b> is rebuilt at its owner's ` +
+    `expense, whatever stopped it.`;
   box.appendChild(intro);
 
   const table = document.createElement('div');
@@ -689,7 +688,7 @@ async function openResults(info, leg) {
   save.className = 'primary';
   save.textContent = sheet.recorded ? 'Save again' : 'Save result';
   save.onclick = async () => {
-    const running = state.filter(r => r.status === 'finished' || r.status === 'damaged');
+    const running = state.filter(r => r.status === 'finished');
     const seen = new Set();
     for (const r of running) {
       if (!r.finish) { alert(`${r.livery} has no finishing position.`); return; }

@@ -176,11 +176,13 @@ function saveResults(db, legId, entries) {
               VALUES (?,?,'driver',?,?, 'prize')`).run(c.season, c.week, payTo, prize);
         }
       }
-      if (e.status === 'dnf_incident' || e.status === 'damaged') {
+      // A car that does not see the flag gets rebuilt, whatever stopped it.
+      // Nobody is asked to judge whether it was contact or a broken engine.
+      if (e.status === 'retired') {
         const model = db.prepare(`SELECT cm.class FROM entries en
             JOIN chassis ch ON ch.id = en.chassis_id
             JOIN car_models cm ON cm.id = ch.model_id WHERE en.id = ?`).get(e.entryId);
-        const bill = Math.round((DAMAGE[model.class] || 20000) * 0.5 / 100) * 100;
+        const bill = Math.round((DAMAGE[model.class] || 20000) * 0.7 / 100) * 100;
         db.prepare(`UPDATE results SET damage_cost = ? WHERE leg_id = ? AND entry_id = ?`)
           .run(bill, legId, e.entryId);
         if (payTo) {
@@ -200,12 +202,14 @@ function saveResults(db, legId, entries) {
     const mine = entries.find(e => e.driverId === c.player_driver_id);
     if (mine) {
       const where = mine.status === 'finished' ? `finished ${ordinal(mine.finish)}`
-                  : mine.status === 'dnf_mechanical' ? 'retired with a mechanical failure'
-                  : 'retired after contact';
+                  : mine.status === 'dns' ? 'did not start'
+                  : 'retired';
       db.prepare(`INSERT INTO news (season,week,category,headline,body) VALUES (?,?,'result',?,?)`)
         .run(c.season, c.week,
              `You ${where} at ${db.prepare('SELECT name FROM tracks WHERE id = ?').get(round.track_id).name}`,
-             `Race ${leg.leg_no}.`);
+             mine.status === 'retired'
+               ? `Race ${leg.leg_no}. The rebuild is charged to you.`
+               : `Race ${leg.leg_no}.`);
     }
     return { saved: entries.length, roundClosed: !legsLeft };
   })();

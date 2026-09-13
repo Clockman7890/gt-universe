@@ -344,7 +344,7 @@ CREATE TABLE results (
   driver_id   INTEGER NOT NULL REFERENCES drivers(id),
   grid_pos    INTEGER,
   finish_pos  INTEGER,
-  status      TEXT NOT NULL DEFAULT 'finished',-- finished | dnf_mechanical | dnf_incident | dns
+  status      TEXT NOT NULL DEFAULT 'finished',-- finished | retired | dns
   best_lap_ms INTEGER,
   points      REAL NOT NULL DEFAULT 0,
   damage_cost INTEGER NOT NULL DEFAULT 0,
