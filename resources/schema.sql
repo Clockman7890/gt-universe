@@ -235,6 +235,7 @@ CREATE TABLE teams (
   partner_driver_id INTEGER REFERENCES drivers(id),  -- 50% shareholder
   capital        INTEGER NOT NULL,
   engineering    TEXT NOT NULL DEFAULT 'amateurs', -- amateurs | experienced | specialist
+  facilities     TEXT NOT NULL DEFAULT 'gt5',      -- highest tier the workshop is fit for
   goals          TEXT NOT NULL DEFAULT 'normal',   -- max_pressure | normal | low_pressure
   status         TEXT NOT NULL DEFAULT 'active',   -- active | distress | folded
   folded_season  INTEGER

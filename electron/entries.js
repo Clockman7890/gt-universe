@@ -17,6 +17,15 @@ function arcFranchises(liveries) {
   return [...byTeam.entries()].map(([name, cars]) => ({ name, cars }));
 }
 
+// Most outfits run one car. A few run two, and a very few run three.
+const FLEET = {
+  gt5:  [0.70, 0.95, 1.00],      // 70% one car, 25% two, 5% three
+  gt4:  [0.55, 0.88, 1.00],
+  gt3:  [0.45, 0.82, 0.96],
+  lmdh: [0.00, 0.00, 1.00]
+};
+const MAX_CARS = 4;
+
 const ENGINEERING = ['amateurs', 'experienced', 'specialist'];
 const GOALS = ['low_pressure', 'normal', 'normal', 'max_pressure'];
 
@@ -181,6 +190,7 @@ function buildEntries(db, world, ctx, profile) {
 
     const drivers = draw(c.id, grid * perCar, c.cls);
     let di = 0;
+    const fleets = [];            // teams already created for this championship
 
     for (let i = 0; i < grid; i++) {
       if (di >= drivers.length) break;
@@ -207,17 +217,39 @@ function buildEntries(db, world, ctx, profile) {
       if (!lv) break;                              // pool exhausted
 
       const eng = teamRun ? engineeringFor(c.cls, r) : 'amateurs';
-      const teamName = isArc
-        ? franchises[i % franchises.length].name
-        : (teamRun ? tf.make(lead.name) : `${lead.name.split(' ').pop()} (privateer)`);
 
-      const teamId = ins.team.run({
-        name: teamName, country: lead.code, block: lead.block,
-        priv: teamRun ? 0 : 1, owner: teamRun ? null : lead.id,
-        capital: Math.round(between(r, teamRun ? 180000 : 90000, teamRun ? 1400000 : 420000) / 1000) * 1000,
-        eng, goals: pick(r, GOALS)
-      }).lastInsertRowid;
-      teamRun ? stats.teams++ : stats.privateers++;
+      // an existing team may add this car to its fleet rather than a new outfit
+      let teamId = null, reused = null;
+      if (isArc) {
+        // the eleven franchises are one team apiece, running two cars
+        const f = franchises[i % franchises.length];
+        if (f.teamId) teamId = f.teamId;
+      } else if (teamRun) {
+        const roll = r();
+        const wants = FLEET[c.cls][0] > roll ? 1 : (FLEET[c.cls][1] > roll ? 2 : 3);
+        reused = fleets.find(f => f.cars < Math.min(f.wants, MAX_CARS));
+        if (reused) { teamId = reused.id; reused.cars++; }
+        else if (wants > 1) { /* a new team that intends to grow */ }
+      }
+
+      if (!teamId) {
+        const teamName = isArc
+          ? franchises[i % franchises.length].name
+          : (teamRun ? tf.make(lead.name) : `${lead.name.split(' ').pop()} (privateer)`);
+        teamId = ins.team.run({
+          name: teamName, country: lead.code, block: lead.block,
+          priv: teamRun ? 0 : 1, owner: teamRun ? null : lead.id,
+          capital: Math.round(between(r, teamRun ? 180000 : 90000, teamRun ? 1400000 : 420000) / 1000) * 1000,
+          eng, goals: pick(r, GOALS)
+        }).lastInsertRowid;
+        teamRun ? stats.teams++ : stats.privateers++;
+        if (isArc) franchises[i % franchises.length].teamId = teamId;
+        if (teamRun && !isArc) {
+          const roll = r();
+          const wants = FLEET[c.cls][0] > roll ? 1 : (FLEET[c.cls][1] > roll ? 2 : 3);
+          if (wants > 1) fleets.push({ id: teamId, cars: 1, wants });
+        }
+      }
 
       const value = model.price_new ? Math.round(model.price_new * 0.8) : 0;
       const chassisId = ins.chassis.run(model.id, teamId, value).lastInsertRowid;

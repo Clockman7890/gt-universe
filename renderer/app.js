@@ -163,8 +163,13 @@ async function refresh() {
     homeNode.classList.toggle('hq', !!off.team);
     homeNode.classList.toggle('home', !off.team);
     $('n-home-label').textContent = off.team ? 'HQ' : 'Home';
-    $('n-home').textContent = off.team ? `${off.team.name} · ${off.team.engineering}`
-      : (cars.length ? `Privateer · ${cars[0].championship}` : 'No entry yet');
+    const hm = await window.gt.home();
+    $('n-home').textContent =
+      off.team ? `${off.team.name} · ${off.team.engineering}`
+      : (hm && hm.entry
+          ? (hm.entry.is_privateer ? `Privateer · ${hm.entry.championship}`
+                                   : `Driving for ${hm.entry.team}`)
+          : 'No entry yet');
   }
   applyTutorial();
 }
@@ -779,7 +784,18 @@ async function openHome() {
   box.appendChild(cards);
 
   // ---- how you go racing ----
-  if (!h.team && o) {
+  if (!h.team && o && !o.open) {
+    const done = document.createElement('div');
+    done.className = 'upgrade';
+    done.innerHTML = `<h4>Entries are closed for this season</h4>` +
+      `<p class="note">` + (h.entry
+        ? (h.entry.is_privateer
+            ? `You are running your own car in the ${h.entry.championship}.`
+            : `You are driving for ${h.entry.team} in the ${h.entry.championship}.`)
+        : 'You did not take an entry this season.') +
+      ` The next chance to change anything comes in the winter.</p>`;
+    box.appendChild(done);
+  } else if (!h.team && o) {
     const up = document.createElement('div');
     up.className = 'upgrade';
     up.innerHTML = `<h4>How will you go racing?</h4>` +
@@ -798,8 +814,9 @@ async function openHome() {
     const canTeam = o.canFormTeam && o.open;
     teamOpt.className = 'opt' + (canTeam ? '' : ' no') + (entryDecided === 'team' ? ' sel' : '');
     teamOpt.innerHTML = `<b>Create a team</b><span>` +
-      (canTeam ? `From ${signed(-Math.min(...Object.values(o.coreCost)))} · several cars`
-               : `Needs ${eur(o.minCapital)} in capital`) + `</span>`;
+      (o.noTeamsHere ? 'Not founded at this level'
+        : canTeam ? `From ${signed(-(o.facilityCost + Math.min(...Object.values(o.coreCost))))} · several cars`
+                  : `Needs ${eur(o.minCapital)} in capital`) + `</span>`;
 
     const seatOpt = document.createElement('div');
     seatOpt.className = 'opt' + (entryDecided === 'seat' ? ' sel' : '');
@@ -835,21 +852,24 @@ async function openHome() {
       detail.innerHTML =
         `<div class="namefield"><label>TEAM NAME</label>` +
         `<input id="hm-teamname" maxlength="34" placeholder="${d.name.split(' ').pop()} Racing"></div>` +
-        `<p class="note">Now choose the engineering staff. Better people cost more every ` +
-        `season but break down less and read the car better.</p>`;
+        `<p class="note">The workshop itself costs ${signed(-o.facilityCost)} — buildings and ` +
+        `equipment, paid once and kept for as long as the team lives. On top of that comes the ` +
+        `engineering staff: better people cost more but break down less and read the car better.</p>`;
       const eng = document.createElement('div');
       eng.className = 'eng';
       for (const [lvl, cost] of Object.entries(o.coreCost)) {
-        const ok = cost <= d.capital;
+        const ok = cost + o.facilityCost <= d.capital;
         const el = document.createElement('div');
         el.className = 'opt' + (ok ? '' : ' no');
-        el.innerHTML = `<b>${ENG_LABEL[lvl]}</b><span>${signed(-cost)} one-off core</span>`;
+        el.innerHTML = `<b>${ENG_LABEL[lvl]}</b>` +
+          `<span>${signed(-(cost + o.facilityCost))} in total</span>`;
         if (ok) el.onclick = async () => {
           const nm = ($('hm-teamname') && $('hm-teamname').value.trim()) || '';
           try {
             const r = await window.gt.formTeam(lvl, nm);
-            alert(`${r.team} founded.\nEngineering: ${ENG_LABEL[r.engineering]}\n` +
-                  `${signed(-r.cost)} — ${eur(r.capital)} left.`);
+            alert(`${r.team} founded.\n\nWorkshop ${signed(-r.facility)}\n` +
+                  `${ENG_LABEL[r.engineering]} staff ${signed(-r.core)}\n` +
+                  `Total ${signed(-r.cost)} — ${eur(r.capital)} left.`);
             await refresh(); await openHome();
           } catch (e) { alert(String(e.message || e).replace(/^Error: /, '')); }
         };
@@ -914,7 +934,8 @@ async function openOffice() {
       b.onclick = async () => {
         try {
           const r = await window.gt.takeSeat(s.entry_id);
-          alert(`Signed with ${r.team}\n${r.car}\n\nSeat fee ${signed(-r.fee)} — ${eur(r.capital)} left.`);
+          alert(`Signed with ${r.team}\n${r.car}\n\nSeat fee ${signed(-r.fee)} — ${eur(r.capital)} left.` +
+                (r.dropped ? `\n\n${r.dropped} loses the drive.` : ''));
           await refresh(); await openOffice();
         } catch (e) { alert(String(e.message || e).replace(/^Error: /, '')); }
       };

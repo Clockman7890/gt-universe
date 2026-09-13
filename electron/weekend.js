@@ -186,8 +186,14 @@ function gridFor(db, round, legNo) {
   // Teams with better engineering break down less often, but nothing is safe:
   // even a specialist outfit sits well short of certainty.
   const REL = { amateurs: 0.68, experienced: 0.78, specialist: 0.86 };
+  // the same crew spread over more cars gets less time on each of them
+  const FLEET_PENALTY = { 1: 1.00, 2: 0.96, 3: 0.91, 4: 0.85 };
+  const fleetSize = {};
+  for (const r of rows) fleetSize[r.team_name] = (fleetSize[r.team_name] || 0) + 1;
+
   for (const r of rows) {
-    r.reliability = REL[r.engineering] || 0.72;
+    const n = Math.min(4, fleetSize[r.team_name] || 1);
+    r.reliability = (REL[r.engineering] || 0.72) * (FLEET_PENALTY[n] || 0.85);
     // a lone owner-driver has no team to name, and the tag would only repeat
     // their own surname
     r.tag = r.is_privateer ? null : teamTag(r.team_name);

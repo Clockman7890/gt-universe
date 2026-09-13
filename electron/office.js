@@ -9,6 +9,12 @@ const CORE_BY_CLASS = {
 };
 const MIN_CAPITAL = { gt5: 250000, gt4: 850000, gt3: 2600000 };
 
+// Buildings and equipment, paid once and kept for life. A team that works its
+// way up pays less than one that starts at the top, and nobody founds a team
+// straight into GT3 — that workshop has to be earned.
+const FACILITIES = { gt5: 50000, gt4: 100000 };
+const UPGRADE    = { gt4: 30000, gt3: 15000 };
+
 // what a privateer pays to rent a crew, per round
 const CREW_PER_ROUND = { gt5: [8000, 14000], gt4: [30000, 45000], gt3: [70000, 110000] };
 
@@ -112,8 +118,10 @@ function offers(db) {
     week: season.week, open: season.week <= 4,
     capital: player.capital, hasSeat: !!seat,
     team: myTeam ? { id: myTeam.id, name: myTeam.name, engineering: myTeam.engineering } : null,
-    canFormTeam: !myTeam && player.capital >= MIN_CAPITAL[t],
+    canFormTeam: !myTeam && t !== 'gt3' && player.capital >= MIN_CAPITAL[t],
+    noTeamsHere: t === 'gt3',
     minCapital: MIN_CAPITAL[t],
+    facilityCost: FACILITIES[t] || null,
     coreCost: CORE_BY_CLASS[t],
     seats, scouting
   };
@@ -127,9 +135,12 @@ function takeSeat(db, entryId) {
   if (ctx.season.week > 4) throw new Error('The entry list for this season has closed.');
 
   const row = db.prepare(`
-    SELECT e.*, t.engineering, t.name team, t.id team_id, t.goals, cm.name car
+    SELECT e.*, t.engineering, t.name team, t.id team_id, t.goals, cm.name car,
+           cl.drivers_per_car seats
     FROM entries e JOIN teams t ON t.id = e.team_id
     JOIN chassis ch ON ch.id = e.chassis_id JOIN car_models cm ON cm.id = ch.model_id
+    JOIN championships c ON c.id = e.championship_id
+    JOIN championship_levels cl ON cl.id = c.level_id
     WHERE e.id = ?`).get(entryId);
   if (!row) throw new Error('That seat is gone.');
 
@@ -141,9 +152,34 @@ function takeSeat(db, entryId) {
   if (fee > ctx.player.capital) throw new Error('You cannot afford that seat.');
 
   return db.transaction(() => {
-    const role = db.prepare(`SELECT COUNT(*) n FROM entry_drivers WHERE entry_id = ?`).get(entryId).n + 1;
+    const inCar = db.prepare(`
+      SELECT ed.role, ed.driver_id, d.name FROM entry_drivers ed
+      JOIN drivers d ON d.id = ed.driver_id
+      WHERE ed.entry_id = ? ORDER BY ed.role`).all(entryId);
+
+    // a paying driver takes the seat; if the car is full the slowest of the
+    // incumbents loses his drive
+    let role, dropped = null;
+    if (inCar.length < row.seats) {
+      role = inCar.length + 1;
+    } else {
+      const worst = db.prepare(`
+        SELECT ed.role, ed.driver_id, d.name FROM entry_drivers ed
+        JOIN drivers d ON d.id = ed.driver_id
+        JOIN driver_skills s ON s.driver_id = d.id
+        WHERE ed.entry_id = ? ORDER BY s.race_skill ASC LIMIT 1`).get(entryId);
+      role = worst.role; dropped = worst.name;
+      db.prepare(`DELETE FROM entry_drivers WHERE entry_id = ? AND driver_id = ?`)
+        .run(entryId, worst.driver_id);
+    }
+
     db.prepare(`INSERT INTO entry_drivers (entry_id,driver_id,role,seat_fee) VALUES (?,?,?,?)`)
       .run(entryId, ctx.player.id, role, fee);
+    if (dropped)
+      db.prepare(`INSERT INTO news (season,week,category,headline,body) VALUES (?,?,'driver',?,?)`)
+        .run(ctx.season.season, ctx.season.week,
+             `${dropped} loses his seat at ${row.team}`,
+             'Replaced by a driver bringing a budget.');
     db.prepare(`UPDATE drivers SET capital = capital - ? WHERE id = ?`).run(fee, ctx.player.id);
     db.prepare(`INSERT INTO ledger (season,week,entity_type,entity_id,amount,reason)
                 VALUES (?,?,'driver',?,?, 'seat_fee')`)
@@ -152,7 +188,8 @@ function takeSeat(db, entryId) {
     db.prepare(`INSERT INTO news (season,week,category,headline,body) VALUES (?,?,'market',?,?)`)
       .run(ctx.season.season, ctx.season.week, `You have signed with ${row.team}`,
            `${row.car} in the ${ctx.champ.name}. Seat fee ${fee}.`);
-    return { team: row.team, car: row.car, fee, capital: ctx.player.capital - fee };
+    return { team: row.team, car: row.car, fee, dropped,
+             capital: ctx.player.capital - fee };
   })();
 }
 
@@ -165,20 +202,26 @@ function formTeam(db, engineering, customName) {
   if (existing) throw new Error('You already run a team.');
 
   const t = tier(ctx.champ.class);
-  const cost = CORE_BY_CLASS[t][engineering];
-  if (!cost) throw new Error('Unknown engineering level.');
+  if (t === 'gt3')
+    throw new Error('No team is founded straight into GT3. Build one lower down and bring it up.');
+  const core = CORE_BY_CLASS[t][engineering];
+  if (!core) throw new Error('Unknown engineering level.');
+  const facility = FACILITIES[t];
+  const cost = core + facility;
   if (ctx.player.capital < MIN_CAPITAL[t])
     throw new Error(`Forming a team here needs at least ${MIN_CAPITAL[t]} in capital.`);
-  if (cost > ctx.player.capital) throw new Error('You cannot afford that engineering core.');
+  if (cost > ctx.player.capital)
+    throw new Error('You cannot afford the workshop and that engineering core.');
 
   return db.transaction(() => {
     const name = (customName || '').trim() ||
                  `${ctx.player.name.split(' ').pop()} Racing`;
     const teamId = db.prepare(`INSERT INTO teams
-        (name,country,block_id,founded_season,is_privateer,owner_driver_id,capital,engineering,goals)
-        VALUES (?,?,?,?,0,?,?,?, 'normal')`)
+        (name,country,block_id,founded_season,is_privateer,owner_driver_id,capital,
+         engineering,facilities,goals)
+        VALUES (?,?,?,?,0,?,?,?,?, 'normal')`)
       .run(name, ctx.player.country, ctx.player.block_id, ctx.season.season,
-           ctx.player.id, 0, engineering).lastInsertRowid;
+           ctx.player.id, 0, engineering, t).lastInsertRowid;
 
     // a car already bought as a privateer moves under the new team
     const priv = db.prepare(`SELECT id FROM teams WHERE owner_driver_id = ? AND is_privateer = 1`)
@@ -196,8 +239,9 @@ function formTeam(db, engineering, customName) {
       .run(ctx.season.season, ctx.season.week, ctx.player.id, -cost);
     db.prepare(`INSERT INTO news (season,week,category,headline,body) VALUES (?,?,'team',?,?)`)
       .run(ctx.season.season, ctx.season.week, `${name} has been founded`,
-           `Engineering: ${engineering}.`);
-    return { team: name, engineering, cost, capital: ctx.player.capital - cost };
+           `Workshop fitted for ${t.toUpperCase()}. Engineering: ${engineering}.`);
+    return { team: name, engineering, cost, facility, core,
+             capital: ctx.player.capital - cost };
   })();
 }
 
@@ -238,4 +282,5 @@ function signDriver(db, driverId, entryId) {
   })();
 }
 
-module.exports = { offers, takeSeat, formTeam, signDriver, CORE_BY_CLASS, MIN_CAPITAL };
+module.exports = { offers, takeSeat, formTeam, signDriver,
+                   CORE_BY_CLASS, MIN_CAPITAL, FACILITIES, UPGRADE };
