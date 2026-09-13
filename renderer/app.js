@@ -728,8 +728,10 @@ async function openResults(info, leg) {
         not_running: 'Automobilista 2 is not running, or shared memory is off. ' +
           'In the game: Options, System, Shared Memory — set it to Project CARS 2.',
         no_view: 'Found the session but could not read it.',
-        bad_layout: 'The block was found but does not look the way it should. ' +
-          'Fill the sheet in by hand and tell me what it reported.'
+        bad_layout: 'The block was found but does not read as expected. ' +
+          'Fill the sheet in by hand and tell me what the lamp reported.',
+        unsupported: 'Shared memory is a Windows feature.',
+        short_read: 'The block was cut short.'
       }[g.reason] || g.message || 'Could not read the session.') + `</span>`;
       return;
     }
