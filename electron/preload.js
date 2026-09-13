@@ -27,6 +27,8 @@ contextBridge.exposeInMainWorld('gt', {
   raceInfo:   ()        => ipcRenderer.invoke('race:info'),
   racePrepare:leg       => ipcRenderer.invoke('race:prepare', leg),
   raceSheet:  (r, l)    => ipcRenderer.invoke('race:sheet', r, l),
+  readGame:   ()        => ipcRenderer.invoke('sm:read'),
+  gameStatus: ()        => ipcRenderer.invoke('sm:status'),
   raceSave:   (l, e)    => ipcRenderer.invoke('race:save', l, e),
   writeFiles: files     => ipcRenderer.invoke('race:write', files),
   ams2Path:   ()        => ipcRenderer.invoke('ams2:path'),

@@ -151,4 +151,43 @@ function classification() {
   return Object.assign(s, { finished: s.raceState === 'finished', order });
 }
 
-module.exports = { read, classification, MAP_NAME };
+// A cheap check the interface can poll: is the library there, is the game
+// running, and is there anything worth reading yet.
+function status() {
+  const out = { platform: process.platform, koffi: false, state: 'unavailable' };
+  if (process.platform !== 'win32') {
+    out.detail = 'Shared memory is a Windows feature.';
+    return out;
+  }
+  try {
+    require.resolve('koffi');
+    out.koffi = true;
+  } catch (_) {
+    out.detail = 'The koffi library is missing from this build.';
+    return out;
+  }
+  let s;
+  try { s = read(); }
+  catch (e) { out.state = 'error'; out.detail = e.message; return out; }
+
+  if (!s.ok) {
+    out.state = s.reason === 'not_running' ? 'closed' : 'error';
+    out.detail = s.reason === 'not_running'
+      ? 'Automobilista 2 is not running, or Shared Memory is not set to Project CARS 2.'
+      : (s.message || s.reason);
+    if (s.sample) out.sample = s.sample;
+    return out;
+  }
+
+  out.version = s.version;
+  out.sessionState = s.sessionState;
+  out.raceState = s.raceState;
+  out.participants = s.numParticipants;
+  out.state = s.raceState === 'finished' ? 'ready' : 'live';
+  out.detail = s.raceState === 'finished'
+    ? `Session finished — ${s.numParticipants} cars, ready to read.`
+    : `${s.sessionState}, ${s.raceState} — ${s.numParticipants} cars.`;
+  return out;
+}
+
+module.exports = { read, classification, status, MAP_NAME };

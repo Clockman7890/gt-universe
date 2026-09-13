@@ -152,6 +152,16 @@ ipcMain.handle('tutorial:set',    (_e, n) => db.setTutorial(n));
 ipcMain.handle('race:info',       () => db.raceInfo());
 ipcMain.handle('race:prepare',    (_e, leg) => db.racePrepare(leg));
 ipcMain.handle('race:sheet',      (_e, r, l) => db.raceSheet(r, l));
+
+ipcMain.handle('sm:read', () => {
+  try { return require('./sharedmem').classification(); }
+  catch (e) { return { ok: false, reason: 'error', message: e.message }; }
+});
+
+ipcMain.handle('sm:status', () => {
+  try { return require('./sharedmem').status(); }
+  catch (e) { return { state: 'error', koffi: false, detail: e.message }; }
+});
 ipcMain.handle('race:save',       (_e, l, e) => db.raceSave(l, e));
 
 ipcMain.handle('settings:get', () => readSettings());

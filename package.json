@@ -7,7 +7,7 @@
   "scripts": {
     "start": "electron .",
     "postinstall": "electron-builder install-app-deps",
-    "dist": "electron-builder --win nsis --publish never"
+    "dist": "electron-builder --win nsis"
   },
   "author": "Ilias Orologas",
   "license": "UNLICENSED",
@@ -16,12 +16,15 @@
     "electron-builder": "^24.13.3"
   },
   "dependencies": {
-    "better-sqlite3": "^11.3.0"
+    "better-sqlite3": "^11.3.0",
+    "koffi": "^3.2.1"
   },
   "build": {
     "appId": "gr.orologas.gtuniverse",
     "productName": "GT Universe",
-    "directories": { "output": "dist" },
+    "directories": {
+      "output": "dist"
+    },
     "files": [
       "electron/**/*",
       "renderer/**/*",
@@ -29,9 +32,17 @@
       "!**/*.map"
     ],
     "extraResources": [
-      { "from": "resources", "to": "." }
+      {
+        "from": "resources",
+        "to": "."
+      }
     ],
-    "win": { "target": ["nsis"], "artifactName": "GTUniverse-Setup-${version}.${ext}" },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "artifactName": "GTUniverse-Setup-${version}.${ext}"
+    },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,

@@ -472,3 +472,14 @@ input.pos { background: var(--surface-0); border: 1px solid var(--border); color
 .rrow .drv { flex: 1; }
 select.st { background: var(--surface-0); border: 1px solid var(--border); color: var(--text-2);
   border-radius: 5px; padding: 5px 7px; font: inherit; font-size: 12px; width: 150px; }
+
+/* ---------- game connection lamp ---------- */
+.lamp { display: flex; align-items: center; gap: 10px; margin: 4px 0 10px;
+  font-size: 12px; color: var(--text-2); }
+.bulb { width: 11px; height: 11px; border-radius: 50%; flex: none;
+  background: #2C2F38; box-shadow: none; }
+.bulb.off   { background: #2C2F38; }
+.bulb.amber { background: var(--accent-soft); box-shadow: 0 0 9px rgba(239,159,39,.8); }
+.bulb.green { background: var(--green);       box-shadow: 0 0 9px rgba(99,153,34,.9); }
+.bulb.red   { background: var(--red);         box-shadow: 0 0 9px rgba(226,75,74,.7); }
+.lamptext { overflow-wrap: anywhere; }

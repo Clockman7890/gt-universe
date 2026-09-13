@@ -11,6 +11,9 @@ const show = id => {
 const view = id => {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   $(id).classList.add('active');
+  if (id !== 'results' && typeof lampTimer !== 'undefined' && lampTimer) {
+    clearInterval(lampTimer); lampTimer = null;
+  }
   if (id === 'hub') paint();
 };
 const eur = n => '€' + Number(n || 0).toLocaleString('en-GB');
@@ -682,9 +685,29 @@ async function openResults(info, leg) {
   });
   box.appendChild(table);
 
+  const lamp = document.createElement('div');
+  lamp.className = 'lamp';
+  lamp.innerHTML = `<span class="bulb off"></span><span class="lamptext">checking…</span>`;
+  box.appendChild(lamp);
+
   const status = document.createElement('p');
   status.className = 'note';
   box.appendChild(status);
+
+  // keep an eye on the game for as long as this screen is open
+  const paintLamp = async () => {
+    if (!$('results').classList.contains('active')) return;
+    let st;
+    try { st = await window.gt.gameStatus(); }
+    catch (e) { st = { state: 'error', detail: String(e.message || e) }; }
+    const bulb = lamp.querySelector('.bulb');
+    const text = lamp.querySelector('.lamptext');
+    const look = { ready: 'green', live: 'amber', closed: 'off',
+                   error: 'red', unavailable: 'red' }[st.state] || 'off';
+    bulb.className = 'bulb ' + look;
+    text.textContent = st.detail || st.state;
+    readBtn.disabled = st.state !== 'ready' && st.state !== 'live';
+  };
 
   const actions = document.createElement('div');
   actions.className = 'rc-actions';
@@ -694,8 +717,10 @@ async function openResults(info, leg) {
   readBtn.textContent = 'Read from Automobilista 2';
   readBtn.onclick = async () => {
     readBtn.disabled = true;
-    status.textContent = 'Looking for the session…';
-    const g = await window.gt.readGame();
+    status.textContent = 'Reading…';
+    let g;
+    try { g = await window.gt.readGame(); }
+    catch (e) { g = { ok: false, reason: 'error', message: String(e.message || e) }; }
     readBtn.disabled = false;
 
     if (!g.ok) {
@@ -765,7 +790,13 @@ async function openResults(info, leg) {
   };
   actions.appendChild(save);
   box.appendChild(actions);
+
+  await paintLamp();
+  clearInterval(lampTimer);
+  lampTimer = setInterval(paintLamp, 2500);
 }
+
+let lampTimer = null;
 
 // ---------------------------------------------------------------- introduction
 let tutStep = 4;                       // 4 means finished
