@@ -558,7 +558,7 @@ async function openRace() {
   setup.innerHTML = `<h5>SINGLE RACE — COPY THESE SETTINGS</h5>` +
     line('Track', info.track) +
     line('Date', `${dayName} ${d.date}`) +
-    line('Time of day', d.startTime) +
+    line('Start type', d.startType || 'Rolling') +
     line('Time progression', '×' + d.timeMultiplier) +
     line('AI opponents', d.aiOpponents) +
     line('Practice', d.practice ? d.practice + ' min' : 'none') +
@@ -578,9 +578,10 @@ async function openRace() {
   if (d.sessions && d.sessions.length) {
     const clock = document.createElement('div');
     clock.className = 'setup';
-    clock.innerHTML = `<h5>HOW THE DAY RUNS — IN-GAME CLOCK AT ×${d.timeMultiplier}</h5>` +
+    clock.innerHTML = `<h5>TIME OF DAY — SET ONE PER SESSION</h5>` +
       d.sessions.map(x => `<div class="line"><span>${x.name}</span>` +
-        `<b>${x.from} → ${x.to}</b><span class="real">${x.real} min real</span></div>`).join('');
+        `<b>${x.start}</b><span class="real">runs to ${x.ends} · ${x.real} min real</span>` +
+        `</div>`).join('');
     box.appendChild(clock);
   }
 

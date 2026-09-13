@@ -60,7 +60,7 @@ function weekendPlan(cls, lvl, km, sunday) {
   if (!lvl.two_leg) {
     // GT5 qualifies on both days; GT4 and GT3 Sprint take Sunday's grid
     // from Saturday's finishing order
-    const open = cls === 'gt5' ? [9 * 60, 10 * 60] : [12 * 60, 13.5 * 60];
+    const open = cls === 'gt5' ? [9 * 60, 10 * 60] : [12 * 60, 13 * 60];
     const qualiSunday = cls === 'gt5' || cls === 'gt3';
     return [
       { leg: 1, date: saturday, start: hhmm(open[0]),
@@ -73,13 +73,12 @@ function weekendPlan(cls, lvl, km, sunday) {
 
   // one race, two stints, same day
   const start = km >= 200 ? 10 * 60 : (tier === 'lmdh' ? 12 * 60 : 11 * 60);
-  let t = start;
-  t += lvl.practice_minutes * 2;                 // practice
-  t += 20 + lvl.qualifying_minutes * 2;          // gap and qualifying
-  t += 20;                                       // gap to the start
-  const legStart = t;
+  const hour = m => Math.ceil(m / 60) * 60;
+  let t = hour(start + lvl.practice_minutes * 2);        // qualifying, on the hour
+  const legStart = hour(t + lvl.qualifying_minutes * 2); // race, on the hour
   const legReal = km / SPEED[tier] * 60;
-  const secondStart = legStart + legReal * 2 + 50;   // first stint plus a break
+  // the second stint also has to begin on the hour
+  const secondStart = Math.ceil((legStart + legReal * 2 + 40) / 60) * 60;
   return [
     { leg: 1, date: sunday, start: hhmm(start),
       practice: lvl.practice_minutes, quali: lvl.qualifying_minutes, skipQuali: 0 },
@@ -123,13 +122,31 @@ const FIELDS = ['race_skill', 'qualifying_skill', 'aggression', 'defending', 'st
   'blue_flag_conceding', 'weather_tyre_changes', 'avoidance_of_mistakes',
   'avoidance_of_forced_mistakes'];
 
+// A short tag so the team is readable on the in-game timing screen.
+// "Vortex 59" -> V59, "Apex Racing Team" -> ART, "Hellenic Motorsport" -> HEM,
+// "Kowalski (privateer)" -> KOW
+function teamTag(name) {
+  const clean = String(name || '').replace(/\(.*?\)/g, ' ')
+                                  .replace(/[^A-Za-z0-9 ]/g, ' ')
+                                  .trim().split(/\s+/).filter(Boolean);
+  if (!clean.length) return 'IND';
+  const last = clean[clean.length - 1];
+  if (/^\d+$/.test(last) && clean.length > 1)
+    return (clean[0][0] + last).toUpperCase().slice(0, 3);
+  if (clean.length >= 3)
+    return clean.slice(0, 3).map(w => w[0]).join('').toUpperCase();
+  if (clean.length === 2)
+    return (clean[0].slice(0, 2) + clean[1][0]).toUpperCase();
+  return clean[0].slice(0, 3).toUpperCase();
+}
+
 const f3 = v => Number(v).toFixed(3);
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
                           .replace(/"/g, '&quot;');
 
 function driverBlock(row, grid) {
   const lines = [`<driver livery_name="${esc(row.livery_name)}">`];
-  lines.push(`  <name>${esc(row.name)}</name>`);
+  lines.push(`  <name>${esc(row.name)}${row.tag ? ' (' + row.tag + ')' : ''}</name>`);
   lines.push(`  <country>${esc(row.country)}</country>`);
   for (const k of FIELDS) lines.push(`  <${k}>${f3(row[k])}</${k}>`);
   // an artificial grid order for the second leg, from the first leg's result
@@ -153,7 +170,7 @@ function gridFor(db, round, legNo) {
            s.fuel_management, s.blue_flag_conceding, s.weather_tyre_changes,
            s.avoidance_of_mistakes, s.avoidance_of_forced_mistakes,
            cp.weight_scalar, cp.power_scalar, cp.drag_scalar,
-           t.engineering, ed.role
+           t.engineering, t.name team_name, t.is_privateer, ed.role
     FROM entries e
     JOIN chassis ch ON ch.id = e.chassis_id
     JOIN car_models cm ON cm.id = ch.model_id
@@ -169,7 +186,12 @@ function gridFor(db, round, legNo) {
   // Teams with better engineering break down less often, but nothing is safe:
   // even a specialist outfit sits well short of certainty.
   const REL = { amateurs: 0.68, experienced: 0.78, specialist: 0.86 };
-  for (const r of rows) r.reliability = REL[r.engineering] || 0.72;
+  for (const r of rows) {
+    r.reliability = REL[r.engineering] || 0.72;
+    // a lone owner-driver has no team to name, and the tag would only repeat
+    // their own surname
+    r.tag = r.is_privateer ? null : teamTag(r.team_name);
+  }
   return rows;
 }
 
@@ -219,27 +241,36 @@ function prepareLeg(db, round, legNo) {
 
   // The clock runs at x2, so a real minute costs two in-game minutes. These are
   // the times the player will actually see on the in-game clock.
+  // AMS2 takes a start time per session and only on the hour, so each session
+  // begins at the first whole hour after the one before it has finished.
+  const nextHour = m => Math.ceil(m / 60) * 60;
   const mins = leg.start_time.split(':').reduce((h, m) => h * 60 + +m, 0);
   const speed = SPEED[round.class === 'gt5' ? 'gt5' : round.class === 'gt4' ? 'gt4'
                     : round.class === 'lmdh' ? 'lmdh' : 'gt3'];
   const raceReal = leg.distance_km / speed * 60;
+
   const sessions = [];
   let t = mins;
   if (leg.practice_min) {
-    sessions.push({ name: 'Practice', from: hhmm(t), to: hhmm(t + leg.practice_min * 2),
-                    real: leg.practice_min });
-    t += leg.practice_min * 2 + 20;
+    const end = t + leg.practice_min * 2;
+    sessions.push({ name: 'Practice', start: hhmm(t), ends: hhmm(end), real: leg.practice_min });
+    t = nextHour(end);
   }
   if (leg.quali_min) {
-    sessions.push({ name: 'Qualifying', from: hhmm(t), to: hhmm(t + leg.quali_min * 2),
-                    real: leg.quali_min });
-    t += leg.quali_min * 2 + 20;
+    const end = t + leg.quali_min * 2;
+    sessions.push({ name: 'Qualifying', start: hhmm(t), ends: hhmm(end), real: leg.quali_min });
+    t = nextHour(end);
   }
-  sessions.push({ name: leg.leg_no === 2 && lvl.two_leg ? 'Race — second stint' : 'Race',
-                  from: hhmm(t), to: hhmm(t + raceReal * 2), real: Math.round(raceReal) });
+  sessions.push({
+    name: leg.leg_no === 2 && lvl.two_leg ? 'Race — second stint' : 'Race',
+    start: hhmm(t), ends: hhmm(t + raceReal * 2), real: Math.round(raceReal)
+  });
+
+  // one-make series line up on the grid; everything else rolls
+  const startType = round.class === 'gt5' ? 'Standing' : 'Rolling';
 
   return {
-    sessions,
+    sessions, startType,
     leg: legNo, laps: leg.laps, distance: leg.distance_km,
     startTime: leg.start_time, date: leg.race_date || round.race_date,
     aiOpponents: rows.filter(r => !r.is_player).length,
