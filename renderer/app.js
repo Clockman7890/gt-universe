@@ -682,8 +682,66 @@ async function openResults(info, leg) {
   });
   box.appendChild(table);
 
+  const status = document.createElement('p');
+  status.className = 'note';
+  box.appendChild(status);
+
   const actions = document.createElement('div');
   actions.className = 'rc-actions';
+
+  // ---- read the finishing order out of the game ----
+  const readBtn = document.createElement('button');
+  readBtn.textContent = 'Read from Automobilista 2';
+  readBtn.onclick = async () => {
+    readBtn.disabled = true;
+    status.textContent = 'Looking for the session…';
+    const g = await window.gt.readGame();
+    readBtn.disabled = false;
+
+    if (!g.ok) {
+      status.innerHTML = `<span class="warn">` + ({
+        not_running: 'Automobilista 2 is not running, or shared memory is off. ' +
+          'In the game: Options, System, Shared Memory — set it to Project CARS 2.',
+        no_view: 'Found the session but could not read it.',
+        bad_layout: 'The block was found but does not look the way it should. ' +
+          'Fill the sheet in by hand and tell me what it reported.'
+      }[g.reason] || g.message || 'Could not read the session.') + `</span>`;
+      return;
+    }
+    if (!g.finished) {
+      status.innerHTML = `<span class="warn">The session is in progress — ` +
+        `${g.sessionState}, ${g.raceState}. Finish the race, stay on the results ` +
+        `screen, then read again.</span>`;
+      return;
+    }
+
+    // match on the driver name as it was written into the AI file
+    const fold = t => String(t || '').toLowerCase().replace(/[^a-z ]/g, '').trim();
+    const byName = new Map(g.order.map(o => [fold(o.name), o]));
+    let matched = 0, missing = [];
+    for (const row of state) {
+      const hit = byName.get(fold(row.driver));
+      if (!hit) { missing.push(row.driver || row.livery); continue; }
+      matched++;
+      row.status = hit.retired ? 'retired' : 'finished';
+      row.finish = hit.retired ? null : hit.position;
+    }
+    // put the numbers on screen
+    [...table.querySelectorAll('.rrow')].slice(1).forEach((el, i) => {
+      const input = el.querySelector('input.pos');
+      const sel = el.querySelector('select.st');
+      if (input) input.value = state[i].finish || '';
+      if (sel) sel.value = state[i].status;
+    });
+    const retired = state.filter(r => r.status === 'retired').length;
+    status.innerHTML = `Read ${matched} of ${state.length} cars from the game` +
+      (retired ? `, ${retired} marked as retired` : '') + `. ` +
+      `The game does not say why a car stopped, so check the retirements against ` +
+      `what you saw before saving.` +
+      (missing.length ? ` <span class="warn">No match for: ${missing.join(', ')}.</span>` : '');
+  };
+  actions.appendChild(readBtn);
+
   const save = document.createElement('button');
   save.className = 'primary';
   save.textContent = sheet.recorded ? 'Save again' : 'Save result';
