@@ -441,3 +441,17 @@ button.primary:hover { background: var(--accent-soft); }
 
 .setup .line .real { margin-left: 14px; color: var(--text-muted); font-size: 11px;
   align-self: center; }
+
+/* ---------- settings ---------- */
+#set-body { position: absolute; inset: 0; padding: 44px 60px; max-width: 760px; }
+#set-body h2 { font-size: 24px; font-weight: 500; margin: 0 0 26px; }
+.setting label { display: block; font-size: 11px; letter-spacing: 1px;
+  color: var(--text-muted); margin-bottom: 8px; }
+.pathline { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.pathline code { font-family: ui-monospace, monospace; font-size: 12px;
+  background: var(--surface-1); padding: 8px 12px; border-radius: 6px;
+  color: var(--text); max-width: 470px; overflow-wrap: anywhere; }
+.pathline code.unset { color: var(--red); }
+.setting .note { margin-top: 12px; max-width: 520px; }
+
+#rs-body { position: absolute; inset: 60px 24px 56px 24px; overflow-y: auto; }

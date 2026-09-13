@@ -32,12 +32,16 @@ function ageUp(r, age, pot) {
 }
 
 // The eighteen AMS2 attributes, derived from the three families with jitter.
+// Nobody who has reached a national championship is slow in absolute terms, so
+// the three pace skills have a floor.
+const FLOOR = 0.49;
 function skills(r, f) {
   const j = (base, spread = .04) => round3(clamp(base + between(r, -spread, spread), .05, .99));
+  const jp = (base, spread = .04) => round3(clamp(base + between(r, -spread, spread), FLOOR, .99));
   return {
-    race_skill: j(f.sp), qualifying_skill: j(f.sp), start_reactions: j(f.sp, .07),
+    race_skill: jp(f.sp), qualifying_skill: jp(f.sp), start_reactions: j(f.sp, .07),
     consistency: j(f.ju), avoidance_of_mistakes: j(f.ju),
-    avoidance_of_forced_mistakes: j(f.ju), wet_skill: j(f.ju, .06),
+    avoidance_of_forced_mistakes: j(f.ju), wet_skill: jp(f.ju, .06),
     tyre_management: j(f.ju, .05), fuel_management: j(f.ju, .05),
     weather_tyre_changes: j(f.ju, .06), defending: j(f.ju, .06),
     aggression: round3(clamp(between(r, .25, .80), .05, .95)),

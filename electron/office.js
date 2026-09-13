@@ -14,6 +14,15 @@ const CREW_PER_ROUND = { gt5: [8000, 14000], gt4: [30000, 45000], gt3: [70000, 1
 
 const tier = cls => (cls === 'gt5' || cls === 'gt4') ? cls : 'gt3';
 
+// A stable ±18% per team, so the paddock does not quote one price.
+function teamFactor(id, goals) {
+  let h = (id * 2654435761) >>> 0;
+  h ^= h >>> 15; h = Math.imul(h, 2246822507) >>> 0; h ^= h >>> 13;
+  const spread = 0.82 + (h % 1000) / 1000 * 0.36;
+  const ambition = goals === 'max_pressure' ? 1.08 : goals === 'low_pressure' ? 0.94 : 1.0;
+  return spread * ambition;
+}
+
 // What the driver pays for a full season. A team spreads one engineering core
 // across several cars and carries the damage risk itself, so a bought seat is
 // always cheaper than running the same car alone — the trade is that nothing
@@ -55,8 +64,11 @@ function offers(db) {
     .map(row => {
       const mult = row.engineering === 'specialist' ? 1.25
                  : row.engineering === 'experienced' ? 1.0 : 0.8;
+      // every outfit prices its own seat: a settled team asks more, one that
+      // needs the money asks less
       const fee = Math.round(seatPrice(champ.class, champ.prestige,
-                                       player.fia_rating, player.reputation) * mult / 1000) * 1000;
+                             player.fia_rating, player.reputation)
+                             * mult * teamFactor(row.team_id, row.goals) / 500) * 500;
       return Object.assign(row, { fee, affordable: fee <= player.capital,
         home: row.country === player.country });
     }).sort((a, b) => a.fee - b.fee);
@@ -75,7 +87,8 @@ function offers(db) {
       rating: d.fia_rating, reputation: d.reputation, block: d.block,
       // a countryman who is Bronze or Silver brings local backing
       home: d.country === player.country && (!d.fia_rating || d.fia_rating === 'Bronze' || d.fia_rating === 'Silver'),
-      pays: seatPrice(champ.class, champ.prestige, d.fia_rating, d.reputation)
+      pays: Math.round(seatPrice(champ.class, champ.prestige, d.fia_rating, d.reputation)
+                       * teamFactor(d.id, 'normal') / 500) * 500
     })) : [];
 
   const t = tier(champ.class);
@@ -114,7 +127,7 @@ function takeSeat(db, entryId) {
   if (ctx.season.week > 4) throw new Error('The entry list for this season has closed.');
 
   const row = db.prepare(`
-    SELECT e.*, t.engineering, t.name team, cm.name car
+    SELECT e.*, t.engineering, t.name team, t.id team_id, t.goals, cm.name car
     FROM entries e JOIN teams t ON t.id = e.team_id
     JOIN chassis ch ON ch.id = e.chassis_id JOIN car_models cm ON cm.id = ch.model_id
     WHERE e.id = ?`).get(entryId);
@@ -123,7 +136,8 @@ function takeSeat(db, entryId) {
   const mult = row.engineering === 'specialist' ? 1.25
              : row.engineering === 'experienced' ? 1.0 : 0.8;
   const fee = Math.round(seatPrice(ctx.champ.class, ctx.champ.prestige,
-                                   ctx.player.fia_rating, ctx.player.reputation) * mult / 1000) * 1000;
+                         ctx.player.fia_rating, ctx.player.reputation)
+                         * mult * teamFactor(row.team_id, row.goals) / 500) * 500;
   if (fee > ctx.player.capital) throw new Error('You cannot afford that seat.');
 
   return db.transaction(() => {
@@ -209,7 +223,8 @@ function signDriver(db, driverId, entryId) {
      WHERE ed.driver_id = ? AND e.season = ?`).get(driverId, ctx.season.season);
   if (busy) throw new Error('That driver has already signed elsewhere.');
 
-  const fee = seatPrice(ctx.champ.class, ctx.champ.prestige, d.fia_rating, d.reputation);
+  const fee = Math.round(seatPrice(ctx.champ.class, ctx.champ.prestige,
+                         d.fia_rating, d.reputation) * teamFactor(d.id, 'normal') / 500) * 500;
   return db.transaction(() => {
     db.prepare(`INSERT INTO entry_drivers (entry_id,driver_id,role,seat_fee) VALUES (?,?,?,?)`)
       .run(entryId, driverId, filled + 1, fee);

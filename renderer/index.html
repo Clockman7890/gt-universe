@@ -167,6 +167,22 @@
   </div>
 </section>
 
+<section id="settings" class="screen">
+  <div id="set-body">
+    <h2>Settings</h2>
+    <div class="setting">
+      <label>AUTOMOBILISTA 2 CUSTOM AI FOLDER</label>
+      <div class="pathline"><code id="set-path">not set</code>
+        <button id="set-pick">Choose folder</button></div>
+      <p class="note">This is where the game keeps its custom AI files. GT Universe writes
+        the grid for each race weekend there. A career cannot be started until it is set.</p>
+    </div>
+    <div class="row" style="margin-top:24px">
+      <button id="set-back">Back</button>
+    </div>
+  </div>
+</section>
+
 <section id="shell" class="screen">
   <div id="bar">
     <span class="money" id="b-money">—</span>
@@ -254,6 +270,13 @@
         <span class="deadline" id="rc-when"></span></div>
       <div id="rc-body"></div>
       <button class="back" data-back="hub">←</button>
+    </div>
+
+    <div id="results" class="view">
+      <div class="head"><h2 id="rs-title">Results</h2><span class="sp"></span>
+        <span class="deadline" id="rs-when"></span></div>
+      <div id="rs-body"></div>
+      <button class="back" data-back="race">←</button>
     </div>
 
     <div id="home" class="view">

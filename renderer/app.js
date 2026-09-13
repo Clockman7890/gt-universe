@@ -220,6 +220,14 @@ async function refreshSaves() {
 
     row.onclick = async () => {
       if (s.empty) {
+        const cfg = await window.gt.settings();
+        if (!cfg.aiFolder) {
+          alert('Set the Automobilista 2 custom AI folder in Settings first.\n\n' +
+                'GT Universe writes the grid for every race weekend there, so a career ' +
+                'cannot run without it.');
+          await openSettings(); show('settings');
+          return;
+        }
         pendingSlot = s.slot;
         $('slot-tag').textContent = '— slot ' + s.slot;
         for (const id of ['f-name','f-age','f-capital','f-passive','f-exp']) $(id).value = '';
@@ -249,7 +257,17 @@ async function refreshSaves() {
 
 // ---------------------------------------------------------------- wiring
 on('btn-create-back', 'onclick', () => { pendingSlot = null; show('title'); });
-on('btn-settings', 'onclick', () => alert('Settings — not implemented yet.'));
+on('btn-settings', 'onclick', async () => { await openSettings(); show('settings'); });
+on('set-back', 'onclick', async () => { await refreshSaves(); show('title'); paint(); });
+on('set-pick', 'onclick', async () => { await window.gt.pickAiFolder(); await openSettings(); });
+
+async function openSettings() {
+  const cfg = await window.gt.settings();
+  const el = $('set-path');
+  if (!el) return;
+  el.textContent = cfg.aiFolder || 'not set';
+  el.className = cfg.aiFolder ? '' : 'unset';
+}
 on('btn-exit-title', 'onclick', () => window.gt.quit());
 
 // leaving the hub closes the career and returns to the title screen
@@ -505,17 +523,13 @@ async function openRace() {
     return;
   }
 
-  // ---- where the files go ----
+  // ---- where the files go (set once, in Settings) ----
   const dir = await window.gt.ams2Path();
   const bar = document.createElement('div');
   bar.className = 'pathbar';
   bar.innerHTML = dir
     ? `Custom AI folder: <code>${dir}</code>`
-    : `<span class="warn">No Automobilista 2 folder set yet.</span>`;
-  const pick = document.createElement('button');
-  pick.textContent = dir ? 'Change folder' : 'Choose folder';
-  pick.onclick = async () => { await window.gt.pickAms2(); await openRace(); };
-  bar.appendChild(pick);
+    : `<span class="warn">No custom AI folder set — fix it in Settings.</span>`;
   box.appendChild(bar);
 
   // ---- leg tabs ----
@@ -593,6 +607,11 @@ async function openRace() {
   };
   actions.appendChild(write);
 
+  const ready = document.createElement('button');
+  ready.textContent = 'Ready — I have run this race';
+  ready.onclick = async () => { await openResults(info, d); view('results'); };
+  actions.appendChild(ready);
+
   const copy = document.createElement('button');
   copy.textContent = 'Copy settings';
   copy.onclick = () => {
@@ -603,6 +622,18 @@ async function openRace() {
   };
   actions.appendChild(copy);
   box.appendChild(actions);
+}
+
+// ---------------------------------------------------------------- results
+async function openResults(info, leg) {
+  const box = $('rs-body');
+  $('rs-title').textContent = `${info.championship} · round ${info.round}`;
+  $('rs-when').textContent = `${info.track} · race ${leg.leg}`;
+  box.innerHTML =
+    `<p class="note">Automobilista 2 is set to share its session data, so the finishing ` +
+    `order can be read straight from the game. That reader is not built yet — this screen ` +
+    `is where it will land, with the option to correct anything by hand before it is saved.</p>` +
+    `<p class="note">For now nothing is recorded, so the round stays open.</p>`;
 }
 
 // ---------------------------------------------------------------- introduction

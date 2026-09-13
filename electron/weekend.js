@@ -216,7 +216,30 @@ function prepareLeg(db, round, legNo) {
   }));
 
   const sim = db.prepare(`SELECT * FROM sim_constants WHERE id = 1`).get();
+
+  // The clock runs at x2, so a real minute costs two in-game minutes. These are
+  // the times the player will actually see on the in-game clock.
+  const mins = leg.start_time.split(':').reduce((h, m) => h * 60 + +m, 0);
+  const speed = SPEED[round.class === 'gt5' ? 'gt5' : round.class === 'gt4' ? 'gt4'
+                    : round.class === 'lmdh' ? 'lmdh' : 'gt3'];
+  const raceReal = leg.distance_km / speed * 60;
+  const sessions = [];
+  let t = mins;
+  if (leg.practice_min) {
+    sessions.push({ name: 'Practice', from: hhmm(t), to: hhmm(t + leg.practice_min * 2),
+                    real: leg.practice_min });
+    t += leg.practice_min * 2 + 20;
+  }
+  if (leg.quali_min) {
+    sessions.push({ name: 'Qualifying', from: hhmm(t), to: hhmm(t + leg.quali_min * 2),
+                    real: leg.quali_min });
+    t += leg.quali_min * 2 + 20;
+  }
+  sessions.push({ name: leg.leg_no === 2 && lvl.two_leg ? 'Race — second stint' : 'Race',
+                  from: hhmm(t), to: hhmm(t + raceReal * 2), real: Math.round(raceReal) });
+
   return {
+    sessions,
     leg: legNo, laps: leg.laps, distance: leg.distance_km,
     startTime: leg.start_time, date: leg.race_date || round.race_date,
     aiOpponents: rows.filter(r => !r.is_player).length,

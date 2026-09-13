@@ -15,6 +15,17 @@ const RESOURCES = app.isPackaged
 
 // saves live in the user's app data, never next to the exe
 const SAVE_DIR = path.join(app.getPath('userData'), 'saves');
+const SETTINGS_FILE = path.join(app.getPath('userData'), 'settings.json');
+
+function readSettings() {
+  try { return JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8')); }
+  catch (_) { return {}; }
+}
+function writeSettings(obj) {
+  fs.mkdirSync(path.dirname(SETTINGS_FILE), { recursive: true });
+  fs.writeFileSync(SETTINGS_FILE, JSON.stringify(obj, null, 1), 'utf8');
+  return obj;
+}
 
 function createWindow() {
   win = new BrowserWindow({
@@ -67,6 +78,8 @@ ipcMain.handle('save:list', () => SLOTS.map(n => {
 }));
 
 ipcMain.handle('career:new', (_e, slot, profile) => {
+  if (!readSettings().aiFolder)
+    throw new Error('Set the Automobilista 2 custom AI folder in Settings first.');
   if (!SLOTS.includes(slot)) throw new Error('bad slot');
   const file = slotPath(slot);
   if (fs.existsSync(file)) throw new Error('slot in use');   // caller must delete first
@@ -136,20 +149,23 @@ ipcMain.handle('tutorial:set',    (_e, n) => db.setTutorial(n));
 ipcMain.handle('race:info',       () => db.raceInfo());
 ipcMain.handle('race:prepare',    (_e, leg) => db.racePrepare(leg));
 
-ipcMain.handle('ams2:pick', async () => {
+ipcMain.handle('settings:get', () => readSettings());
+
+ipcMain.handle('settings:pickAiFolder', async () => {
   const res = await dialog.showOpenDialog(win, {
     title: 'Where does Automobilista 2 keep its custom AI files?',
     properties: ['openDirectory', 'createDirectory']
   });
-  if (res.canceled || !res.filePaths.length) return null;
-  db.setAms2Path(res.filePaths[0]);
-  return res.filePaths[0];
+  if (res.canceled || !res.filePaths.length) return readSettings();
+  const s = readSettings();
+  s.aiFolder = res.filePaths[0];
+  return writeSettings(s);
 });
 
-ipcMain.handle('ams2:path', () => db.ams2Path());
+ipcMain.handle('ams2:path', () => readSettings().aiFolder || null);
 
 ipcMain.handle('race:write', (_e, files) => {
-  const dir = db.ams2Path();
+  const dir = readSettings().aiFolder;
   if (!dir) throw new Error('Set the Automobilista 2 folder first.');
   const written = [];
   for (const f of files) {
