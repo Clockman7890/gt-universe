@@ -432,3 +432,12 @@ button.primary:hover { background: var(--accent-soft); }
   font-size: 12px; width: 100%; }
 .seat select:disabled { color: var(--text-dim); }
 .seatnote { font-size: 11px; color: var(--text-muted); }
+
+/* ---------- money in and out ---------- */
+.in  { color: var(--green-soft); }
+.out { color: var(--red); }
+.car .price.out { color: #C4635F; }
+.car.no .price.out { color: var(--text-dim); }
+
+.setup .line .real { margin-left: 14px; color: var(--text-muted); font-size: 11px;
+  align-self: center; }

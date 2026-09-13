@@ -14,6 +14,10 @@ const view = id => {
   if (id === 'hub') paint();
 };
 const eur = n => '€' + Number(n || 0).toLocaleString('en-GB');
+// money that moves always shows which way it went
+const signed = n => (n < 0 ? '−' : '+') + eur(Math.abs(n));
+const moneyHtml = n =>
+  `<span class="${n < 0 ? 'out' : 'in'}">${signed(n)}</span>`;
 
 const REP = ['Unproven', 'Known', 'Established', 'Respected', 'Legend'];
 const repWord = r => REP[Math.min(4, Math.floor((r || 0) * 5))];
@@ -330,8 +334,10 @@ async function leaveView(target) {
       let cars = 0;
       try { cars = (await window.gt.garage()).length; } catch (_) {}
       if (tutStep === 1) {
-        if (entryDecided) await tutorialAdvance(2);
-        else nudge('Choose how you will go racing first — privateer, or your own team.');
+        if (entryDecided === 'seat') await tutorialAdvance(3, '3-nocar');
+        else if (entryDecided) await tutorialAdvance(2);
+        else nudge('Choose how you will go racing first — your own car, your own team, ' +
+                   'or a seat with someone else.');
       } else if (tutStep === 2) {
         await tutorialAdvance(3, cars ? 3 : '3-nocar');
       } else if (tutStep === 3) {
@@ -373,13 +379,12 @@ async function openMarket() {
     ? `entry list closes at the end of week 4`
     : `closed — reopens next winter`;
   renderMarketList();
-  // during the introduction the only way out is the named button, so the bare
-  // arrow does not read as "cancel"
-  const intro = tutStep === 2;
+  // the seat-or-car decision is made at Home now, so the Market keeps the plain
+  // back arrow like every other screen
   const skipRow = $('mk-skip');
-  if (skipRow) skipRow.hidden = !intro;
+  if (skipRow) skipRow.hidden = true;
   const arrow = document.querySelector('#market .back');
-  if (arrow) arrow.hidden = intro;
+  if (arrow) arrow.hidden = false;
   $('mk-detail').innerHTML = mk.note
     ? `<p class="note">${mk.note}</p>`
     : `<p class="note">${mk.team
@@ -404,7 +409,7 @@ function renderMarketList() {
       const row = document.createElement('div');
       row.className = 'car' + (m.affordable ? '' : ' no') + (mkModel === m.id ? ' sel' : '');
       row.innerHTML = `<span>${m.name}</span><span class="sp"></span>` +
-                      `<span class="price">${eur(m.price)}</span>`;
+                      `<span class="price out">${signed(-m.price)}</span>`;
       row.onclick = () => selectCar(m);
       box.appendChild(row);
     }
@@ -426,7 +431,7 @@ async function selectCar(m) {
         ${specRow('Drive', spec.drive + ' · ' + spec.gears + ' ' + spec.shift.toLowerCase())}
         ${specRow('Balance', spec.weight_dist)}</div>` : '') +
     (m.liveries.length ? `<div class="numbers">ENTRY NUMBER</div><div class="nums" id="mk-nums"></div>` : '') +
-    `<div class="buyrow"><span class="big">${eur(m.price)}</span><span class="sp"></span>` +
+    `<div class="buyrow"><span class="big out">${signed(-m.price)}</span><span class="sp"></span>` +
     (m.affordable && mk.open && mk.canBuy
       ? `<span class="why" id="mk-hint"></span><button class="primary" id="mk-buy">Buy</button>`
       : `<span class="why">${m.why || (!mk.canBuy ? 'You already have a seat' : 'Market closed')}</span>`) +
@@ -460,7 +465,7 @@ async function selectCar(m) {
       alert(`${res.model}\n${res.livery}\n\n` +
             (res.needsDriver ? 'Second car entered. Sign a driver in the Office.\n'
                              : `Entered the ${res.championship}.\n`) +
-            `Spent ${eur(res.spent)} — ${eur(res.capital)} left.`);
+            `${signed(-res.spent)} — ${eur(res.capital)} left.`);
       await refresh();
       await openMarket();
     } catch (err) {
@@ -555,6 +560,15 @@ async function openRace() {
     line('Your car', d.playerLivery || '—') +
     (d.playerGrid ? line('Your starting position', d.playerGrid, true) : '');
   box.appendChild(setup);
+
+  if (d.sessions && d.sessions.length) {
+    const clock = document.createElement('div');
+    clock.className = 'setup';
+    clock.innerHTML = `<h5>HOW THE DAY RUNS — IN-GAME CLOCK AT ×${d.timeMultiplier}</h5>` +
+      d.sessions.map(x => `<div class="line"><span>${x.name}</span>` +
+        `<b>${x.from} → ${x.to}</b><span class="real">${x.real} min real</span></div>`).join('');
+    box.appendChild(clock);
+  }
 
   const files = document.createElement('div');
   files.className = 'setup';
@@ -716,8 +730,7 @@ async function openHome() {
   cards.appendChild(card('FINANCES', [
     ['Capital', eur(d.capital), d.capital < 0 ? 'warn' : ''],
     ['Passive income', eur(d.passive) + ' / year'],
-    ['Net this season', (h.netThisSeason >= 0 ? '+' : '') + eur(h.netThisSeason),
-      h.netThisSeason >= 0 ? 'good' : 'warn']
+    ['Net this season', signed(h.netThisSeason), h.netThisSeason >= 0 ? 'good' : 'warn']
   ]));
   cards.appendChild(card('THIS SEASON', h.entry ? [
     ['Championship', h.entry.championship],
@@ -747,32 +760,46 @@ async function openHome() {
 
     const privOpt = document.createElement('div');
     privOpt.className = 'opt' + (entryDecided === 'privateer' ? ' sel' : '');
-    privOpt.innerHTML = `<b>Privateer</b><span>No extra cost · one car · amateur crew</span>`;
+    privOpt.innerHTML = `<b>Privateer</b><span>Buy your own car · one entry · amateur crew</span>`;
 
     const teamOpt = document.createElement('div');
     const canTeam = o.canFormTeam && o.open;
     teamOpt.className = 'opt' + (canTeam ? '' : ' no') + (entryDecided === 'team' ? ' sel' : '');
     teamOpt.innerHTML = `<b>Create a team</b><span>` +
-      (canTeam ? `From ${eur(Math.min(...Object.values(o.coreCost)))} · several cars`
+      (canTeam ? `From ${signed(-Math.min(...Object.values(o.coreCost)))} · several cars`
                : `Needs ${eur(o.minCapital)} in capital`) + `</span>`;
 
-    row.appendChild(privOpt); row.appendChild(teamOpt);
+    const seatOpt = document.createElement('div');
+    seatOpt.className = 'opt' + (entryDecided === 'seat' ? ' sel' : '');
+    seatOpt.innerHTML = `<b>Drive for someone else</b>` +
+      `<span>Buy a seat · no car to own · no repair bills</span>`;
+
+    row.appendChild(privOpt); row.appendChild(teamOpt); row.appendChild(seatOpt);
     up.appendChild(row);
 
     const detail = document.createElement('div');
     up.appendChild(detail);
     box.appendChild(up);
 
-    privOpt.onclick = async () => {
+    const clear = () => [privOpt, teamOpt, seatOpt].forEach(o => o.classList.remove('sel'));
+
+    privOpt.onclick = () => {
       entryDecided = 'privateer';
-      privOpt.classList.add('sel'); teamOpt.classList.remove('sel');
+      clear(); privOpt.classList.add('sel');
       detail.innerHTML = `<p class="note">You will run your own car. ` +
         `Buy one in the Market when you are ready.</p>`;
     };
 
+    seatOpt.onclick = () => {
+      entryDecided = 'seat';
+      clear(); seatOpt.classList.add('sel');
+      detail.innerHTML = `<p class="note">You will race for an existing team. ` +
+        `Go to the Office and pick a seat you can afford — the Market is not for you today.</p>`;
+    };
+
     if (canTeam) teamOpt.onclick = () => {
       entryDecided = 'team';
-      teamOpt.classList.add('sel'); privOpt.classList.remove('sel');
+      clear(); teamOpt.classList.add('sel');
       detail.innerHTML =
         `<div class="namefield"><label>TEAM NAME</label>` +
         `<input id="hm-teamname" maxlength="34" placeholder="${d.name.split(' ').pop()} Racing"></div>` +
@@ -784,13 +811,13 @@ async function openHome() {
         const ok = cost <= d.capital;
         const el = document.createElement('div');
         el.className = 'opt' + (ok ? '' : ' no');
-        el.innerHTML = `<b>${ENG_LABEL[lvl]}</b><span>${eur(cost)} one-off core</span>`;
+        el.innerHTML = `<b>${ENG_LABEL[lvl]}</b><span>${signed(-cost)} one-off core</span>`;
         if (ok) el.onclick = async () => {
           const nm = ($('hm-teamname') && $('hm-teamname').value.trim()) || '';
           try {
             const r = await window.gt.formTeam(lvl, nm);
             alert(`${r.team} founded.\nEngineering: ${ENG_LABEL[r.engineering]}\n` +
-                  `Cost ${eur(r.cost)} — ${eur(r.capital)} left.`);
+                  `${signed(-r.cost)} — ${eur(r.capital)} left.`);
             await refresh(); await openHome();
           } catch (e) { alert(String(e.message || e).replace(/^Error: /, '')); }
         };
@@ -849,13 +876,13 @@ async function openOffice() {
       el.innerHTML = `<span class="who">${s.team}</span>` +
         `<span class="sub2">${s.car} · ${s.livery} · ${s.engineering}</span>` +
         (s.home ? '<span class="homeflag">home</span>' : '') +
-        `<span class="sp"></span><span class="fee">${eur(s.fee)}</span>`;
+        `<span class="sp"></span><span class="fee">${moneyHtml(-s.fee)}</span>`;
       const b = document.createElement('button');
       b.textContent = 'Sign'; b.disabled = !(s.affordable && o.open);
       b.onclick = async () => {
         try {
           const r = await window.gt.takeSeat(s.entry_id);
-          alert(`Signed with ${r.team}\n${r.car}\n\nSeat fee ${eur(r.fee)} — ${eur(r.capital)} left.`);
+          alert(`Signed with ${r.team}\n${r.car}\n\nSeat fee ${signed(-r.fee)} — ${eur(r.capital)} left.`);
           await refresh(); await openOffice();
         } catch (e) { alert(String(e.message || e).replace(/^Error: /, '')); }
       };
@@ -883,13 +910,13 @@ async function openOffice() {
         `<span class="sub2">${d.country} · ${d.age}` +
         (d.rating ? ` · ${d.rating}` : '') + `</span>` +
         (d.home ? '<span class="homeflag">home</span>' : '') +
-        `<span class="sp"></span><span class="fee">pays ${eur(d.pays)}</span>`;
+        `<span class="sp"></span><span class="fee">${moneyHtml(d.pays)}</span>`;
       const b = document.createElement('button');
       b.textContent = 'Offer seat'; b.disabled = !(openSeats.length && o.open);
       b.onclick = async () => {
         try {
           const r = await window.gt.signDriver(d.id, openSeats[0].id);
-          alert(`${r.driver} signed.\nBrings ${eur(r.fee)} — you now have ${eur(r.capital)}.`);
+          alert(`${r.driver} signed.\n${signed(r.fee)} — you now have ${eur(r.capital)}.`);
           await refresh(); await openOffice();
         } catch (e) { alert(String(e.message || e).replace(/^Error: /, '')); }
       };
