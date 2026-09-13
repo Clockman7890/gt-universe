@@ -29,6 +29,11 @@ const MAX_CARS = 4;
 const ENGINEERING = ['amateurs', 'experienced', 'specialist'];
 const GOALS = ['low_pressure', 'normal', 'normal', 'max_pressure'];
 
+// The eleven ARC franchises are permanent, so each has a settled character:
+// one is a proper operation, one is a shoestring, most sit between.
+const ARC_ENG = ['specialist', 'specialist', 'experienced', 'experienced', 'experienced',
+                 'experienced', 'experienced', 'amateurs', 'amateurs', 'amateurs', 'amateurs'];
+
 function engineeringFor(cls, r) {
   if (cls === 'gt5')  return r() < 0.72 ? 'amateurs' : 'experienced';
   if (cls === 'gt4')  return r() < 0.30 ? 'amateurs' : (r() < 0.75 ? 'experienced' : 'specialist');
@@ -216,7 +221,8 @@ function buildEntries(db, world, ctx, profile) {
       }
       if (!lv) break;                              // pool exhausted
 
-      const eng = teamRun ? engineeringFor(c.cls, r) : 'amateurs';
+      const eng = isArc ? ARC_ENG[(i % franchises.length) % ARC_ENG.length]
+                        : (teamRun ? engineeringFor(c.cls, r) : 'amateurs');
 
       // an existing team may add this car to its fleet rather than a new outfit
       let teamId = null, reused = null;
@@ -253,6 +259,10 @@ function buildEntries(db, world, ctx, profile) {
 
       const value = model.price_new ? Math.round(model.price_new * 0.8) : 0;
       const chassisId = ins.chassis.run(model.id, teamId, value).lastInsertRowid;
+      // franchise cars are kept year after year and drift apart a little
+      if (isArc)
+        db.prepare(`UPDATE chassis SET dev_bonus = ? WHERE id = ?`)
+          .run(round3(between(r, -0.10, 0.10)), chassisId);
 
       const entryId = ins.entry.run({
         champ: c.id, team: teamId, chassis: chassisId, livery: lv.id,

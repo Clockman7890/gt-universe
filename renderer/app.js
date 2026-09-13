@@ -321,7 +321,9 @@ on('btn-create', 'onclick', async () => {
   show('shell'); view('hub');
   await refresh();
   tutStep = 0; applyTutorial();
-  setTimeout(() => showTutorialPanel(0, async () => { await tutorialAdvance(1); }), 1000);
+  const off0 = await window.gt.office();
+  const opening = off0 && off0.franchiseOnly ? '0-franchise' : 0;
+  setTimeout(() => showTutorialPanel(opening, async () => { await tutorialAdvance(1); }), 1000);
   } catch (err) {
     alert('Could not start the career:\n\n' + (err && err.message ? err.message : err));
   }
@@ -618,15 +620,6 @@ async function openRace() {
   ready.onclick = async () => { await openResults(info, d); view('results'); };
   actions.appendChild(ready);
 
-  const copy = document.createElement('button');
-  copy.textContent = 'Copy settings';
-  copy.onclick = () => {
-    const txt = setup.innerText.replace(/\n{2,}/g, '\n');
-    navigator.clipboard.writeText(txt).then(
-      () => { copy.textContent = 'Copied'; setTimeout(() => copy.textContent = 'Copy settings', 1400); },
-      () => alert('Could not reach the clipboard.'));
-  };
-  actions.appendChild(copy);
   box.appendChild(actions);
 }
 
@@ -646,6 +639,14 @@ async function openResults(info, leg) {
 let tutStep = 4;                       // 4 means finished
 
 const TUT = {
+  '0-franchise': { focus: null, title: 'Welcome to this journey, driver',
+       html: `<p>You have started in a series where the cars are not for sale. Every entry
+                belongs to one of the eleven teams that have always run it, and they keep
+                their cars from season to season.</p>
+              <p>So there is nothing to buy and no team to found. Go to <b>Home</b> to see
+                where you stand, then to the <b>Office</b> and buy a seat from whichever
+                team will have you. The cheapest are listed first.</p>
+              <p>Drive well enough and the better outfits will come looking.</p>` },
   0: { focus: null, title: 'Welcome to this journey, driver',
        html: `<p>You start with nothing but a name, a licence and whatever money you brought
                 with you. Everything after that is yours to arrange.</p>
@@ -806,6 +807,17 @@ async function openHome() {
     const row = document.createElement('div');
     row.className = 'choice';
 
+    if (o.franchiseOnly) {
+      up.innerHTML = `<h4>How will you go racing?</h4>` +
+        `<p class="note">Every car in the ${o.championship} belongs to one of its eleven ` +
+        `teams. They are permanent: nobody buys a car here, and no new team is founded. ` +
+        `The only way in is to buy a seat from one of them.</p>` +
+        `<p class="note">Go to the Office and take the seat you can afford.</p>`;
+      entryDecided = 'seat';
+      box.appendChild(up);
+      return;
+    }
+
     const privOpt = document.createElement('div');
     privOpt.className = 'opt' + (entryDecided === 'privateer' ? ' sel' : '');
     privOpt.innerHTML = `<b>Privateer</b><span>Buy your own car · one entry · amateur crew</span>`;
@@ -928,9 +940,12 @@ async function openOffice() {
       el.innerHTML = `<span class="who">${s.team}</span>` +
         `<span class="sub2">${s.car} · ${s.livery} · ${s.engineering}</span>` +
         (s.home ? '<span class="homeflag">home</span>' : '') +
-        `<span class="sp"></span><span class="fee">${moneyHtml(-s.fee)}</span>`;
+        `<span class="sp"></span>` +
+        (s.refuses ? `<span class="refuse">not interested — ${s.refuses}</span>`
+                   : `<span class="fee">${moneyHtml(-s.fee)}</span>`);
       const b = document.createElement('button');
-      b.textContent = 'Sign'; b.disabled = !(s.affordable && o.open);
+      b.textContent = s.refuses ? '—' : 'Sign';
+      b.disabled = !(s.affordable && o.open);
       b.onclick = async () => {
         try {
           const r = await window.gt.takeSeat(s.entry_id);

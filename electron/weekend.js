@@ -169,7 +169,7 @@ function gridFor(db, round, legNo) {
            s.consistency, s.start_reactions, s.wet_skill, s.tyre_management,
            s.fuel_management, s.blue_flag_conceding, s.weather_tyre_changes,
            s.avoidance_of_mistakes, s.avoidance_of_forced_mistakes,
-           cp.weight_scalar, cp.power_scalar, cp.drag_scalar,
+           cp.weight_scalar, cp.power_scalar, cp.drag_scalar, ch.dev_bonus,
            t.engineering, t.name team_name, t.is_privateer, ed.role
     FROM entries e
     JOIN chassis ch ON ch.id = e.chassis_id
@@ -194,6 +194,15 @@ function gridFor(db, round, legNo) {
   for (const r of rows) {
     const n = Math.min(4, fleetSize[r.team_name] || 1);
     r.reliability = (REL[r.engineering] || 0.72) * (FLEET_PENALTY[n] || 0.85);
+
+    // a car that has been worked on carries a little more pace: one per cent of
+    // power is worth about 0.13s, so convert the seconds back into a scalar
+    const dev = r.dev_bonus || 0;
+    if (dev) {
+      const clamp = v => Math.min(1.100, Math.max(0.900, v));
+      r.power_scalar  = clamp(r.power_scalar  + dev / 0.13 * 0.01);
+      r.weight_scalar = clamp(r.weight_scalar - dev / 0.10 * 0.004);
+    }
     // a lone owner-driver has no team to name, and the tag would only repeat
     // their own surname
     r.tag = r.is_privateer ? null : teamTag(r.team_name);
@@ -225,13 +234,15 @@ function prepareLeg(db, round, legNo) {
     }
   }
 
+  // Every entry goes in, the player's included: without it the game would not
+  // apply their scalars or reliability. The opponent count is one short of the
+  // grid, so the livery they pick is the one left over.
   const byFile = {};
   let playerLivery = null, playerGrid = null;
   for (const r of rows) {
     if (r.is_player) {
       playerLivery = r.livery_name;
       if (gridOrder) playerGrid = [...gridOrder.keys()].indexOf(r.entry_id) + 1;
-      continue;                      // the player is not an AI entry
     }
     (byFile[r.ai_file] ||= []).push(
       driverBlock(r, gridOrder ? gridOrder.get(r.entry_id) : undefined));

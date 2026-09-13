@@ -455,3 +455,5 @@ button.primary:hover { background: var(--accent-soft); }
 .setting .note { margin-top: 12px; max-width: 520px; }
 
 #rs-body { position: absolute; inset: 60px 24px 56px 24px; overflow-y: auto; }
+
+.offer .refuse { font-size: 11px; color: var(--text-muted); font-style: italic; }

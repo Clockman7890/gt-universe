@@ -20,6 +20,24 @@ const CREW_PER_ROUND = { gt5: [8000, 14000], gt4: [30000, 45000], gt3: [70000, 1
 
 const tier = cls => (cls === 'gt5' || cls === 'gt4') ? cls : 'gt3';
 
+// Series where the cars belong to permanent franchises: a driver can only buy
+// a seat, never own a car or found a team.
+const FRANCHISE = new Set(['australasian_arc']);
+
+// Nobody hands a seat to a stranger. The better the outfit, the more it wants
+// to see first — a name it recognises, or at least a licence above bronze.
+function willHave(row, player) {
+  const need = row.engineering === 'specialist' ? 0.34
+             : row.engineering === 'experienced' ? 0.14 : 0.0;
+  const rep = player.reputation || 0;
+  const rated = player.fia_rating === 'Gold' || player.fia_rating === 'Platinum' ? 0.18
+              : player.fia_rating === 'Silver' ? 0.08 : 0;
+  if (rep + rated >= need) return null;
+  return row.engineering === 'specialist'
+    ? 'they only take drivers with a name'
+    : 'you are unknown to them';
+}
+
 // A stable ±18% per team, so the paddock does not quote one price.
 function teamFactor(id, goals) {
   let h = (id * 2654435761) >>> 0;
@@ -56,7 +74,7 @@ function offers(db) {
   // teams in the player's championship that could take one more driver
   const seats = seat ? [] : db.prepare(`
     SELECT t.id team_id, t.name team, t.engineering, t.goals, t.country,
-           cm.name car, l.livery_name livery, e.id entry_id,
+           cm.name car, l.livery_name livery, e.id entry_id, ch.dev_bonus,
            (SELECT COUNT(*) FROM entry_drivers ed WHERE ed.entry_id = e.id) filled
     FROM entries e
     JOIN teams t ON t.id = e.team_id
@@ -72,12 +90,18 @@ function offers(db) {
                  : row.engineering === 'experienced' ? 1.0 : 0.8;
       // every outfit prices its own seat: a settled team asks more, one that
       // needs the money asks less
+      // a quicker car is worth more to sit in
+      const pace = 1 + (row.dev_bonus || 0) * 0.9;
       const fee = Math.round(seatPrice(champ.class, champ.prestige,
                              player.fia_rating, player.reputation)
-                             * mult * teamFactor(row.team_id, row.goals) / 500) * 500;
-      return Object.assign(row, { fee, affordable: fee <= player.capital,
-        home: row.country === player.country });
-    }).sort((a, b) => a.fee - b.fee);
+                             * mult * pace * teamFactor(row.team_id, row.goals) / 500) * 500;
+      const refuses = willHave(row, player);
+      return Object.assign(row, {
+        fee, refuses,
+        affordable: !refuses && fee <= player.capital,
+        home: row.country === player.country
+      });
+    }).sort((a, b) => (a.refuses ? 1 : 0) - (b.refuses ? 1 : 0) || a.fee - b.fee);
 
   // free drivers the player could sign into a second car
   const scouting = myTeam ? db.prepare(`
@@ -118,7 +142,9 @@ function offers(db) {
     week: season.week, open: season.week <= 4,
     capital: player.capital, hasSeat: !!seat,
     team: myTeam ? { id: myTeam.id, name: myTeam.name, engineering: myTeam.engineering } : null,
-    canFormTeam: !myTeam && t !== 'gt3' && player.capital >= MIN_CAPITAL[t],
+    franchiseOnly: FRANCHISE.has(champ.id),
+    canFormTeam: !myTeam && t !== 'gt3' && !FRANCHISE.has(champ.id)
+                 && player.capital >= MIN_CAPITAL[t],
     noTeamsHere: t === 'gt3',
     minCapital: MIN_CAPITAL[t],
     facilityCost: FACILITIES[t] || null,
@@ -143,6 +169,9 @@ function takeSeat(db, entryId) {
     JOIN championship_levels cl ON cl.id = c.level_id
     WHERE e.id = ?`).get(entryId);
   if (!row) throw new Error('That seat is gone.');
+
+  const refuses = willHave(row, ctx.player);
+  if (refuses) throw new Error(`They are not interested — ${refuses}.`);
 
   const mult = row.engineering === 'specialist' ? 1.25
              : row.engineering === 'experienced' ? 1.0 : 0.8;
@@ -201,6 +230,8 @@ function formTeam(db, engineering, customName) {
       AND is_privateer = 0 AND status = 'active'`).get(ctx.player.id);
   if (existing) throw new Error('You already run a team.');
 
+  if (FRANCHISE.has(ctx.champ.id))
+    throw new Error('The cars in this series belong to its teams. You can only take a seat.');
   const t = tier(ctx.champ.class);
   if (t === 'gt3')
     throw new Error('No team is founded straight into GT3. Build one lower down and bring it up.');
