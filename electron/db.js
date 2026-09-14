@@ -6,6 +6,8 @@ const { buildEntries, placePlayer } = require('./entries');
 const market = require('./market');
 const weekend = require('./weekend');
 const season = require('./season');
+const economy = require('./economy');
+const simulate = require('./simulate');
 const office = require('./office');
 
 let handle = null;
@@ -239,6 +241,9 @@ function advanceWeek() {
   if (week > 52) { week = 1; s += 1; }
   handle.prepare(`UPDATE career SET season = ?, week = ? WHERE id = 1`).run(s, week);
 
+  // wages and retainers arrive with the new year
+  if (week === 1) economy.payPassive(handle);
+
   // the entry list closes at the end of week 4; anything still open is taken
   let filled = null;
   if (c.week === 4 && week === 5 && worldData) {
@@ -250,8 +255,71 @@ function advanceWeek() {
                    : 'Every championship starts the season with a full grid.');
   }
 
+  // every round due this week is settled and run, except the player's own,
+  // which waits for them at the Race screen
+  const ran = runWeek(s, week);
+
   dirty = true;
-  return { season: s, week, filled };
+  return { season: s, week, filled, ran };
+}
+
+// Everything the world does in a week while the player is elsewhere.
+function runWeek(seasonNo, week) {
+  const me = handle.prepare(`SELECT player_driver_id p FROM career WHERE id = 1`).get().p;
+  // anything whose week has come, and anything left hanging behind it
+  const due = handle.prepare(`
+    SELECT r.id, r.championship_id, r.week FROM rounds r
+    WHERE r.season = ? AND r.week <= ? AND r.played = 0
+    ORDER BY r.week, r.id`).all(seasonNo, week);
+  if (!due.length) return null;
+
+  let races = 0, absent = 0;
+  for (const round of due) {
+    // who can afford to be there
+    const settled = economy.settleRound(handle, round.id);
+    absent += settled.missing.length;
+    for (const m of settled.missing.slice(0, 3))
+      handle.prepare(`INSERT INTO news (season,week,category,headline,body)
+                      VALUES (?,?,'driver',?,?)`)
+        .run(seasonNo, week, `${m.driver || m.team} misses the round`,
+             'Cannot meet the cost of the meeting.');
+
+    // The player's own round waits for them at the Race screen — unless they
+    // have withdrawn, in which case the race goes ahead without them.
+    const mine = handle.prepare(`
+      SELECT e.id FROM entries e JOIN entry_drivers ed ON ed.entry_id = e.id
+      WHERE ed.driver_id = ? AND e.season = ? AND e.championship_id = ?`)
+      .get(me, seasonNo, round.championship_id);
+    if (mine) {
+      const away = handle.prepare(`SELECT 1 FROM round_absences
+          WHERE round_id = ? AND entry_id = ?`).get(round.id, mine.id);
+      if (!away) {
+        // the weekend is still theirs to run; only once it is behind them does
+        // the round go ahead without them
+        if (round.week >= week) continue;
+        handle.prepare(`INSERT OR REPLACE INTO round_absences (round_id,entry_id,reason)
+                        VALUES (?,?,'skipped')`).run(round.id, mine.id);
+        handle.prepare(`INSERT INTO news (season,week,category,headline,body)
+                        VALUES (?,?,'driver',?,?)`)
+          .run(seasonNo, week, 'You missed the round',
+               'The meeting went ahead without you.');
+      }
+    }
+
+    const legs = handle.prepare(`SELECT leg_no FROM legs WHERE round_id = ? AND simulated = 0
+                                 ORDER BY leg_no`).all(round.id);
+    for (const l of legs) {
+      const out = simulate.simulateLeg(handle, round.id, l.leg_no);
+      if (out.entries.length) {
+        const leg = handle.prepare(`SELECT id FROM legs WHERE round_id = ? AND leg_no = ?`)
+          .get(round.id, l.leg_no);
+        season.saveResults(handle, leg.id, out.entries);
+        races++;
+      }
+    }
+    economy.reviewSponsors(handle, round.id);
+  }
+  return { races, absent };
 }
 
 function save() {
@@ -376,14 +444,60 @@ function racePrepare(legNo) {
                          round: r.round_no, roundId: r.id }, weekend.prepareLeg(handle, r, legNo || 1));
 }
 
+// ---------------------------------------------------------------- economy
+function roundBill(entryId, roundId) {
+  return handle ? economy.roundCost(handle, entryId, roundId) : null;
+}
+function myRoundCost() {
+  if (!handle) return null;
+  const r = weekend.nextRound(handle);
+  if (!r) return null;
+  const me = handle.prepare(`SELECT player_driver_id p FROM career WHERE id = 1`).get().p;
+  const mine = handle.prepare(`
+    SELECT e.id FROM entries e JOIN entry_drivers ed ON ed.entry_id = e.id
+    WHERE ed.driver_id = ? AND e.season = (SELECT season FROM career WHERE id = 1)
+      AND e.championship_id = ?`).get(me, r.championship_id);
+  if (!mine) return null;
+  const cost = economy.roundCost(handle, mine.id, r.id);
+  if (!cost) return null;
+  const purse = economy.purseOf(handle, cost);
+  return Object.assign(cost, { entryId: mine.id, roundId: r.id,
+                               capital: purse.capital, track: r.track });
+}
+function withdrawFromRound(roundId, entryId) {
+  const r = economy.withdraw(handle, roundId, entryId);
+  dirty = true;
+  return r;
+}
+function sponsors(driverId) {
+  if (!handle) return [];
+  const id = driverId || handle.prepare(`SELECT player_driver_id p FROM career WHERE id = 1`).get().p;
+  return economy.sponsorsOf(handle, id);
+}
+
 function raceSheet(roundId, legNo) {
   return handle ? season.resultSheet(handle, roundId, legNo) : null;
 }
 function raceSave(legId, entries) {
   if (!handle) throw new Error('No career open.');
+  payForMyRound(legId);
   const r = season.saveResults(handle, legId, entries);
+  const round = handle.prepare(`SELECT round_id FROM legs WHERE id = ?`).get(legId);
+  economy.reviewSponsors(handle, round.round_id);
   dirty = true;
   return r;
+}
+
+// Running a meeting costs money whether the result is typed in or simulated.
+function payForMyRound(legId) {
+  const me = handle.prepare(`SELECT player_driver_id p FROM career WHERE id = 1`).get().p;
+  const row = handle.prepare(`
+    SELECT l.round_id, e.id entry_id FROM legs l
+    JOIN rounds r ON r.id = l.round_id
+    JOIN entries e ON e.season = r.season AND e.championship_id = r.championship_id
+    JOIN entry_drivers ed ON ed.entry_id = e.id
+    WHERE l.id = ? AND ed.driver_id = ?`).get(legId, me);
+  if (row) economy.chargePlayerRound(handle, row.round_id, row.entry_id);
 }
 
 // ------------------------------------------------------------- standings
@@ -463,16 +577,39 @@ function standings(championshipId, kind) {
 function calendar(championshipId) {
   if (!handle) return [];
   const c = handle.prepare(`SELECT season FROM career WHERE id = 1`).get();
-  return handle.prepare(`
-    SELECT r.round_no, r.week, r.played, t.name track,
-           (SELECT d.name FROM results res
-            JOIN legs l2 ON l2.id = res.leg_id
-            JOIN drivers d ON d.id = res.driver_id
-            WHERE l2.round_id = r.id AND res.finish_pos = 1
-            ORDER BY l2.leg_no DESC LIMIT 1) winner
+  const rounds = handle.prepare(`
+    SELECT r.id, r.round_no, r.week, r.played, t.name track
     FROM rounds r JOIN tracks t ON t.id = r.track_id
     WHERE r.season = ? AND r.championship_id = ?
     ORDER BY r.round_no`).all(c.season, championshipId);
+
+  const winners = handle.prepare(`
+    SELECT l.round_id, l.leg_no, d.name
+    FROM results res
+    JOIN legs l ON l.id = res.leg_id
+    JOIN drivers d ON d.id = res.driver_id
+    WHERE res.finish_pos = 1 AND l.round_id IN (
+      SELECT id FROM rounds WHERE season = ? AND championship_id = ?)
+    ORDER BY l.round_id, l.leg_no`).all(c.season, championshipId);
+
+  for (const r of rounds)
+    r.winners = winners.filter(w => w.round_id === r.id)
+                       .map(w => ({ leg: w.leg_no, name: w.name }));
+  return rounds;
+}
+
+function simulateLeg(roundId, legNo) {
+  if (!handle) throw new Error('No career open.');
+  const leg = handle.prepare(`SELECT id FROM legs WHERE round_id = ? AND leg_no = ?`)
+    .get(roundId, legNo);
+  const out = simulate.simulateLeg(handle, roundId, legNo);
+  if (!out.entries.length) return { saved: 0 };
+  payForMyRound(leg.id);
+  const res = season.saveResults(handle, leg.id, out.entries);
+  economy.reviewSponsors(handle, roundId);
+  dirty = true;
+  return Object.assign(res, { starters: out.starters, retired: out.retired,
+                              order: out.entries });
 }
 
 function newsList() {
@@ -586,5 +723,6 @@ function garage() {
 module.exports = { create, open, peek, state, advanceWeek, save, close, isDirty,
                    marketList, marketBuy, marketBuyMany, garage, myEntries, lineup, setCarDriver, newsList, newsRead, home, setTutorial, raceInfo, racePrepare, raceSheet, raceSave,
                    worldTree, standings, calendar,
+                   roundBill, myRoundCost, withdrawFromRound, sponsors, simulateLeg,
                    officeOffers, officeTakeSeat, officeFormTeam, officeSign,
                    handle: () => handle };

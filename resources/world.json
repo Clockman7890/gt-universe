@@ -3,257 +3,308 @@
   {
    "name": "Adelaide",
    "km": 3.219,
-   "max_grid": 39
+   "max_grid": 39,
+   "continent": "asia_pacific"
   },
   {
    "name": "Azure Circuit",
    "km": 3.34,
-   "max_grid": 26
+   "max_grid": 26,
+   "continent": "europe"
   },
   {
    "name": "Barcelona",
    "km": 4.655,
-   "max_grid": 48
+   "max_grid": 48,
+   "continent": "europe"
   },
   {
    "name": "Bathurst",
    "km": 6.213,
-   "max_grid": 48
+   "max_grid": 48,
+   "continent": "asia_pacific"
   },
   {
    "name": "Brands Hatch",
    "km": 3.916,
-   "max_grid": 32
+   "max_grid": 32,
+   "continent": "europe"
   },
   {
    "name": "Buenos Aires No6",
    "km": 3.345,
-   "max_grid": 32
+   "max_grid": 32,
+   "continent": "americas"
   },
   {
    "name": "Buenos Aires No15",
    "km": 4.259,
-   "max_grid": 32
+   "max_grid": 32,
+   "continent": "americas"
   },
   {
    "name": "Cadwell Park",
    "km": 3.484,
-   "max_grid": 26
+   "max_grid": 26,
+   "continent": "europe"
   },
   {
    "name": "Campo Grande",
    "km": 3.433,
-   "max_grid": 48
+   "max_grid": 48,
+   "continent": "americas"
   },
   {
    "name": "Cascais",
    "km": 4.182,
-   "max_grid": 48
+   "max_grid": 48,
+   "continent": "europe"
   },
   {
    "name": "Cascavel",
    "km": 3.3,
-   "max_grid": 48
+   "max_grid": 48,
+   "continent": "americas"
   },
   {
    "name": "Cleveland GP",
    "km": 3.862,
-   "max_grid": 32
+   "max_grid": 32,
+   "continent": "americas"
   },
   {
    "name": "Curvelo Long",
    "km": 3.7,
-   "max_grid": 48
+   "max_grid": 48,
+   "continent": "americas"
   },
   {
    "name": "Cordoba No4",
    "km": 4.3,
-   "max_grid": 26
+   "max_grid": 26,
+   "continent": "americas"
   },
   {
    "name": "Daytona Sports",
    "km": 5.729,
-   "max_grid": 48
+   "max_grid": 48,
+   "continent": "americas"
   },
   {
    "name": "Donington GP",
    "km": 4.02,
-   "max_grid": 38
+   "max_grid": 38,
+   "continent": "europe"
   },
   {
    "name": "Fontana Club",
    "km": 2.4,
-   "max_grid": 30
+   "max_grid": 30,
+   "continent": "americas"
   },
   {
    "name": "Goiania",
    "km": 3.835,
-   "max_grid": 48
+   "max_grid": 48,
+   "continent": "americas"
   },
   {
    "name": "Guapore",
    "km": 2.8,
-   "max_grid": 40
+   "max_grid": 40,
+   "continent": "americas"
   },
   {
    "name": "Hockenheim",
    "km": 4.574,
-   "max_grid": 48
+   "max_grid": 48,
+   "continent": "europe"
   },
   {
    "name": "Hungaroring",
    "km": 4.381,
-   "max_grid": 48
+   "max_grid": 48,
+   "continent": "europe"
   },
   {
    "name": "Ibarra",
    "km": 2.9,
-   "max_grid": 30
+   "max_grid": 30,
+   "continent": "americas"
   },
   {
    "name": "Imola",
    "km": 4.909,
-   "max_grid": 48
+   "max_grid": 48,
+   "continent": "europe"
   },
   {
    "name": "Indianapolis Road",
    "km": 3.925,
-   "max_grid": 48
+   "max_grid": 48,
+   "continent": "americas"
   },
   {
    "name": "Interlagos",
    "km": 4.309,
-   "max_grid": 48
+   "max_grid": 48,
+   "continent": "americas"
   },
   {
    "name": "Jerez Moto",
    "km": 4.423,
-   "max_grid": 42
+   "max_grid": 42,
+   "continent": "europe"
   },
   {
    "name": "Kansai GP",
    "km": 5.807,
-   "max_grid": 48
+   "max_grid": 48,
+   "continent": "asia_pacific"
   },
   {
    "name": "Kansai West",
    "km": 3.5,
-   "max_grid": 26
+   "max_grid": 26,
+   "continent": "asia_pacific"
   },
   {
    "name": "Kyalami",
    "km": 4.522,
-   "max_grid": 48
+   "max_grid": 48,
+   "continent": "africa_gulf"
   },
   {
    "name": "Laguna Seca",
    "km": 3.602,
-   "max_grid": 48
+   "max_grid": 48,
+   "continent": "americas"
   },
   {
    "name": "Le Mans 24 Hour",
    "km": 13.626,
-   "max_grid": 48
+   "max_grid": 48,
+   "continent": "europe"
   },
   {
    "name": "Le Mans Bugatti",
    "km": 4.185,
-   "max_grid": 32
+   "max_grid": 32,
+   "continent": "europe"
   },
   {
    "name": "Long Beach",
    "km": 3.167,
-   "max_grid": 48
+   "max_grid": 48,
+   "continent": "americas"
   },
   {
    "name": "Montreal",
    "km": 4.361,
-   "max_grid": 40
+   "max_grid": 40,
+   "continent": "americas"
   },
   {
    "name": "Monza",
    "km": 5.793,
-   "max_grid": 48
+   "max_grid": 48,
+   "continent": "europe"
   },
   {
    "name": "Mosport",
    "km": 3.957,
-   "max_grid": 48
+   "max_grid": 48,
+   "continent": "americas"
   },
   {
    "name": "Nordschleife 24 Hour",
    "km": 25.378,
-   "max_grid": 48
+   "max_grid": 48,
+   "continent": "europe"
   },
   {
    "name": "Nurburgring",
    "km": 5.148,
-   "max_grid": 48
+   "max_grid": 48,
+   "continent": "europe"
   },
   {
    "name": "Oulton Park International",
    "km": 4.307,
-   "max_grid": 42
+   "max_grid": 42,
+   "continent": "europe"
   },
   {
    "name": "Road America",
    "km": 6.515,
-   "max_grid": 48
+   "max_grid": 48,
+   "continent": "americas"
   },
   {
    "name": "Road Atlanta",
    "km": 4.088,
-   "max_grid": 48
+   "max_grid": 48,
+   "continent": "americas"
   },
   {
    "name": "Santa Cruz",
    "km": 3.2,
-   "max_grid": 48
+   "max_grid": 48,
+   "continent": "americas"
   },
   {
    "name": "Sebring",
    "km": 6.019,
-   "max_grid": 48
+   "max_grid": 48,
+   "continent": "americas"
   },
   {
    "name": "Silverstone",
    "km": 5.891,
-   "max_grid": 48
+   "max_grid": 48,
+   "continent": "europe"
   },
   {
    "name": "Snetterton",
    "km": 4.779,
-   "max_grid": 26
+   "max_grid": 26,
+   "continent": "europe"
   },
   {
    "name": "Spa",
    "km": 7.004,
-   "max_grid": 48
+   "max_grid": 48,
+   "continent": "europe"
   },
   {
    "name": "Spielberg",
    "km": 4.318,
-   "max_grid": 32
+   "max_grid": 32,
+   "continent": "europe"
   },
   {
    "name": "Termas de Rio Hondo",
    "km": 4.806,
-   "max_grid": 48
+   "max_grid": 48,
+   "continent": "americas"
   },
   {
    "name": "Velo Citta",
    "km": 3.3,
-   "max_grid": 34
+   "max_grid": 34,
+   "continent": "americas"
   },
   {
    "name": "Virginia Grand",
    "km": 5.262,
-   "max_grid": 48
+   "max_grid": 48,
+   "continent": "americas"
   },
   {
    "name": "Watkins Glen",
    "km": 5.552,
-   "max_grid": 48
+   "max_grid": 48,
+   "continent": "americas"
   }
  ],
  "levels": [
@@ -827,10 +878,10 @@
    ],
    "weeks": [
     11,
-    18,
-    25,
-    31,
-    38,
+    17,
+    23,
+    30,
+    37,
     45
    ],
    "grid": 26,
@@ -859,10 +910,10 @@
    ],
    "weeks": [
     11,
-    18,
-    25,
-    31,
-    38,
+    17,
+    23,
+    30,
+    37,
     45
    ],
    "grid": 22,
@@ -878,19 +929,23 @@
    "model": null,
    "continent": "asia_pacific",
    "prestige": 0.8,
-   "rounds": 4,
+   "rounds": 6,
    "winter": false,
    "active_from": 1,
    "calendar": [
     "Kansai GP",
     "Bathurst",
     "Adelaide",
-    "Kyalami"
+    "Kyalami",
+    "Kansai GP",
+    "Bathurst"
    ],
    "weeks": [
     11,
-    22,
-    34,
+    17,
+    23,
+    30,
+    37,
     45
    ],
    "grid": 18,
@@ -906,18 +961,20 @@
    "model": null,
    "continent": "africa_gulf",
    "prestige": 0.55,
-   "rounds": 4,
+   "rounds": 5,
    "winter": true,
    "active_from": 1,
    "calendar": [
     "Kyalami",
     "Jerez Moto",
     "Cascais",
-    "Barcelona"
+    "Barcelona",
+    "Kyalami"
    ],
    "weeks": [
     5,
-    7,
+    6,
+    8,
     9,
     10
    ],

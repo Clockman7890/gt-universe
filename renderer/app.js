@@ -339,7 +339,22 @@ on('btn-create', 'onclick', async () => {
   }
 });
 
-on('plaza', 'onclick', async () => { await window.gt.advance(); await refresh(); });
+on('plaza', 'onclick', async () => {
+  const rc = await window.gt.raceInfo();
+  if (rc && rc.thisWeek) {
+    const bill = await window.gt.raceCost();
+    const saved = bill ? `${signed(bill.total)} in crew hire and travel` : 'the cost of the meeting';
+    const ok = confirm(
+      `You are entered at ${rc.track} this weekend.\n\n` +
+      `Advancing the week means you do not turn up at all. No result, no points, ` +
+      `and the round goes on without you.\n\n` +
+      `You would keep ${saved}.\n\nSkip the round?`);
+    if (!ok) return;
+    if (bill) await window.gt.withdraw(bill.roundId, bill.entryId);
+  }
+  await window.gt.advance();
+  await refresh();
+});
 on('b-news', 'onclick', async () => { await openNews(); view('news'); });
 
 document.querySelectorAll('.node').forEach(n => {
@@ -585,10 +600,14 @@ async function renderStandings(main, champ) {
   if (wdKind === 'calendar') {
     const rows = await window.gt.calendar(champ.id);
     const wrap = document.createElement('div');
-    wrap.innerHTML = rows.map(r =>
-      `<div class="calrow${r.played ? ' played' : ''}">` +
-      `<span class="r">${r.round_no}</span><span class="tk">${r.track}</span>` +
-      `<span class="wn">${r.winner || (r.played ? '' : 'week ' + r.week)}</span></div>`).join('');
+    wrap.innerHTML = rows.map(r => {
+      const won = (r.winners || []).length
+        ? r.winners.map(w => `<span class="wn"><em>R${w.leg}</em> ${w.name}</span>`).join('')
+        : `<span class="wn">week ${r.week}</span>`;
+      return `<div class="calrow${r.played ? ' played' : ''}">` +
+             `<span class="r">${r.round_no}</span>` +
+             `<span class="tk">${r.track}</span>${won}</div>`;
+    }).join('');
     main.appendChild(wrap);
     return;
   }
@@ -769,6 +788,29 @@ async function openRace() {
   ready.textContent = 'Ready — I have run this race';
   ready.onclick = async () => { await openResults(info, d); view('results'); };
   actions.appendChild(ready);
+
+  const sim = document.createElement('button');
+  sim.textContent = 'Simulate this race';
+  sim.onclick = async () => {
+    const bill = await window.gt.raceCost();
+    if (!confirm(`Run race ${rcLeg} without driving it?\n\n` +
+                 `The result is worked out from the same numbers the game would ` +
+                 `have been given.` +
+                 (bill ? `\n\nThe meeting still costs ${signed(-bill.total)}.` : '')))
+      return;
+    try {
+      const res = await window.gt.simulate(info.roundId, rcLeg);
+      const me = (res.order || []).find(o => o.isPlayer);
+      alert(`Race ${rcLeg} at ${info.track}\n\n` +
+            (me ? (me.finish ? `You finished ${me.finish} from ${me.grid} on the grid.`
+                             : `You retired, from ${me.grid} on the grid.`)
+                : 'Result recorded.') +
+            `\n\n${res.starters} started, ${res.retired} did not finish.`);
+      await refresh();
+      await openRace();
+    } catch (e) { alert(String(e.message || e).replace(/^Error: /, '')); }
+  };
+  actions.appendChild(sim);
 
   box.appendChild(actions);
 }

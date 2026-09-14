@@ -152,6 +152,10 @@ ipcMain.handle('tutorial:set',    (_e, n) => db.setTutorial(n));
 ipcMain.handle('race:info',       () => db.raceInfo());
 ipcMain.handle('race:prepare',    (_e, leg) => db.racePrepare(leg));
 ipcMain.handle('race:sheet',      (_e, r, l) => db.raceSheet(r, l));
+ipcMain.handle('race:cost',       () => db.myRoundCost());
+ipcMain.handle('race:withdraw',   (_e, rd, en) => db.withdrawFromRound(rd, en));
+ipcMain.handle('race:simulate',   (_e, rd, lg) => db.simulateLeg(rd, lg));
+ipcMain.handle('sponsors:mine',   () => db.sponsors());
 
 ipcMain.handle('sm:read', () => {
   try { return require('./sharedmem').classification(); }

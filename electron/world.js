@@ -7,7 +7,8 @@ function buildWorld(db, world, blocks, countries, alreadySeeded = false) {
     block:   db.prepare(`INSERT INTO blocks (id,name,continent,production_weight,passive_multiplier)
                          VALUES (?,?,?,?,?)`),
     country: db.prepare(`INSERT INTO countries (code,name,block_id,weight) VALUES (?,?,?,?)`),
-    track:   db.prepare(`INSERT INTO tracks (name,country,length_km,max_grid) VALUES (?,?,?,?)`),
+    track:   db.prepare(`INSERT INTO tracks (name,country,length_km,max_grid,continent)
+                          VALUES (?,?,?,?,?)`),
     man:     db.prepare(`INSERT INTO manufacturers (name,customer_only) VALUES (?,?)`),
     model:   db.prepare(`INSERT INTO car_models
                 (name,manufacturer_id,class,ai_file,price_new,purchasable,running_cost_index,
@@ -36,7 +37,8 @@ function buildWorld(db, world, blocks, countries, alreadySeeded = false) {
 
   const trackId = {};
   for (const t of world.tracks) {
-    trackId[t.name] = ins.track.run(t.name, null, t.km, t.max_grid).lastInsertRowid;
+    trackId[t.name] = ins.track.run(t.name, null, t.km, t.max_grid,
+                                    t.continent || 'europe').lastInsertRowid;
   }
 
   const CUSTOMER_ONLY = new Set(['Nissan', 'Ginetta', 'Ultima', 'Puma', 'Mitsubishi']);

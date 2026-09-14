@@ -203,8 +203,9 @@ function gridFor(db, round, legNo) {
     JOIN entry_drivers ed ON ed.entry_id = e.id AND ed.role = ?
     JOIN drivers d ON d.id = ed.driver_id
     JOIN driver_skills s ON s.driver_id = d.id
-    WHERE e.season = ? AND e.championship_id = ?`)
-    .all(legNo === 2 ? 2 : 1, season.season, round.championship_id);
+    WHERE e.season = ? AND e.championship_id = ?
+      AND e.id NOT IN (SELECT entry_id FROM round_absences WHERE round_id = ?)`)
+    .all(legNo === 2 ? 2 : 1, season.season, round.championship_id, round.id);
 
   // Teams with better engineering break down less often, but nothing is safe:
   // even a specialist outfit sits well short of certainty.

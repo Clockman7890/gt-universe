@@ -516,6 +516,7 @@ select.st { background: var(--surface-0); border: 1px solid var(--border); color
   border-bottom: .5px solid #23262D; }
 .calrow .r { width: 34px; color: var(--text-muted); }
 .calrow .tk { flex: 1; }
-.calrow .wn { width: 220px; color: var(--text-2); }
+.calrow .wn { width: 190px; color: var(--text-2); }
+.calrow .wn em { color: var(--text-muted); font-style: normal; margin-right: 5px; }
 .calrow.played .tk { color: var(--text); }
 .calrow:not(.played) .tk { color: var(--text-dim); }

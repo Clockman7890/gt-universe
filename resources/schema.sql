@@ -33,7 +33,8 @@ CREATE TABLE tracks (
   name       TEXT NOT NULL UNIQUE,             -- exactly as AMS2 names it
   country    TEXT,
   length_km  REAL NOT NULL,
-  max_grid   INTEGER NOT NULL                  -- hard cap from the game
+  max_grid   INTEGER NOT NULL,                 -- hard cap from the game
+  continent  TEXT NOT NULL DEFAULT 'europe'    -- decides whether a trip is long
 );
 
 CREATE TABLE manufacturers (
@@ -270,6 +271,7 @@ CREATE TABLE manufacturer_programs (
 
 CREATE TABLE ledger (                          -- every euro that moves
   id          INTEGER PRIMARY KEY,
+  round_id    INTEGER REFERENCES rounds(id),    -- set for anything tied to a meeting
   season      INTEGER NOT NULL,
   week        INTEGER NOT NULL,
   entity_type TEXT NOT NULL,                   -- driver | team | manufacturer
@@ -377,6 +379,28 @@ CREATE TABLE weekend_faults (
 );
 
 -- driver absences: illness or injury, never racing related
+-- A backer signs a driver for a run of races after good results. The better
+-- known the driver, the more of them will have him at once.
+CREATE TABLE sponsors (
+  id            INTEGER PRIMARY KEY,
+  driver_id     INTEGER NOT NULL REFERENCES drivers(id),
+  name          TEXT NOT NULL,
+  per_race      INTEGER NOT NULL,
+  races_left    INTEGER NOT NULL,
+  season_signed INTEGER NOT NULL,
+  tier          TEXT NOT NULL DEFAULT 'local'    -- local | regional | national | international
+);
+CREATE INDEX idx_sponsors_driver ON sponsors(driver_id);
+
+-- An entry that could not afford to travel, or was withdrawn for any other
+-- reason, sits out a round and never reaches the grid file.
+CREATE TABLE round_absences (
+  round_id      INTEGER NOT NULL REFERENCES rounds(id),
+  entry_id      INTEGER NOT NULL REFERENCES entries(id),
+  reason        TEXT NOT NULL,                  -- no_funds | withdrawn | skipped
+  PRIMARY KEY (round_id, entry_id)
+);
+
 CREATE TABLE absences (
   id            INTEGER PRIMARY KEY,
   driver_id     INTEGER NOT NULL REFERENCES drivers(id),
