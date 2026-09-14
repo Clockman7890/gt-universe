@@ -68,6 +68,9 @@ function grab() {
   return { ok: true, buf };
 }
 
+// The course car occupies a participant slot but is not in the race.
+const isCourseCar = n => /^(safety|pace|course)\b/i.test(String(n || '').trim());
+
 const cstr = (buf, at, len) => {
   const end = buf.indexOf(0, at);
   const stop = end === -1 || end > at + len ? at + len : end;
@@ -90,10 +93,12 @@ function read() {
   const participants = [];
   for (let i = 0; i < Math.min(numParticipants, MAX_PARTICIPANTS); i++) {
     const at = HEADER + i * PART_SIZE;
+    const name = cstr(b, at + 1, 64);
+    if (isCourseCar(name)) continue;
     participants.push({
       index: i,
       active: b.readUInt8(at) !== 0,
-      name: cstr(b, at + 1, 64),
+      name,
       position: b.readUInt32LE(at + 84),
       lapsCompleted: b.readUInt32LE(at + 88),
       currentLap: b.readUInt32LE(at + 92)
@@ -113,12 +118,35 @@ function read() {
     sessionState: SESSION_STATE[b.readUInt32LE(12)] || b.readUInt32LE(12),
     raceState: RACE_STATE[b.readUInt32LE(16)] || b.readUInt32LE(16),
     viewed: b.readInt32LE(20),
-    numParticipants, participants
+    numParticipants: participants.length,
+    slots: numParticipants,
+    participants
   };
 }
 
+let snapshot = null;      // the last reading that looked like a finished race
+
+function remember(s) {
+  if (!s.ok || !s.participants.length) return;
+  // Keep the last table from a race session. Once the flag falls the block is
+  // cleared within moments, so the reading taken just before is what survives.
+  if (s.sessionState === 'race')
+    snapshot = { at: Date.now(), sessionState: s.sessionState,
+                 raceState: s.raceState, participants: s.participants };
+}
+
 function classification() {
-  const s = read();
+  let s = read();
+  remember(s);
+
+  // The game clears the block as soon as it leaves the session, so a player who
+  // skipped to the end and walked away would find nothing. Fall back to the
+  // last table that still had a classification in it.
+  if ((!s.ok || !s.participants.length) && snapshot) {
+    s = { ok: true, fromSnapshot: true, ageSeconds: Math.round((Date.now() - snapshot.at) / 1000),
+          sessionState: snapshot.sessionState, raceState: snapshot.raceState,
+          numParticipants: snapshot.participants.length, participants: snapshot.participants };
+  }
   if (!s.ok) return s;
 
   // Laps down says nothing: in an endurance race, or on a mixed grid, a car two
@@ -130,7 +158,12 @@ function classification() {
                  retired: !p.active || !p.position }))
     .sort((a, b) => (a.position || 999) - (b.position || 999));
 
-  return Object.assign(s, { finished: s.raceState === 'finished', order });
+  // Mid-race every car has a position, so only the session flag, or the block
+  // having gone away after a good reading, says the race is actually over.
+  return Object.assign(s, {
+    finished: s.raceState === 'finished' || !!s.fromSnapshot,
+    order
+  });
 }
 
 // A cheap check the interface can poll.
@@ -141,9 +174,16 @@ function status() {
     return out;
   }
   let s;
-  try { s = read(); }
+  try { s = read(); remember(s); }
   catch (e) { out.state = 'error'; out.detail = e.message; return out; }
 
+  if (!s.ok && snapshot) {
+    out.state = 'ready';
+    out.participants = snapshot.participants.length;
+    out.detail = `Holding the last classification — ${snapshot.participants.length} cars, ` +
+                 `read ${Math.round((Date.now() - snapshot.at) / 1000)}s ago. Ready to use.`;
+    return out;
+  }
   if (!s.ok) {
     out.state = s.reason === 'not_running' ? 'closed' : 'error';
     out.detail = s.reason === 'not_running'
@@ -160,10 +200,12 @@ function status() {
   out.sessionState = s.sessionState;
   out.raceState = s.raceState;
   out.participants = s.numParticipants;
-  out.state = s.raceState === 'finished' ? 'ready' : 'live';
-  out.detail = s.raceState === 'finished'
-    ? `Session finished — ${s.numParticipants} cars, ready to read.`
-    : `${s.sessionState}, ${s.raceState} — ${s.numParticipants} cars.`;
+  const done = s.raceState === 'finished';
+  out.state = done ? 'ready' : 'live';
+  out.detail = done
+    ? `Classification complete — ${s.numParticipants} cars, ready to read.`
+    : `${s.sessionState}, ${s.raceState} — ${s.numParticipants} cars` +
+      (s.slots > s.numParticipants ? ' (course car ignored)' : '') + '.';
   return out;
 }
 

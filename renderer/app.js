@@ -735,12 +735,7 @@ async function openResults(info, leg) {
       }[g.reason] || g.message || 'Could not read the session.') + `</span>`;
       return;
     }
-    if (!g.finished) {
-      status.innerHTML = `<span class="warn">The session is in progress — ` +
-        `${g.sessionState}, ${g.raceState}. Finish the race, stay on the results ` +
-        `screen, then read again.</span>`;
-      return;
-    }
+    const provisional = !g.finished;
 
     // match on the driver name as it was written into the AI file
     const fold = t => String(t || '').toLowerCase().replace(/[^a-z ]/g, '').trim();
@@ -761,7 +756,15 @@ async function openResults(info, leg) {
       if (sel) sel.value = state[i].status;
     });
     const retired = state.filter(r => r.status === 'retired').length;
-    status.innerHTML = `Read ${matched} of ${state.length} cars from the game` +
+    status.innerHTML =
+      (provisional
+        ? `<span class="warn">The race is still running — this is the order as it ` +
+          `stands right now. </span>`
+        : g.fromSnapshot
+          ? `The session has closed, so this is the last classification the game ` +
+            `published${g.ageSeconds ? `, ${g.ageSeconds}s ago` : ''}. `
+          : '') +
+      `Read ${matched} of ${state.length} cars from the game` +
       (retired ? `, ${retired} marked as retired` : '') + `. ` +
       `The game does not say why a car stopped, so check the retirements against ` +
       `what you saw before saving.` +
