@@ -509,7 +509,8 @@ select.st { background: var(--surface-0); border: 1px solid var(--border); color
 .srow.me { background: var(--surface-3); }
 .srow .rk { width: 32px; color: var(--text-2); }
 .srow .nm { flex: 1; }
-.srow .tm { width: 200px; color: var(--text-2); font-size: 11px; }
+.srow .tm { width: 190px; color: var(--text-2); font-size: 11px; }
+.srow .cr { width: 160px; color: var(--text-2); font-size: 11px; }
 .srow .num { width: 46px; text-align: right; }
 .srow .pt { width: 60px; text-align: right; font-weight: 500; color: var(--accent-soft); }
 .calrow { display: flex; gap: 10px; font-size: 12px; padding: 5px 12px;

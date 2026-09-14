@@ -146,10 +146,10 @@ async function refresh() {
 
   // Nothing has happened in the wider world until the entry lists have closed
   // and the first rounds are near, so the standings stay shut until week 6.
-  const worldOpen = s.career.season > 1 || s.career.week >= 6;
+  const worldOpen = s.career.season > 1 || s.career.week >= 5;
   const wdNode = document.querySelector('[data-go="world"]');
   wdNode.classList.toggle('locked', !worldOpen);
-  wdNode.querySelector('.sub').textContent = worldOpen ? 'standings' : 'opens in week 6';
+  wdNode.querySelector('.sub').textContent = worldOpen ? 'standings' : 'opens in week 5';
 
   const cars = await window.gt.garage();
   $('n-garage').textContent = cars.length
@@ -534,7 +534,8 @@ const CONTINENT = { europe: 'Europe', americas: 'Americas',
 const CLASS_LABEL = { gt5: 'GT5', gt4: 'GT4', gt3: 'GT3', lmdh: 'LMDh' };
 
 async function openWorld() {
-  if (!wdTree) wdTree = await window.gt.worldTree();
+  // read fresh every time: rounds are run while the player is elsewhere
+  wdTree = await window.gt.worldTree();
   const st = await window.gt.state();
   $('wd-season').textContent = `Season ${st.career.season} · week ${st.career.week}`;
 
@@ -622,10 +623,12 @@ async function renderStandings(main, champ) {
   }
 
   const showTeam = wdKind === 'drivers';
+  const showCar = wdKind === 'drivers' || wdKind === 'teams';
   const head = document.createElement('div');
   head.className = 'srow head2';
   head.innerHTML = `<span class="rk">#</span><span class="nm">NAME</span>` +
     (showTeam ? `<span class="tm">TEAM</span>` : '') +
+    (showCar ? `<span class="cr">CAR</span>` : '') +
     `<span class="num">WINS</span><span class="num">POD</span><span class="pt">POINTS</span>`;
   main.appendChild(head);
 
@@ -635,6 +638,7 @@ async function renderStandings(main, champ) {
     el.innerHTML = `<span class="rk">${i + 1}</span>` +
       `<span class="nm">${r.name}${r.country ? ' · ' + r.country : ''}</span>` +
       (showTeam ? `<span class="tm">${r.team || ''}</span>` : '') +
+      (showCar ? `<span class="cr">${r.car || ''}</span>` : '') +
       `<span class="num">${r.wins || 0}</span>` +
       `<span class="num">${r.podiums || 0}</span>` +
       `<span class="pt">${r.pts || 0}</span>`;

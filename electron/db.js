@@ -524,6 +524,11 @@ function standings(championshipId, kind) {
   if (kind === 'teams') {
     return handle.prepare(`
       SELECT t.name AS name, t.country,
+             (SELECT cm2.name FROM entries e2
+              JOIN chassis c3 ON c3.id = e2.chassis_id
+              JOIN car_models cm2 ON cm2.id = c3.model_id
+              WHERE e2.team_id = t.id AND e2.season = @season
+                AND e2.championship_id = @champ LIMIT 1) car,
              SUM(res.points) pts,
              SUM(CASE WHEN res.finish_pos = 1 THEN 1 ELSE 0 END) wins,
              SUM(CASE WHEN res.finish_pos <= 3 AND res.finish_pos IS NOT NULL THEN 1 ELSE 0 END) podiums,
@@ -557,7 +562,7 @@ function standings(championshipId, kind) {
   }
 
   return handle.prepare(`
-    SELECT d.name AS name, d.country, t.name team,
+    SELECT d.name AS name, d.country, t.name team, cm.name car,
            SUM(res.points) pts,
            SUM(CASE WHEN res.finish_pos = 1 THEN 1 ELSE 0 END) wins,
            SUM(CASE WHEN res.finish_pos <= 3 AND res.finish_pos IS NOT NULL THEN 1 ELSE 0 END) podiums,
@@ -568,6 +573,8 @@ function standings(championshipId, kind) {
     JOIN rounds r ON r.id = l.round_id
     JOIN entries e ON e.id = res.entry_id
     JOIN teams t ON t.id = e.team_id
+    JOIN chassis ch ON ch.id = e.chassis_id
+    JOIN car_models cm ON cm.id = ch.model_id
     JOIN drivers d ON d.id = res.driver_id
     WHERE r.season = @season AND r.championship_id = @champ
     GROUP BY d.id ORDER BY pts DESC, wins DESC`)
