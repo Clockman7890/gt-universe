@@ -483,3 +483,39 @@ select.st { background: var(--surface-0); border: 1px solid var(--border); color
 .bulb.green { background: var(--green);       box-shadow: 0 0 9px rgba(99,153,34,.9); }
 .bulb.red   { background: var(--red);         box-shadow: 0 0 9px rgba(226,75,74,.7); }
 .lamptext { overflow-wrap: anywhere; }
+
+.legtabs span.done   { background: var(--surface-0); color: var(--green-soft); }
+.legtabs span.locked { background: var(--surface-0); color: var(--text-dim); cursor: not-allowed; }
+.legtabs span.on.done { background: var(--accent); color: var(--accent-ink); }
+
+/* ---------- world standings ---------- */
+.head .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.head .tabs span { font-size: 12px; padding: 5px 12px; border-radius: 6px;
+  background: var(--surface-1); color: var(--text-2); cursor: pointer; }
+.head .tabs span.on { background: var(--accent); color: var(--accent-ink); font-weight: 500; }
+
+#wd-body { position: absolute; inset: 60px 24px 56px 24px; display: flex; gap: 18px; }
+.wd-list { width: 270px; overflow-y: auto; }
+.wd-main { flex: 1; overflow-y: auto; }
+.champ { padding: 9px 12px; margin-bottom: 3px; border-radius: 7px;
+  background: var(--surface-1); cursor: pointer; font-size: 13px; }
+.champ:hover { background: var(--surface-2); }
+.champ.sel { background: var(--surface-3); }
+.champ .cs { display: block; font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+.srow { display: flex; align-items: center; gap: 10px; font-size: 13px;
+  padding: 6px 12px; border-radius: 6px; margin-bottom: 2px; background: var(--surface-1); }
+.srow.head2 { background: none; color: var(--text-muted); font-size: 10px; letter-spacing: 1px; }
+.srow.me { background: var(--surface-3); }
+.srow .rk { width: 32px; color: var(--text-2); }
+.srow .nm { flex: 1; }
+.srow .tm { width: 200px; color: var(--text-2); font-size: 11px; }
+.srow .num { width: 46px; text-align: right; }
+.srow .pt { width: 60px; text-align: right; font-weight: 500; color: var(--accent-soft); }
+.calrow { display: flex; gap: 10px; font-size: 12px; padding: 5px 12px;
+  border-bottom: .5px solid #23262D; }
+.calrow .r { width: 34px; color: var(--text-muted); }
+.calrow .tk { flex: 1; }
+.calrow .wn { width: 220px; color: var(--text-2); }
+.calrow.played .tk { color: var(--text); }
+.calrow:not(.played) .tk { color: var(--text-dim); }

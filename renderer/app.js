@@ -346,6 +346,7 @@ document.querySelectorAll('.node').forEach(n => {
     else if (go === 'office') { await openOffice(); view('office'); }
     else if (go === 'home')   { await openHome(); view('home'); }
     else if (go === 'race')   { await openRace(); view('race'); }
+    else if (go === 'world')  { await openWorld(); view('world'); }
     else {
       $('stub-title').textContent = n.querySelector('.label').textContent;
       $('stub-text').textContent  = 'Not built yet.';
@@ -502,6 +503,118 @@ async function selectCar(m) {
   };
 }
 
+// ---------------------------------------------------------------- world
+let wdTree = null, wdContinent = null, wdChamp = null, wdKind = 'drivers';
+
+const CONTINENT = { europe: 'Europe', americas: 'Americas', asia: 'Asia',
+                    oceania: 'Oceania', africa: 'Africa', world: 'World' };
+const CLASS_LABEL = { gt5: 'GT5', gt4: 'GT4', gt3: 'GT3', lmdh: 'LMDh' };
+
+async function openWorld() {
+  if (!wdTree) wdTree = await window.gt.worldTree();
+  const st = await window.gt.state();
+  $('wd-season').textContent = `Season ${st.career.season} · week ${st.career.week}`;
+
+  const continents = [...new Set(wdTree.map(c => c.continent))];
+  if (!wdContinent || !continents.includes(wdContinent)) wdContinent = continents[0];
+
+  const tabs = $('wd-continents');
+  tabs.innerHTML = '';
+  for (const k of continents) {
+    const t = document.createElement('span');
+    t.className = k === wdContinent ? 'on' : '';
+    t.textContent = CONTINENT[k] || k;
+    t.onclick = async () => { wdContinent = k; wdChamp = null; await openWorld(); };
+    tabs.appendChild(t);
+  }
+
+  const here = wdTree.filter(c => c.continent === wdContinent);
+  if (!wdChamp || !here.some(c => c.id === wdChamp)) wdChamp = here.length ? here[0].id : null;
+
+  const box = $('wd-body');
+  box.innerHTML = '<div class="wd-list"></div><div class="wd-main"></div>';
+  const list = box.querySelector('.wd-list');
+  const main = box.querySelector('.wd-main');
+
+  let lastClass = null;
+  for (const c of here) {
+    if (c.class !== lastClass) {
+      const g = document.createElement('div');
+      g.className = 'group';
+      g.textContent = CLASS_LABEL[c.class] || c.class.toUpperCase();
+      list.appendChild(g); lastClass = c.class;
+    }
+    const el = document.createElement('div');
+    el.className = 'champ' + (c.id === wdChamp ? ' sel' : '');
+    el.innerHTML = `${c.name}<span class="cs">${c.entries} cars · ` +
+      `${c.played} of ${c.rounds} rounds run</span>`;
+    el.onclick = async () => { wdChamp = c.id; await openWorld(); };
+    list.appendChild(el);
+  }
+
+  if (!wdChamp) { main.innerHTML = '<p class="note">Nothing running here yet.</p>'; return; }
+  await renderStandings(main, here.find(c => c.id === wdChamp));
+}
+
+async function renderStandings(main, champ) {
+  const kinds = [['drivers', 'Drivers'], ['teams', 'Teams']];
+  // a one-make series has a single manufacturer, so the tab is pointless there
+  if (champ.class !== 'gt5') kinds.push(['manufacturers', 'Manufacturers']);
+  kinds.push(['calendar', 'Calendar']);
+  if (!kinds.some(k => k[0] === wdKind)) wdKind = 'drivers';
+  main.innerHTML = '';
+  const tabs = document.createElement('div');
+  tabs.className = 'legtabs';
+  for (const [k, label] of kinds) {
+    const t = document.createElement('span');
+    t.className = k === wdKind ? 'on' : '';
+    t.textContent = label;
+    t.onclick = async () => { wdKind = k; await renderStandings(main, champ); };
+    tabs.appendChild(t);
+  }
+  main.appendChild(tabs);
+
+  if (wdKind === 'calendar') {
+    const rows = await window.gt.calendar(champ.id);
+    const wrap = document.createElement('div');
+    wrap.innerHTML = rows.map(r =>
+      `<div class="calrow${r.played ? ' played' : ''}">` +
+      `<span class="r">${r.round_no}</span><span class="tk">${r.track}</span>` +
+      `<span class="wn">${r.winner || (r.played ? '' : 'week ' + r.week)}</span></div>`).join('');
+    main.appendChild(wrap);
+    return;
+  }
+
+  const rows = await window.gt.standings(champ.id, wdKind);
+  if (!rows.length) {
+    const p = document.createElement('p');
+    p.className = 'note';
+    p.textContent = 'No races run yet.';
+    main.appendChild(p);
+    return;
+  }
+
+  const showTeam = wdKind === 'drivers';
+  const head = document.createElement('div');
+  head.className = 'srow head2';
+  head.innerHTML = `<span class="rk">#</span><span class="nm">NAME</span>` +
+    (showTeam ? `<span class="tm">TEAM</span>` : '') +
+    `<span class="num">WINS</span><span class="num">POD</span><span class="pt">POINTS</span>`;
+  main.appendChild(head);
+
+  rows.forEach((r, i) => {
+    const el = document.createElement('div');
+    el.className = 'srow' + (r.mine ? ' me' : '');
+    el.innerHTML = `<span class="rk">${i + 1}</span>` +
+      `<span class="nm">${r.name}${r.country ? ' · ' + r.country : ''}</span>` +
+      (showTeam ? `<span class="tm">${r.team || ''}</span>` : '') +
+      `<span class="num">${r.wins || 0}</span>` +
+      `<span class="num">${r.podiums || 0}</span>` +
+      `<span class="pt">${r.pts || 0}</span>`;
+    main.appendChild(el);
+  });
+}
+
 // ---------------------------------------------------------------- race weekend
 let rcLeg = 1, rcData = null;
 
@@ -542,18 +655,44 @@ async function openRace() {
     : `<span class="warn">No custom AI folder set — fix it in Settings.</span>`;
   box.appendChild(bar);
 
-  // ---- leg tabs ----
+  // ---- leg tabs: one race at a time, in order ----
+  const legs = info.legState || [{ leg: 1, done: false }];
+  const firstOpen = (legs.find(l => !l.done) || legs[legs.length - 1]).leg;
+  if (rcLeg > firstOpen) rcLeg = firstOpen;
+
   if (info.legs > 1) {
     const tabs = document.createElement('div');
     tabs.className = 'legtabs';
-    for (let i = 1; i <= info.legs; i++) {
+    for (const l of legs) {
+      const locked = !l.done && l.leg > firstOpen;
       const t = document.createElement('span');
-      t.className = i === rcLeg ? 'on' : '';
-      t.textContent = `Race ${i}`;
-      t.onclick = async () => { rcLeg = i; await openRace(); };
+      t.className = (l.leg === rcLeg ? 'on ' : '') + (l.done ? 'done' : locked ? 'locked' : '');
+      t.textContent = `Race ${l.leg}` + (l.done ? '  ✓' : locked ? '  🔒' : '');
+      t.title = l.done ? 'Recorded' : locked ? 'Run the previous race first' : '';
+      if (!locked) t.onclick = async () => { rcLeg = l.leg; await openRace(); };
       tabs.appendChild(t);
     }
     box.appendChild(tabs);
+  }
+
+  const thisLeg = legs.find(l => l.leg === rcLeg);
+  if (thisLeg && thisLeg.done) {
+    const done = document.createElement('div');
+    done.className = 'setup';
+    done.innerHTML = `<h5>ALREADY RUN</h5>` +
+      `<p class="note">Race ${rcLeg} is recorded. ` +
+      (legs.every(l => l.done)
+        ? 'The round is complete — advance the week for the next one.'
+        : `Move to race ${firstOpen} when you are ready.`) + `</p>`;
+    box.appendChild(done);
+    const redo = document.createElement('div');
+    redo.className = 'rc-actions';
+    const b = document.createElement('button');
+    b.textContent = 'Correct the result';
+    b.onclick = async () => { await openResults(info, { leg: rcLeg }); view('results'); };
+    redo.appendChild(b);
+    box.appendChild(redo);
+    return;
   }
 
   rcData = await window.gt.racePrepare(rcLeg);
@@ -736,6 +875,7 @@ async function openResults(info, leg) {
       return;
     }
     const provisional = !g.finished;
+    const youAreOut = ['retired', 'dnf', 'disqualified'].includes(g.playerRaceState);
 
     // match on the driver name as it was written into the AI file
     const fold = t => String(t || '').toLowerCase().replace(/[^a-z ]/g, '').trim();
@@ -757,7 +897,10 @@ async function openResults(info, leg) {
     });
     const retired = state.filter(r => r.status === 'retired').length;
     status.innerHTML =
-      (provisional
+      (youAreOut
+        ? `<span class="warn">Your car is out — the game reports ${g.playerRaceState}. ` +
+          `The others are shown where they stood when you stopped, so check them. </span>`
+        : provisional
         ? `<span class="warn">The race is still running — this is the order as it ` +
           `stands right now. </span>`
         : g.fromSnapshot

@@ -190,6 +190,9 @@ ipcMain.handle('race:write', (_e, files) => {
   }
   return { dir, written };
 });
+ipcMain.handle('world:tree',      () => db.worldTree());
+ipcMain.handle('world:standings', (_e, id, kind) => db.standings(id, kind));
+ipcMain.handle('world:calendar',  (_e, id) => db.calendar(id));
 ipcMain.handle('news:list',       () => db.newsList());
 ipcMain.handle('news:read',       () => db.newsRead());
 

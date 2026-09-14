@@ -132,7 +132,8 @@ function remember(s) {
   // cleared within moments, so the reading taken just before is what survives.
   if (s.sessionState === 'race')
     snapshot = { at: Date.now(), sessionState: s.sessionState,
-                 raceState: s.raceState, participants: s.participants };
+                 raceState: s.raceState, viewed: s.viewed,
+                 participants: s.participants };
 }
 
 function classification() {
@@ -145,23 +146,39 @@ function classification() {
   if ((!s.ok || !s.participants.length) && snapshot) {
     s = { ok: true, fromSnapshot: true, ageSeconds: Math.round((Date.now() - snapshot.at) / 1000),
           sessionState: snapshot.sessionState, raceState: snapshot.raceState,
+          viewed: snapshot.viewed,
           numParticipants: snapshot.participants.length, participants: snapshot.participants };
   }
   if (!s.ok) return s;
 
   // Laps down says nothing: in an endurance race, or on a mixed grid, a car two
-  // laps behind the leader is simply a slower class doing its job. The only
-  // honest signals are the slot going inactive and the position being unset.
+  // laps behind the leader is simply a slower class doing its job. For the AI
+  // the only honest signals are the slot going inactive and the position being
+  // unset. For the player's own car there is a better one — mRaceState is that
+  // car's state, not the session's, and it says outright when they retired.
+  const OUT = new Set(['retired', 'dnf', 'disqualified']);
+  const mineOut = OUT.has(s.raceState);
+
   const order = s.participants
     .filter(p => p.name)
-    .map(p => ({ name: p.name, position: p.position, laps: p.lapsCompleted,
-                 retired: !p.active || !p.position }))
-    .sort((a, b) => (a.position || 999) - (b.position || 999));
+    .map(p => ({
+      name: p.name,
+      position: p.position,
+      laps: p.lapsCompleted,
+      isPlayer: p.index === s.viewed,
+      retired: p.index === s.viewed ? mineOut : (!p.active || !p.position)
+    }))
+    .sort((a, b) => {
+      // a retired car has no place in the order
+      if (a.retired !== b.retired) return a.retired ? 1 : -1;
+      return (a.position || 999) - (b.position || 999);
+    });
 
   // Mid-race every car has a position, so only the session flag, or the block
   // having gone away after a good reading, says the race is actually over.
   return Object.assign(s, {
-    finished: s.raceState === 'finished' || !!s.fromSnapshot,
+    finished: s.raceState === 'finished' || OUT.has(s.raceState) || !!s.fromSnapshot,
+    playerRaceState: s.raceState,
     order
   });
 }
@@ -200,12 +217,15 @@ function status() {
   out.sessionState = s.sessionState;
   out.raceState = s.raceState;
   out.participants = s.numParticipants;
-  const done = s.raceState === 'finished';
+  const OUT = new Set(['retired', 'dnf', 'disqualified']);
+  const done = s.raceState === 'finished' || OUT.has(s.raceState);
   out.state = done ? 'ready' : 'live';
-  out.detail = done
+  out.detail = s.raceState === 'finished'
     ? `Classification complete — ${s.numParticipants} cars, ready to read.`
-    : `${s.sessionState}, ${s.raceState} — ${s.numParticipants} cars` +
-      (s.slots > s.numParticipants ? ' (course car ignored)' : '') + '.';
+    : OUT.has(s.raceState)
+      ? `Your car is out — ${s.raceState}. ${s.numParticipants} cars, ready to read.`
+      : `${s.sessionState}, ${s.raceState} — ${s.numParticipants} cars` +
+        (s.slots > s.numParticipants ? ' (course car ignored)' : '') + '.';
   return out;
 }
 

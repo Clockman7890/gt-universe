@@ -358,6 +358,10 @@ function raceInfo() {
     round: r.round_no, championship: r.championship, track: r.track,
     week: r.week, weeksAway: r.weeksAway, thisWeek: r.thisWeek,
     date: r.race_date, legs: r.legs.length,
+    legState: r.legs.map(l => ({
+      leg: l.leg_no, date: l.race_date, start: l.start_time,
+      done: !!l.simulated
+    })),
     gridSize: handle.prepare(`SELECT COUNT(*) n FROM entries
         WHERE season = (SELECT season FROM career WHERE id=1) AND championship_id = ?`)
         .get(r.championship_id).n,
@@ -380,6 +384,95 @@ function raceSave(legId, entries) {
   const r = season.saveResults(handle, legId, entries);
   dirty = true;
   return r;
+}
+
+// ------------------------------------------------------------- standings
+function worldTree() {
+  if (!handle) return null;
+  const c = handle.prepare(`SELECT season FROM career WHERE id = 1`).get();
+  return handle.prepare(`
+    SELECT ch.id, ch.name, ch.class, ch.home_continent AS continent,
+           (SELECT COUNT(*) FROM entries e
+            WHERE e.season = ? AND e.championship_id = ch.id) entries,
+           (SELECT COUNT(*) FROM rounds r
+            WHERE r.season = ? AND r.championship_id = ch.id AND r.played = 1) played,
+           (SELECT COUNT(*) FROM rounds r
+            WHERE r.season = ? AND r.championship_id = ch.id) rounds
+    FROM championships ch
+    WHERE ch.active_from <= ?
+    ORDER BY ch.home_continent, ch.class, ch.name`).all(c.season, c.season, c.season, c.season);
+}
+
+function standings(championshipId, kind) {
+  if (!handle) return null;
+  const c = handle.prepare(`SELECT season, player_driver_id FROM career WHERE id = 1`).get();
+
+  if (kind === 'teams') {
+    return handle.prepare(`
+      SELECT t.name AS name, t.country,
+             SUM(res.points) pts,
+             SUM(CASE WHEN res.finish_pos = 1 THEN 1 ELSE 0 END) wins,
+             SUM(CASE WHEN res.finish_pos <= 3 AND res.finish_pos IS NOT NULL THEN 1 ELSE 0 END) podiums,
+             MAX(CASE WHEN t.owner_driver_id = @me THEN 1 ELSE 0 END) mine
+      FROM results res
+      JOIN legs l ON l.id = res.leg_id
+      JOIN rounds r ON r.id = l.round_id
+      JOIN entries e ON e.id = res.entry_id
+      JOIN teams t ON t.id = e.team_id
+      WHERE r.season = @season AND r.championship_id = @champ
+      GROUP BY t.id ORDER BY pts DESC, wins DESC`)
+      .all({ season: c.season, champ: championshipId, me: c.player_driver_id });
+  }
+
+  if (kind === 'manufacturers') {
+    return handle.prepare(`
+      SELECT m.name AS name, NULL country, SUM(res.points) pts,
+             SUM(CASE WHEN res.finish_pos = 1 THEN 1 ELSE 0 END) wins,
+             SUM(CASE WHEN res.finish_pos <= 3 AND res.finish_pos IS NOT NULL THEN 1 ELSE 0 END) podiums,
+             0 mine
+      FROM results res
+      JOIN legs l ON l.id = res.leg_id
+      JOIN rounds r ON r.id = l.round_id
+      JOIN entries e ON e.id = res.entry_id
+      JOIN chassis ch ON ch.id = e.chassis_id
+      JOIN car_models cm ON cm.id = ch.model_id
+      JOIN manufacturers m ON m.id = cm.manufacturer_id
+      WHERE r.season = @season AND r.championship_id = @champ
+      GROUP BY m.id ORDER BY pts DESC, wins DESC`)
+      .all({ season: c.season, champ: championshipId });
+  }
+
+  return handle.prepare(`
+    SELECT d.name AS name, d.country, t.name team,
+           SUM(res.points) pts,
+           SUM(CASE WHEN res.finish_pos = 1 THEN 1 ELSE 0 END) wins,
+           SUM(CASE WHEN res.finish_pos <= 3 AND res.finish_pos IS NOT NULL THEN 1 ELSE 0 END) podiums,
+           SUM(CASE WHEN res.status <> 'finished' THEN 1 ELSE 0 END) retirements,
+           MAX(CASE WHEN d.is_player = 1 THEN 1 ELSE 0 END) mine
+    FROM results res
+    JOIN legs l ON l.id = res.leg_id
+    JOIN rounds r ON r.id = l.round_id
+    JOIN entries e ON e.id = res.entry_id
+    JOIN teams t ON t.id = e.team_id
+    JOIN drivers d ON d.id = res.driver_id
+    WHERE r.season = @season AND r.championship_id = @champ
+    GROUP BY d.id ORDER BY pts DESC, wins DESC`)
+    .all({ season: c.season, champ: championshipId });
+}
+
+function calendar(championshipId) {
+  if (!handle) return [];
+  const c = handle.prepare(`SELECT season FROM career WHERE id = 1`).get();
+  return handle.prepare(`
+    SELECT r.round_no, r.week, r.played, t.name track,
+           (SELECT d.name FROM results res
+            JOIN legs l2 ON l2.id = res.leg_id
+            JOIN drivers d ON d.id = res.driver_id
+            WHERE l2.round_id = r.id AND res.finish_pos = 1
+            ORDER BY l2.leg_no DESC LIMIT 1) winner
+    FROM rounds r JOIN tracks t ON t.id = r.track_id
+    WHERE r.season = ? AND r.championship_id = ?
+    ORDER BY r.round_no`).all(c.season, championshipId);
 }
 
 function newsList() {
@@ -492,5 +585,6 @@ function garage() {
 
 module.exports = { create, open, peek, state, advanceWeek, save, close, isDirty,
                    marketList, marketBuy, marketBuyMany, garage, myEntries, lineup, setCarDriver, newsList, newsRead, home, setTutorial, raceInfo, racePrepare, raceSheet, raceSave,
+                   worldTree, standings, calendar,
                    officeOffers, officeTakeSeat, officeFormTeam, officeSign,
                    handle: () => handle };
