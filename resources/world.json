@@ -394,7 +394,7 @@
    "model": "Puma P052",
    "continent": "europe",
    "prestige": 0.7,
-   "rounds": 6,
+   "rounds": 5,
    "winter": false,
    "active_from": 1,
    "calendar": [
@@ -402,15 +402,13 @@
     "Monza",
     "Hungaroring",
     "Spielberg",
-    "Azure Circuit",
     "Barcelona"
    ],
    "weeks": [
     11,
-    18,
-    25,
-    31,
-    38,
+    19,
+    27,
+    35,
     45
    ],
    "grid": 20,
@@ -426,7 +424,7 @@
    "model": "Ginetta G40 GT5",
    "continent": "europe",
    "prestige": 0.7,
-   "rounds": 6,
+   "rounds": 5,
    "winter": false,
    "active_from": 1,
    "calendar": [
@@ -434,15 +432,13 @@
     "Donington GP",
     "Oulton Park International",
     "Brands Hatch",
-    "Hockenheim",
-    "Nurburgring"
+    "Hockenheim"
    ],
    "weeks": [
     11,
-    18,
-    25,
-    31,
-    38,
+    19,
+    27,
+    35,
     45
    ],
    "grid": 20,
@@ -458,7 +454,7 @@
    "model": "Ginetta G40 GT5",
    "continent": "europe",
    "prestige": 0.75,
-   "rounds": 6,
+   "rounds": 5,
    "winter": false,
    "active_from": 1,
    "calendar": [
@@ -466,15 +462,13 @@
     "Snetterton",
     "Oulton Park International",
     "Cadwell Park",
-    "Donington GP",
-    "Silverstone"
+    "Donington GP"
    ],
    "weeks": [
     11,
-    18,
-    25,
-    31,
-    38,
+    19,
+    27,
+    35,
     45
    ],
    "grid": 20,
@@ -490,7 +484,7 @@
    "model": "Ginetta G40 Cup",
    "continent": "europe",
    "prestige": 0.75,
-   "rounds": 6,
+   "rounds": 5,
    "winter": false,
    "active_from": 1,
    "calendar": [
@@ -498,15 +492,13 @@
     "Nurburgring",
     "Spielberg",
     "Hungaroring",
-    "Imola",
-    "Silverstone"
+    "Imola"
    ],
    "weeks": [
     11,
-    18,
-    25,
-    31,
-    38,
+    19,
+    27,
+    35,
     45
    ],
    "grid": 23,
@@ -522,7 +514,7 @@
    "model": "Ginetta G40 Cup",
    "continent": "europe",
    "prestige": 0.6,
-   "rounds": 6,
+   "rounds": 5,
    "winter": false,
    "active_from": 1,
    "calendar": [
@@ -530,15 +522,13 @@
     "Spielberg",
     "Imola",
     "Hockenheim",
-    "Nurburgring",
-    "Monza"
+    "Nurburgring"
    ],
    "weeks": [
     11,
-    18,
-    25,
-    31,
-    38,
+    19,
+    27,
+    35,
     45
    ],
    "grid": 23,
@@ -554,7 +544,7 @@
    "model": "Puma P052",
    "continent": "europe",
    "prestige": 0.7,
-   "rounds": 6,
+   "rounds": 5,
    "winter": false,
    "active_from": 1,
    "calendar": [
@@ -562,15 +552,13 @@
     "Jerez Moto",
     "Cascais",
     "Barcelona",
-    "Azure Circuit",
     "Monza"
    ],
    "weeks": [
     11,
-    18,
-    25,
-    31,
-    38,
+    19,
+    27,
+    35,
     45
    ],
    "grid": 20,
@@ -586,19 +574,21 @@
    "model": "Ginetta G40 GT5",
    "continent": "europe",
    "prestige": 0.5,
-   "rounds": 4,
+   "rounds": 5,
    "winter": false,
    "active_from": 1,
    "calendar": [
     "Hungaroring",
     "Spielberg",
+    "Hungaroring",
     "Hockenheim",
     "Imola"
    ],
    "weeks": [
     11,
-    22,
-    34,
+    19,
+    27,
+    35,
     45
    ],
    "grid": 20,
@@ -614,7 +604,7 @@
    "model": "Ginetta G40 Cup",
    "continent": "americas",
    "prestige": 0.7,
-   "rounds": 6,
+   "rounds": 5,
    "winter": false,
    "active_from": 1,
    "calendar": [
@@ -622,15 +612,13 @@
     "Road Atlanta",
     "Watkins Glen",
     "Mosport",
-    "Laguna Seca",
-    "Road America"
+    "Laguna Seca"
    ],
    "weeks": [
     11,
-    18,
-    25,
-    31,
-    38,
+    19,
+    27,
+    35,
     45
    ],
    "grid": 23,
@@ -646,7 +634,7 @@
    "model": "Puma P052",
    "continent": "americas",
    "prestige": 0.6,
-   "rounds": 6,
+   "rounds": 5,
    "winter": false,
    "active_from": 1,
    "calendar": [
@@ -654,15 +642,13 @@
     "Curvelo Long",
     "Velo Citta",
     "Goiania",
-    "Buenos Aires No15",
     "Termas de Rio Hondo"
    ],
    "weeks": [
     11,
-    18,
-    25,
-    31,
-    38,
+    19,
+    27,
+    35,
     45
    ],
    "grid": 20,
@@ -678,19 +664,21 @@
    "model": "Mitsubishi Lancer R",
    "continent": "asia_pacific",
    "prestige": 0.65,
-   "rounds": 4,
+   "rounds": 5,
    "winter": false,
    "active_from": 1,
    "calendar": [
     "Kansai GP",
     "Kansai West",
     "Kansai GP",
-    "Kansai West"
+    "Kansai West",
+    "Kansai GP"
    ],
    "weeks": [
     11,
-    22,
-    34,
+    19,
+    27,
+    35,
     45
    ],
    "grid": 16,
@@ -706,19 +694,21 @@
    "model": "Mitsubishi Lancer R",
    "continent": "asia_pacific",
    "prestige": 0.5,
-   "rounds": 4,
+   "rounds": 5,
    "winter": false,
    "active_from": 1,
    "calendar": [
     "Kansai West",
     "Kansai GP",
+    "Kansai West",
     "Adelaide",
     "Bathurst"
    ],
    "weeks": [
     11,
-    22,
-    34,
+    19,
+    27,
+    35,
     45
    ],
    "grid": 16,
@@ -734,10 +724,11 @@
    "model": "Ginetta G40 GT5",
    "continent": "asia_pacific",
    "prestige": 0.5,
-   "rounds": 4,
+   "rounds": 5,
    "winter": false,
    "active_from": 1,
    "calendar": [
+    "Kansai GP",
     "Kansai West",
     "Kansai GP",
     "Adelaide",
@@ -745,8 +736,9 @@
    ],
    "weeks": [
     11,
-    22,
-    34,
+    19,
+    27,
+    35,
     45
    ],
    "grid": 20,
@@ -762,19 +754,21 @@
    "model": "ARC Camaro",
    "continent": "asia_pacific",
    "prestige": 0.6,
-   "rounds": 4,
+   "rounds": 5,
    "winter": false,
    "active_from": 1,
    "calendar": [
     "Bathurst",
     "Adelaide",
+    "Bathurst",
     "Kansai GP",
     "Kyalami"
    ],
    "weeks": [
     11,
-    22,
-    34,
+    19,
+    27,
+    35,
     45
    ],
    "grid": 22,
@@ -790,18 +784,20 @@
    "model": "Mitsubishi Lancer R",
    "continent": "africa_gulf",
    "prestige": 0.45,
-   "rounds": 4,
+   "rounds": 5,
    "winter": true,
    "active_from": 1,
    "calendar": [
     "Kyalami",
     "Jerez Moto",
     "Cascais",
+    "Jerez Moto",
     "Kyalami"
    ],
    "weeks": [
     5,
     7,
+    8,
     9,
     10
    ],

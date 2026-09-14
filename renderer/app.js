@@ -144,6 +144,13 @@ async function refresh() {
   const mkNode = document.querySelector('[data-go="market"]');
   mkNode.classList.toggle('locked', s.career.week > 4);
 
+  // Nothing has happened in the wider world until the entry lists have closed
+  // and the first rounds are near, so the standings stay shut until week 6.
+  const worldOpen = s.career.season > 1 || s.career.week >= 6;
+  const wdNode = document.querySelector('[data-go="world"]');
+  wdNode.classList.toggle('locked', !worldOpen);
+  wdNode.querySelector('.sub').textContent = worldOpen ? 'standings' : 'opens in week 6';
+
   const cars = await window.gt.garage();
   $('n-garage').textContent = cars.length
     ? `${cars.length} car${cars.length === 1 ? '' : 's'}` : 'no cars';
@@ -506,8 +513,9 @@ async function selectCar(m) {
 // ---------------------------------------------------------------- world
 let wdTree = null, wdContinent = null, wdChamp = null, wdKind = 'drivers';
 
-const CONTINENT = { europe: 'Europe', americas: 'Americas', asia: 'Asia',
-                    oceania: 'Oceania', africa: 'Africa', world: 'World' };
+const CONTINENT = { europe: 'Europe', americas: 'Americas',
+                    asia_pacific: 'Asia-Pacific', africa_gulf: 'Africa & Gulf',
+                    oceania: 'Oceania', world: 'World' };
 const CLASS_LABEL = { gt5: 'GT5', gt4: 'GT4', gt3: 'GT3', lmdh: 'LMDh' };
 
 async function openWorld() {

@@ -160,12 +160,14 @@ function buildEntries(db, world, ctx, profile) {
       .get(playerBlock, playerCls) : null;
 
   for (const c of champs) {
-    // One place is held in the player's championship so the grid is full once
-    // they enter. A franchise series holds nothing back: its cars already exist
-    // and the player buys a seat in one of them.
+    // Two places are held in the player's championship: one to enter with, one
+    // for a second car if they choose to run a team. Whatever they leave is
+    // taken by somebody else when the entry list closes, so no grid is short.
+    // A franchise series holds nothing back: its cars already exist and the
+    // player buys a seat in one of them.
     const isPlayers = playerChamp && playerChamp.id === c.id;
     const franchise = c.id === 'australasian_arc';
-    const grid = c.grid_first - (isPlayers && !franchise ? 1 : 0);
+    const grid = c.grid_first - (isPlayers && !franchise ? 2 : 0);
     const perCar = c.drivers_per_car;
     const dbChamp = db.prepare(`SELECT * FROM championships WHERE id = ?`).get(c.id);
 
@@ -187,8 +189,10 @@ function buildEntries(db, world, ctx, profile) {
     if (isPlayers && !isArc) {
       for (const m of models) {
         const pl = pools[m.id];
-        const i = pl.findIndex(x => x.sponsor_level === 'low');
-        if (i >= 0) pl.splice(i, 1); else if (pl.length) pl.pop();
+        for (let k = 0; k < 2; k++) {
+          const i = pl.findIndex(x => x.sponsor_level === 'low');
+          if (i >= 0) pl.splice(i, 1); else if (pl.length) pl.pop();
+        }
       }
     }
 
@@ -232,11 +236,8 @@ function buildEntries(db, world, ctx, profile) {
         const f = franchises[i % franchises.length];
         if (f.teamId) teamId = f.teamId;
       } else if (teamRun) {
-        const roll = r();
-        const wants = FLEET[c.cls][0] > roll ? 1 : (FLEET[c.cls][1] > roll ? 2 : 3);
         reused = fleets.find(f => f.cars < Math.min(f.wants, MAX_CARS));
         if (reused) { teamId = reused.id; reused.cars++; }
-        else if (wants > 1) { /* a new team that intends to grow */ }
       }
 
       if (!teamId) {
@@ -252,8 +253,9 @@ function buildEntries(db, world, ctx, profile) {
         teamRun ? stats.teams++ : stats.privateers++;
         if (isArc) franchises[i % franchises.length].teamId = teamId;
         if (teamRun && !isArc) {
+          // how big an operation this one means to be
           const roll = r();
-          const wants = FLEET[c.cls][0] > roll ? 1 : (FLEET[c.cls][1] > roll ? 2 : 3);
+          const wants = roll < FLEET[c.cls][0] ? 1 : roll < FLEET[c.cls][1] ? 2 : 3;
           if (wants > 1) fleets.push({ id: teamId, cars: 1, wants });
         }
       }
