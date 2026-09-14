@@ -58,14 +58,35 @@ function placePlayer(db, world, ctx, profile) {
   if (!champ) return null;
 
   const age = 2020 - p.birth_year;
-  const e = profile.experience;
+
+  // The experience the player chose is a standing among the people they will
+  // actually race, not a number in the abstract. The bottom of the slider puts
+  // them at the back of their own grid, the top at the front, the middle in the
+  // middle — whatever that grid happens to be worth this time.
+  const band = cls === 'gt4' ? [0.50, 0.60] : [0.60, 0.70];
+  const want = Math.min(1, Math.max(0, (profile.experience - band[0]) / (band[1] - band[0])));
+  const field = db.prepare(`
+    SELECT s.race_skill v FROM entries en
+    JOIN entry_drivers ed ON ed.entry_id = en.id
+    JOIN driver_skills s ON s.driver_id = ed.driver_id
+    WHERE en.championship_id = ? ORDER BY s.race_skill`).all(champ.id).map(x => x.v);
+
+  let e = profile.experience;
+  if (field.length >= 6) {
+    const at = q => field[Math.min(field.length - 1, Math.round(q * (field.length - 1)))];
+    const lo = at(0.10), hi = at(0.96);
+    e = round3(lo + want * (hi - lo));
+  }
+
   const j = (b, sp = .05) => round3(Math.min(.95, Math.max(.05, b + between(r, -sp, sp))));
   db.prepare(`INSERT INTO driver_skills
     (driver_id,race_skill,qualifying_skill,wet_skill,start_reactions,aggression,defending,
      consistency,stamina,avoidance_of_mistakes,avoidance_of_forced_mistakes,tyre_management,
      fuel_management,weather_tyre_changes,blue_flag_conceding)
     VALUES (@id,@rs,@qs,@ws,@sr,@ag,@df,@co,@st,@am,@af,@tm,@fm,@wt,@bf)`).run({
-      id: p.id, rs: j(e), qs: j(e), ws: j(e - .03, .06), sr: j(e, .07),
+      // the player picked their standing, so pace is held close to it; the
+      // rest of the profile still varies
+      id: p.id, rs: j(e, .015), qs: j(e, .03), ws: j(e - .03, .06), sr: j(e, .07),
       ag: round3(between(r, .35, .65)), df: j(e - .04, .06), co: j(e - .02),
       st: j(ageUp(r, age, { speed: e, judgement: e, stamina: .80 }).st, .04),
       am: j(e - .02), af: j(e - .02), tm: j(e - .03), fm: j(e - .03),
@@ -124,23 +145,54 @@ function buildEntries(db, world, ctx, profile) {
   const taken = new Set();                       // driver ids already seated
   const stats = { teams: 0, privateers: 0, entries: 0, seats: 0 };
 
-  // Drivers are drawn strongest-first from the blocks that feed the championship,
-  // so the higher the tier the better the field.
+  // Drivers are drawn from the blocks that feed the championship, strongest
+  // first but never mechanically so. A club series does not sign the nineteen
+  // quickest people in the region; it signs nineteen of the people who turned
+  // up with money and a free weekend. So the field is sampled from a wider
+  // shortlist, weighted towards form, which keeps the tiers in order while
+  // leaving room for a slow car at the front and a quick one at the back.
   const form = d => d.sk.race_skill + d.sk.consistency;
+
+  // Pick n from a shortlist, chance proportional to form cubed.
+  function weightedTake(sorted, n, keyFn, shortlistFactor = 1.7) {
+    const window = sorted.slice(0, Math.max(n, Math.ceil(n * shortlistFactor)));
+    const rest = sorted.slice(window.length);
+    const out = [];
+    while (out.length < n && window.length) {
+      const lowest = window.reduce((m, d) => Math.min(m, keyFn(d)), Infinity);
+      let total = 0;
+      const w = window.map(d => {
+        const v = Math.pow(keyFn(d) - lowest + 0.06, 3);
+        total += v; return v;
+      });
+      let roll = r() * total, idx = 0;
+      while (idx < w.length - 1 && roll > w[idx]) { roll -= w[idx]; idx++; }
+      out.push(window.splice(idx, 1)[0]);
+    }
+    // if the shortlist ran dry, fall back to whoever is left
+    while (out.length < n && rest.length) out.push(rest.shift());
+    return out;
+  }
 
   function draw(champId, n, cls) {
     const src = (feeds[champId] || []).flatMap(b => pool[b] || []);
     const free = src.filter(d => !taken.has(d.id));
     let out;
     if (cls === 'gt5') {
-      out = free.sort((a, b) => form(b) - form(a)).slice(0, n);
+      // enough of a shortlist that the grid is not simply the top nineteen,
+      // but not so wide that a club championship stops being competitive
+      out = weightedTake(free.slice().sort((a, b) => form(b) - form(a)), n, form, 1.8);
     } else {
       // above GT5 a grid is part seasoned money, part young talent on the way up
       const young = free.filter(d => d.age <= 25)
                         .sort((a, b) => (b.pot.speed + b.sk.race_skill) - (a.pot.speed + a.sk.race_skill));
       const rest  = free.filter(d => d.age > 25).sort((a, b) => form(b) - form(a));
-      const nYoung = Math.round(n * 0.40);
-      out = young.slice(0, nYoung).concat(rest.slice(0, n - Math.min(nYoung, young.length)));
+      const nYoung = Math.min(Math.round(n * 0.40), young.length);
+      // the higher the tier the narrower the shortlist: a works drive really
+      // does go to one of the best available
+      const factor = cls === 'gt4' ? 1.5 : 1.25;
+      out = weightedTake(young, nYoung, d => d.pot.speed + d.sk.race_skill, factor)
+        .concat(weightedTake(rest, n - nYoung, form, factor));
     }
     for (const d of out) taken.add(d.id);
     return out;
