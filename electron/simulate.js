@@ -112,18 +112,36 @@ function simulateLeg(db, roundId, legNo, seed) {
   }
   runners.forEach((c, i) => { c.grid = i + 1; });
 
-  // the race itself
+  // The race itself. Lap-by-lap scatter alone is not enough to decide anything:
+  // over a full race it averages out and the quickest car wins every time. What
+  // actually shuffles a result is the things that do not average out — the day a
+  // driver is having, a moment lost at a corner, and the traffic ahead.
   const meanAggression = runners.reduce((m, c) => m + c.aggression, 0) / runners.length;
+  const passing = { gt5: 0.10, gt4: 0.14, gt3: 0.18, lmdh: 0.22 }[tier];
+
   for (const c of runners) {
+    // how this one is going today, held for the whole race
+    const form = (r() - 0.5) * 2 * (1 - c.consistency) * 1.00;
+
     let total = 0;
     for (let lap = 0; lap < laps; lap++) {
       const scatter = (1 - c.consistency) * 1.1;
       const tyre = (lap / laps) * (1 - c.tyre_management) * 1.6;
       const fade = (lap / laps) * (1 - c.stamina) * 0.7;
-      total += c.base + tyre + fade + (r() - 0.5) * 2 * scatter;
+      total += c.base + form + tyre + fade + (r() - 0.5) * 2 * scatter;
     }
+
+    // moments: a spin, a lock-up, a lap ruined behind a backmarker
+    const expected = (1 - c.avoidance_of_mistakes) * 1.8 * (laps / 14);
+    let moments = 0;
+    for (let k = 0; k < 6; k++) if (r() < expected / 6) moments++;
+    for (let k = 0; k < moments; k++) total += 3 + r() * 16;
+    c.moments = moments;
+
     // a poor start costs, a good one gains
     total += (0.5 - c.start_reactions) * 1.4;
+    // track position is worth something: cars ahead have to be got past
+    total += (c.grid - 1) * passing * (1 + (1 - c.aggression));
     // pit stops cost the same to everyone, so they only matter through mistakes
     if (lvl.mandatory_stops)
       total += lvl.mandatory_stops * (1 - c.avoidance_of_mistakes) * 2.2;

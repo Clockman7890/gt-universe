@@ -524,11 +524,14 @@ function standings(championshipId, kind) {
   if (kind === 'teams') {
     return handle.prepare(`
       SELECT t.name AS name, t.country,
-             (SELECT cm2.name FROM entries e2
-              JOIN chassis c3 ON c3.id = e2.chassis_id
-              JOIN car_models cm2 ON cm2.id = c3.model_id
-              WHERE e2.team_id = t.id AND e2.season = @season
-                AND e2.championship_id = @champ LIMIT 1) car,
+             -- a team may run more than one model, so name every one of them
+             (SELECT GROUP_CONCAT(x.n, ' · ') FROM
+                (SELECT DISTINCT cm2.name n FROM entries e2
+                 JOIN chassis c3 ON c3.id = e2.chassis_id
+                 JOIN car_models cm2 ON cm2.id = c3.model_id
+                 WHERE e2.team_id = t.id AND e2.season = @season
+                   AND e2.championship_id = @champ
+                 ORDER BY cm2.name) x) car,
              SUM(res.points) pts,
              SUM(CASE WHEN res.finish_pos = 1 THEN 1 ELSE 0 END) wins,
              SUM(CASE WHEN res.finish_pos <= 3 AND res.finish_pos IS NOT NULL THEN 1 ELSE 0 END) podiums,
