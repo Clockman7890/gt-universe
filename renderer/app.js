@@ -1149,6 +1149,37 @@ async function openHome() {
   ]));
   box.appendChild(cards);
 
+  // ---- which championship, when the winter is open and nothing is settled ----
+  if (o && o.open && !h.entry) {
+    const el = await window.gt.eligible();
+    if (el && el.options.length > 1) {
+      const pick = document.createElement('div');
+      pick.className = 'upgrade';
+      pick.innerHTML = `<h4>Where will you race this season?</h4>` +
+        `<p class="note">You may stay where you are, drop back down, or take one step up. ` +
+        `A GT3 seat asks for a licence, which means a season already spent in GT4.</p>`;
+      const row = document.createElement('div');
+      row.className = 'choice';
+      for (const opt of el.options) {
+        const el2 = document.createElement('div');
+        el2.className = 'opt' + (opt.current ? ' sel' : '');
+        el2.innerHTML = `<b>${opt.name}</b><span>` +
+          `${CLASS_LABEL[opt.cls] || opt.cls.toUpperCase()} · ${opt.cars} cars` +
+          (opt.step === 'up' ? ' · a step up' : opt.step === 'down' ? ' · a step back' : '') +
+          (opt.home ? '' : ' · away from home') + `</span>`;
+        el2.onclick = async () => {
+          try {
+            const r = await window.gt.chooseChamp(opt.id);
+            await refresh(); await openHome();
+          } catch (e) { alert(String(e.message || e).replace(/^Error: /, '')); }
+        };
+        row.appendChild(el2);
+      }
+      pick.appendChild(row);
+      box.appendChild(pick);
+    }
+  }
+
   // ---- how you go racing ----
   if (!h.team && o && !o.open) {
     const done = document.createElement('div');

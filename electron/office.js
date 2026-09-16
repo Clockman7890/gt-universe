@@ -313,5 +313,77 @@ function signDriver(db, driverId, entryId) {
   })();
 }
 
-module.exports = { offers, takeSeat, formTeam, signDriver,
+// ------------------------------------------------------------- where to race
+// The championships the player may enter this winter. A driver may always go
+// back down, stay where they are, or take one step up; GT3 asks for a licence,
+// which means a season already spent in GT4.
+function eligible(db) {
+  const c = db.prepare(`SELECT season, week, player_driver_id, player_championship_id
+                        FROM career WHERE id = 1`).get();
+  const me = db.prepare(`SELECT * FROM drivers WHERE id = ?`).get(c.player_driver_id);
+  if (!me) return null;
+
+  const raced = db.prepare(`
+    SELECT DISTINCT ch.class FROM entries e
+    JOIN entry_drivers ed ON ed.entry_id = e.id
+    JOIN championships ch ON ch.id = e.championship_id
+    WHERE ed.driver_id = ?`).all(me.id).map(r => r.class);
+
+  const ORDER = ['gt5', 'gt4', 'gt3', 'lmdh'];
+  const best = raced.reduce((m, x) => Math.max(m, ORDER.indexOf(x)), -1);
+  const ceiling = Math.min(ORDER.length - 1, best + 1);
+
+  const rows = db.prepare(`
+    SELECT c.id, c.name, c.class, c.prestige, c.home_continent,
+           (SELECT COUNT(*) FROM entries e WHERE e.season = @season AND e.championship_id = c.id) cars,
+           (SELECT COUNT(*) FROM championship_blocks cb
+            WHERE cb.championship_id = c.id AND cb.block_id = @block) mine
+    FROM championships c
+    WHERE c.active_from <= @season AND c.shares_entries_with IS NULL
+    ORDER BY c.class, c.prestige DESC`).all({ season: c.season, block: me.block_id });
+
+  const out = [];
+  for (const row of rows) {
+    const at = ORDER.indexOf(row.class);
+    if (at < 0 || at > ceiling) continue;
+    // GT5 is regional: only the series that feeds the player's own block.
+    // Above that a driver travels, but their own continent comes first.
+    if (row.class === 'gt5' && !row.mine) continue;
+    if (row.class === 'gt3' && best < ORDER.indexOf('gt4')) continue;
+
+    const home = db.prepare(`SELECT continent FROM blocks WHERE id = ?`).get(me.block_id).continent;
+    out.push({
+      id: row.id, name: row.name, cls: row.class, cars: row.cars,
+      home: row.home_continent === home,
+      current: row.id === c.player_championship_id,
+      step: at > best ? 'up' : at === best ? 'same' : 'down'
+    });
+  }
+  return { season: c.season, open: c.week <= 4, rating: me.fia_rating,
+           current: c.player_championship_id, options: out };
+}
+
+// Point the player at a championship. Only possible while nothing has been
+// bought or signed, and only inside the four weeks.
+function choose(db, championshipId) {
+  const c = db.prepare(`SELECT season, week, player_driver_id FROM career WHERE id = 1`).get();
+  if (c.week > 4) throw new Error('Entries are closed for this season.');
+  const seat = db.prepare(`
+    SELECT 1 FROM entry_drivers ed JOIN entries e ON e.id = ed.entry_id
+    WHERE ed.driver_id = ? AND e.season = ?`).get(c.player_driver_id, c.season);
+  if (seat) throw new Error('You already have a drive this season.');
+
+  const list = eligible(db);
+  if (!list || !list.options.some(o => o.id === championshipId))
+    throw new Error('You are not eligible for that championship yet.');
+
+  db.prepare(`UPDATE career SET player_championship_id = ? WHERE id = 1`).run(championshipId);
+  const name = db.prepare(`SELECT name FROM championships WHERE id = ?`).get(championshipId).name;
+  db.prepare(`INSERT INTO news (season,week,category,headline,body) VALUES (?,?,'market',?,?)`)
+    .run(c.season, c.week, `You are aiming at the ${name}`,
+         'Buy a car in the Market or take a seat in the Office before week 4 is out.');
+  return { championship: name };
+}
+
+module.exports = { offers, takeSeat, formTeam, signDriver, eligible, choose,
                    CORE_BY_CLASS, MIN_CAPITAL, FACILITIES, UPGRADE };

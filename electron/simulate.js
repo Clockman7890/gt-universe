@@ -16,6 +16,15 @@ const SEC_PER_POWER  = 0.13;   // 1% power
 const SEC_PER_WEIGHT = 0.10;   // 1% weight
 const SEC_PER_DRAG   = 0.05;   // 1% drag
 
+// How much of the raw difference between models survives the balancing. The
+// scalars are not a measure of how quick a car is — they are the correction
+// that was applied to make it lap with the others, so a car carrying a heavy
+// correction is a car that was fast before it was pegged back, not a slow one.
+// Read them as pace and the simulation punishes exactly the cars the balancing
+// equalised. What is left after a good job is a residue: enough that one model
+// suits a circuit better than another, nowhere near enough to decide a race.
+const BOP_RESIDUE = 0.15;
+
 // How much slower the back of a field is than the front, per class. A GT5
 // grid spreads far more than a works LMDh one.
 const SPREAD = { gt5: 3.4, gt4: 2.6, gt3: 1.9, lmdh: 1.2 };
@@ -55,15 +64,23 @@ function fieldFor(db, roundId, legNo) {
     .all(role, c.season, round.championship_id, roundId);
 }
 
-// Seconds off the quickest possible lap, before any luck is applied.
-function paceOf(car, cls) {
-  const tier = tierOf(cls);
-  const driverLoss = (1 - car.race_skill) * SPREAD[tier];
-  const carLoss =
-      (1 - car.power_scalar)  * 100 * SEC_PER_POWER
-    + (car.weight_scalar - 1) * 100 * SEC_PER_WEIGHT
-    + (car.drag_scalar - 1)   * 100 * SEC_PER_DRAG
-    - (car.dev_bonus || 0);
+// The seconds a model's balancing correction is worth. On its own this number
+// says nothing about pace; it only means something next to the rest of the
+// field, which is why it is centred before it is used.
+function bopEffect(car) {
+  return (1 - car.power_scalar)  * 100 * SEC_PER_POWER
+       + (car.weight_scalar - 1) * 100 * SEC_PER_WEIGHT
+       + (car.drag_scalar - 1)   * 100 * SEC_PER_DRAG;
+}
+
+// Seconds off the quickest possible lap, before any luck is applied. fieldBop
+// is the average correction across the cars actually entered: subtracting it
+// leaves no model systematically ahead, and in a one-make series cancels to
+// nothing, as it should.
+function paceOf(car, cls, fieldBop = 0) {
+  const driverLoss = (1 - car.race_skill) * SPREAD[tierOf(cls)];
+  const carLoss = (bopEffect(car) - fieldBop) * BOP_RESIDUE
+                - (car.dev_bonus || 0);
   return driverLoss + carLoss;
 }
 
@@ -94,8 +111,10 @@ function simulateLeg(db, roundId, legNo, seed) {
     if (prev.length) grid = prev.map(p => p.entry_id);
   }
 
+  const fieldBop = field.reduce((m, c) => m + bopEffect(c), 0) / field.length;
+
   const runners = field.map(c => {
-    const base = paceOf(c, round.class);
+    const base = paceOf(c, round.class, fieldBop);
     // qualifying is one lap, so scatter bites harder than over a race
     const qLoss = base - (c.qualifying_skill - c.race_skill) * SPREAD[tier] * 0.5
                 + (1 - c.consistency) * 0.9 * (r() - 0.35);
@@ -173,4 +192,4 @@ function simulateLeg(db, roundId, legNo, seed) {
   return { entries, starters: runners.length, retired: out.length };
 }
 
-module.exports = { simulateLeg, paceOf };
+module.exports = { simulateLeg, paceOf, bopEffect, BOP_RESIDUE };

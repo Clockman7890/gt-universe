@@ -2,10 +2,35 @@
 const { rng, pick, NameFactory, TeamFactory } = require('./names');
 const { between, irange, round3 } = require('./population');
 
+// A number still going spare in this championship, leaving alone any the
+// player's own car carried last year.
+function freeLivery(db, modelId, season, champId) {
+  return db.prepare(`
+    SELECT l.* FROM liveries l
+    WHERE l.model_id = @model
+      AND l.id NOT IN (SELECT livery_id FROM entries
+                       WHERE season = @season AND championship_id = @champ)
+      AND l.id NOT IN (
+        SELECT e2.livery_id FROM entries e2 JOIN teams t2 ON t2.id = e2.team_id
+        WHERE e2.season = @last AND e2.championship_id = @champ
+          AND t2.owner_driver_id = (SELECT player_driver_id FROM career WHERE id = 1))
+    ORDER BY l.id LIMIT 1`)
+    .get({ model: modelId, season, champ: champId, last: season - 1 });
+}
+
+const shuffled = (r, arr) => {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(r() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
+
 // ---------------------------------------------------------------- week 4 lock
 // Any place still open when the entry list closes is taken by somebody else.
 // A championship never starts a season short of cars.
-function lockEntries(db, world) {
+function lockEntries(db, world, leaveOpen = 0) {
   const c = db.prepare(`SELECT season FROM career WHERE id = 1`).get();
   const filled = [];
 
@@ -14,7 +39,13 @@ function lockEntries(db, world) {
     const champ = db.prepare(`SELECT * FROM championships WHERE id = ?`).get(w.id);
     if (!champ) continue;
 
-    const target = w.grid_first || w.grid;
+    // A championship opens smaller than it will end up: grid_first is the
+    // field it musters in its first year, grid the one it settles at. Using the
+    // opening number for ever leaves a series permanently half full.
+    const full = (c.season === w.active_from ? (w.grid_first || w.grid) : w.grid) || w.grid;
+    // leaveOpen holds places back so the player still has somewhere to enter
+    // during their four weeks; at the lock itself nothing is held back.
+    const target = Math.max(1, full - leaveOpen);
     let have = db.prepare(`SELECT COUNT(*) n FROM entries WHERE season = ? AND championship_id = ?`)
       .get(c.season, w.id).n;
     if (have >= target) continue;
@@ -31,13 +62,16 @@ function lockEntries(db, world) {
       .get(champ.level_id).n;
 
     while (have < target) {
-      const model = models.length === 1 ? models[0] : pick(r, models);
-      const lv = db.prepare(`
-        SELECT l.* FROM liveries l
-        WHERE l.model_id = ?
-          AND l.id NOT IN (SELECT livery_id FROM entries WHERE season = ? AND championship_id = ?)
-        ORDER BY l.id LIMIT 1`).get(model.id, c.season, w.id);
-      if (!lv) break;                            // no numbers left, the grid is what it is
+      // Try every model before giving up: one being out of numbers says nothing
+      // about the rest, and stopping at the first exhausted one leaves a grid
+      // half empty while dozens of liveries sit unused.
+      const order = models.length === 1 ? models : shuffled(r, models);
+      let model = null, lv = null;
+      for (const cand of order) {
+        const found = freeLivery(db, cand.id, c.season, w.id);
+        if (found) { model = cand; lv = found; break; }
+      }
+      if (!lv) break;                            // the whole class is out of numbers
 
       const free = db.prepare(`
         SELECT d.* FROM drivers d
@@ -220,4 +254,114 @@ const ordinal = n => {
   return n + (s[(v - 20) % 10] || s[v] || s[0]);
 };
 
-module.exports = { lockEntries, resultSheet, saveResults };
+// ------------------------------------------------------- balance of performance
+// Every model needs a row for the new season or nothing can be entered: the
+// grid is built by joining car_performance on the season being raced.
+//
+// Last year's manufacturer standings decide the direction. A manufacturer that
+// won gets pegged back a little, one that finished last gets a little help, and
+// the middle of the table is left alone. The steps are small and the distance
+// from the measured baseline is capped, so a decade of this drifts the order of
+// a class without ever running away from the numbers we measured on track.
+const STEP        = 0.030;   // most a scalar moves in one season
+const CAP         = 0.090;   // most it may ever sit from its baseline
+const GTO_STEP    = 0.015;   // the old cars only ever get help
+const GTO_CAP     = 0.045;
+const FLOOR       = 0.900;
+const CEILING     = 1.100;
+
+const clamp = v => Math.min(CEILING, Math.max(FLOOR, Math.round(v * 1000) / 1000));
+
+function rollBoP(db, toSeason) {
+  const from = toSeason - 1;
+  const models = db.prepare(`SELECT * FROM car_models`).all();
+  const already = db.prepare(`SELECT COUNT(*) n FROM car_performance WHERE season = ?`)
+    .get(toSeason).n;
+  if (already) return { skipped: true };
+
+  // Only a class whose championships are open to several makes has anything to
+  // balance. A one-make series is already equal by construction, and ranking
+  // its car against the car of a series on another continent would peg back a
+  // model for points it never raced against.
+  const contested = new Set(db.prepare(`
+    SELECT DISTINCT cm.class
+    FROM championships ch
+    JOIN car_models cm ON cm.class = ch.class
+    WHERE ch.model_id IS NULL`).all().map(r => r.class));
+
+  // points each manufacturer scored last season, in the classes that are contested
+  const scored = db.prepare(`
+    SELECT cm.class, cm.manufacturer_id, SUM(res.points) pts
+    FROM results res
+    JOIN legs l ON l.id = res.leg_id
+    JOIN rounds r ON r.id = l.round_id
+    JOIN entries e ON e.id = res.entry_id
+    JOIN chassis ch ON ch.id = e.chassis_id
+    JOIN car_models cm ON cm.id = ch.model_id
+    WHERE r.season = ?
+    GROUP BY cm.class, cm.manufacturer_id`).all(from);
+
+  const table = {};
+  for (const row of scored) {
+    if (!contested.has(row.class)) continue;
+    (table[row.class] ||= []).push({ man: row.manufacturer_id, pts: row.pts || 0 });
+  }
+  for (const cls of Object.keys(table)) table[cls].sort((a, b) => b.pts - a.pts);
+
+  const ins = db.prepare(`INSERT INTO car_performance
+    (model_id,season,weight_scalar,power_scalar,drag_scalar,bop_drift,dev_bonus,clamped)
+    VALUES (?,?,?,?,?,?,?,?)`);
+  const moved = [];
+
+  const tx = db.transaction(() => {
+    for (const m of models) {
+      const prev = db.prepare(`SELECT * FROM car_performance WHERE model_id = ? AND season = ?`)
+        .get(m.id, from);
+      const base = { w: m.base_weight_scalar, p: m.base_power_scalar, d: m.base_drag_scalar };
+      const now = prev ? { w: prev.weight_scalar, p: prev.power_scalar, d: prev.drag_scalar }
+                       : { ...base };
+      let drift = prev ? prev.bop_drift : 0;
+      const dev = prev ? prev.dev_bonus : 0;
+
+      const isGto = m.class === 'gto';
+      const step = isGto ? GTO_STEP : STEP;
+      const cap = isGto ? GTO_CAP : CAP;
+
+      // where this manufacturer finished in its own class last season. Only the
+      // ends of the table move: the winners are pegged, the tail is helped, and
+      // most of the field is left where the measurements put it.
+      const order = table[m.class] || [];
+      const at = order.findIndex(x => x.man === m.manufacturer_id);
+      const ends = order.length >= 6 ? 2 : 1;
+      let dir = 0;
+      if (order.length >= 4 && at >= 0) {
+        if (at < ends) dir = -1;
+        else if (at >= order.length - ends) dir = +1;
+      }
+      // the old cars in the GT3 field are never pegged back, only helped
+      if (isGto && contested.has(m.class)) dir = at >= 0 ? Math.max(0, dir) : 0;
+      else if (isGto) dir = 0;
+
+      if (dir) {
+        const wanted = drift + dir * step;
+        const allowed = Math.min(cap, Math.max(isGto ? 0 : -cap, wanted));
+        const actually = allowed - drift;
+        if (actually) {
+          drift = Math.round(allowed * 1000) / 1000;
+          // help means more power and less weight; a peg-back is the reverse
+          now.p = clamp(now.p + actually);
+          now.w = clamp(now.w - actually * 0.6);
+          now.d = clamp(now.d - actually * 0.3);
+          moved.push({ model: m.name, dir, drift });
+        }
+      }
+
+      const hitLimit = [now.w, now.p, now.d].some(v => v <= FLOOR || v >= CEILING) ? 1 : 0;
+      ins.run(m.id, toSeason, now.w, now.p, now.d, drift, dev, hitLimit);
+    }
+  });
+  tx();
+  return { season: toSeason, models: models.length, moved };
+}
+
+module.exports = { lockEntries, resultSheet, saveResults, rollBoP };

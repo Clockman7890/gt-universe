@@ -19,8 +19,10 @@ function buildCalendar(db, season) {
     const lvl = db.prepare(`SELECT * FROM championship_levels WHERE id = ?`).get(c.level_id);
     const tpl = db.prepare(`SELECT * FROM championship_tracks WHERE championship_id = ?
                             ORDER BY round_no`).all(c.id);
+    // an endurance championship runs the sprint field, so it counts that one's cars
+    const fieldOf = c.shares_entries_with || c.id;
     const entries = db.prepare(`SELECT COUNT(*) n FROM entries
-                                WHERE season = ? AND championship_id = ?`).get(season, c.id).n;
+                                WHERE season = ? AND championship_id = ?`).get(season, fieldOf).n;
     if (!entries) continue;
 
     for (const t of tpl) {
@@ -185,6 +187,11 @@ function driverBlock(row, grid) {
 // Everything on the grid for one leg, grouped by the file AMS2 reads it from.
 function gridFor(db, round, legNo) {
   const season = db.prepare(`SELECT season, player_driver_id FROM career WHERE id = 1`).get();
+  // the field is this championship's own, unless it borrows another's
+  const borrows = db.prepare(`SELECT shares_entries_with s FROM championships WHERE id = ?`)
+    .get(round.championship_id);
+  const fieldChamp = (borrows && borrows.s) || round.championship_id;
+
   const rows = db.prepare(`
     SELECT e.id entry_id, l.livery_name, cm.ai_file, cm.id model_id,
            d.id driver_id, d.name, d.country, d.is_player,
@@ -205,7 +212,7 @@ function gridFor(db, round, legNo) {
     JOIN driver_skills s ON s.driver_id = d.id
     WHERE e.season = ? AND e.championship_id = ?
       AND e.id NOT IN (SELECT entry_id FROM round_absences WHERE round_id = ?)`)
-    .all(legNo === 2 ? 2 : 1, season.season, round.championship_id, round.id);
+    .all(legNo === 2 ? 2 : 1, season.season, fieldChamp, round.id);
 
   // Teams with better engineering break down less often, but nothing is safe:
   // even a specialist outfit sits well short of certainty.

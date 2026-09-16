@@ -6,6 +6,7 @@ const { buildEntries, placePlayer } = require('./entries');
 const market = require('./market');
 const weekend = require('./weekend');
 const season = require('./season');
+const winter = require('./winter');
 const economy = require('./economy');
 const simulate = require('./simulate');
 const office = require('./office');
@@ -13,6 +14,7 @@ const office = require('./office');
 let handle = null;
 let dirty = false;
 let worldData = null;
+let namesData = null;
 
 // the fourteen driver blocks, needed before any driver row can exist
 const BLOCKS = [
@@ -150,6 +152,7 @@ function peek(file) {
 
 function create(file, schemaSql, profile, world, namesDb) {
   worldData = world;
+  namesData = namesDb;
   close();
   handle = new Database(file);
   handle.pragma('journal_mode = WAL');
@@ -210,8 +213,9 @@ function create(file, schemaSql, profile, world, namesDb) {
   return { file, ok: true };
 }
 
-function open(file, world) {
+function open(file, world, namesDb) {
   if (world) worldData = world;
+  if (namesDb) namesData = namesDb;
   close();
   handle = new Database(file, { fileMustExist: true });
   handle.pragma('journal_mode = WAL');
@@ -241,13 +245,36 @@ function advanceWeek() {
   if (week > 52) { week = 1; s += 1; }
   handle.prepare(`UPDATE career SET season = ?, week = ? WHERE id = 1`).run(s, week);
 
-  // wages and retainers arrive with the new year
+  // A new year: the classes are rebalanced on last season's evidence before
+  // anything can be entered, then the retainers are paid.
+  if (s > c.season) {
+    // the world turns over before the player gets their four weeks
+    let wintered = null;
+    if (worldData && namesData) wintered = winter.runWinter(handle, worldData, namesData, s);
+    const bop = season.rollBoP(handle, s);
+
+    // grids exist now, so the season has a calendar to run
+    const hasCalendar = handle.prepare(`SELECT COUNT(*) n FROM rounds WHERE season = ?`).get(s).n;
+    if (!hasCalendar) weekend.buildCalendar(handle, s);
+
+    if (bop && bop.moved && bop.moved.length) {
+      const pegged = bop.moved.filter(x => x.dir < 0).map(x => x.model);
+      const helped = bop.moved.filter(x => x.dir > 0).map(x => x.model);
+      handle.prepare(`INSERT INTO news (season,week,category,headline,body)
+          VALUES (?,?,'manufacturer',?,?)`).run(s, week,
+        'The balance of performance is revised',
+        [pegged.length ? `Pegged back: ${pegged.join(', ')}.` : '',
+         helped.length ? `Given help: ${helped.join(', ')}.` : ''].filter(Boolean).join(' '));
+    }
+  }
   if (week === 1) economy.payPassive(handle);
 
   // the entry list closes at the end of week 4; anything still open is taken
   let filled = null;
   if (c.week === 4 && week === 5 && worldData) {
     filled = season.lockEntries(handle, worldData);
+
+
     const short = filled.filter(f => f.to < f.target);
     handle.prepare(`INSERT INTO news (season,week,category,headline,body)
         VALUES (?,?,'market',?,?)`).run(s, week, 'The entry lists are closed',
@@ -469,6 +496,13 @@ function withdrawFromRound(roundId, entryId) {
   dirty = true;
   return r;
 }
+function whereToRace() { return handle ? office.eligible(handle) : null; }
+function pickChampionship(id) {
+  const r = office.choose(handle, id);
+  dirty = true;
+  return r;
+}
+
 function sponsors(driverId) {
   if (!handle) return [];
   const id = driverId || handle.prepare(`SELECT player_driver_id p FROM career WHERE id = 1`).get().p;
@@ -712,10 +746,34 @@ function setCarDriver(entryId, role, driverId) {
 function garage() {
   if (!handle) return null;
   const me = handle.prepare(`SELECT player_driver_id p FROM career WHERE id = 1`).get().p;
+  // Everything the player owns, whether or not it is entered anywhere this
+  // season, plus any car they are driving for somebody else. Between seasons a
+  // car sits here with no championship against it, waiting to be entered.
   return handle.prepare(`
-    SELECT ch.id, cm.name model, cm.class, l.livery_name livery, ch.value,
-           ch.engine_hours, ch.chassis_hours, t.name team, c.name championship,
+    SELECT ch.id AS id, cm.name model, cm.class, ch.value, ch.engine_hours, ch.chassis_hours,
+           t.name team,
            CASE WHEN t.owner_driver_id = @me THEN 1 ELSE 0 END mine,
+           ch.for_sale,
+           e.id entry_id,
+           COALESCE(l.livery_name, lastl.livery_name, cm.name) livery,
+           c.name championship,
+           (SELECT d2.name FROM entry_drivers ed2 JOIN drivers d2 ON d2.id = ed2.driver_id
+            WHERE ed2.entry_id = e.id ORDER BY ed2.role LIMIT 1) driver
+    FROM chassis ch
+    JOIN car_models cm ON cm.id = ch.model_id
+    JOIN teams t ON t.id = ch.owner_team_id
+    LEFT JOIN entries e ON e.chassis_id = ch.id
+         AND e.season = (SELECT season FROM career WHERE id = 1)
+    LEFT JOIN liveries l ON l.id = e.livery_id
+    LEFT JOIN championships c ON c.id = e.championship_id
+    LEFT JOIN liveries lastl ON lastl.id = (
+      SELECT e2.livery_id FROM entries e2 WHERE e2.chassis_id = ch.id
+      ORDER BY e2.season DESC LIMIT 1)
+    WHERE t.status = 'active' AND t.owner_driver_id = @me
+    UNION
+    SELECT ch.id AS id, cm.name model, cm.class, ch.value, ch.engine_hours, ch.chassis_hours,
+           t.name team, 0 mine, ch.for_sale, e.id entry_id,
+           l.livery_name livery, c.name championship,
            (SELECT d2.name FROM entry_drivers ed2 JOIN drivers d2 ON d2.id = ed2.driver_id
             WHERE ed2.entry_id = e.id ORDER BY ed2.role LIMIT 1) driver
     FROM entries e
@@ -725,14 +783,15 @@ function garage() {
     JOIN teams t ON t.id = e.team_id
     JOIN championships c ON c.id = e.championship_id
     WHERE e.season = (SELECT season FROM career WHERE id = 1)
-      AND ( t.owner_driver_id = @me
-            OR e.id IN (SELECT entry_id FROM entry_drivers WHERE driver_id = @me) )
-    ORDER BY mine DESC, ch.id`).all({ me });
+      AND t.owner_driver_id IS NOT @me
+      AND e.id IN (SELECT entry_id FROM entry_drivers WHERE driver_id = @me)
+    ORDER BY mine DESC, id`).all({ me });
 }
 
 module.exports = { create, open, peek, state, advanceWeek, save, close, isDirty,
                    marketList, marketBuy, marketBuyMany, garage, myEntries, lineup, setCarDriver, newsList, newsRead, home, setTutorial, raceInfo, racePrepare, raceSheet, raceSave,
                    worldTree, standings, calendar,
                    roundBill, myRoundCost, withdrawFromRound, sponsors, simulateLeg,
+                   whereToRace, pickChampionship,
                    officeOffers, officeTakeSeat, officeFormTeam, officeSign,
                    handle: () => handle };

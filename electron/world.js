@@ -23,8 +23,10 @@ function buildWorld(db, world, blocks, countries, alreadySeeded = false) {
                 VALUES (@id,@races,@km,@two,@drv,@prac,@qual,@priv,@pole,@stops,@wf,@wt,@late)`),
     points:  db.prepare(`INSERT INTO points_scheme (level_id,position,points) VALUES (?,?,?)`),
     champ:   db.prepare(`INSERT INTO championships
-                (id,name,level_id,class,model_id,home_continent,prestige,rounds,min_grid,winter,active_from)
-                VALUES (@id,@name,@level,@cls,@model,@cont,@prest,@rounds,@min,@winter,@from)`),
+                (id,name,level_id,class,model_id,home_continent,prestige,rounds,min_grid,
+                 winter,active_from,shares_entries_with)
+                VALUES (@id,@name,@level,@cls,@model,@cont,@prest,@rounds,@min,
+                        @winter,@from,@shares)`),
     cblock:  db.prepare(`INSERT INTO championship_blocks (championship_id,block_id) VALUES (?,?)`),
     ctrack:  db.prepare(`INSERT INTO championship_tracks
                 (championship_id,round_no,track_id,week,distance_override) VALUES (?,?,?,?,?)`)
@@ -85,7 +87,8 @@ function buildWorld(db, world, blocks, countries, alreadySeeded = false) {
       id: c.id, name: c.name, level: c.level, cls: c.cls,
       model: c.model ? modelId[c.model] : null, cont: c.continent, prest: c.prestige,
       rounds: c.rounds, min: c.cls === 'gt5' ? 10 : 12,
-      winter: c.winter ? 1 : 0, from: c.active_from
+      winter: c.winter ? 1 : 0, from: c.active_from,
+      shares: c.shares_entries_with || null
     });
 
     // GT5 draws from its own block; everything above draws from the whole continent.

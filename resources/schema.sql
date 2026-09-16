@@ -106,7 +106,8 @@ CREATE TABLE championships (
   rounds        INTEGER NOT NULL,
   min_grid      INTEGER NOT NULL DEFAULT 10,
   winter        INTEGER NOT NULL DEFAULT 0,    -- 1 = runs weeks 5-10
-  active_from   INTEGER NOT NULL DEFAULT 1     -- season it first appears (GT3 = 2, LMDh = 7)
+  active_from   INTEGER NOT NULL DEFAULT 1,    -- season it first appears (GT3 = 2, LMDh = 7)
+  shares_entries_with TEXT REFERENCES championships(id)  -- endurance runs the sprint field
 );
 
 CREATE TABLE championship_blocks (             -- which driver blocks feed a championship

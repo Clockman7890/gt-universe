@@ -100,7 +100,8 @@ ipcMain.handle('career:new', (_e, slot, profile) => {
 
 ipcMain.handle('career:load', (_e, slot) => {
   const world = JSON.parse(fs.readFileSync(path.join(RESOURCES, 'world.json'), 'utf8'));
-  return db.open(slotPath(slot), world);
+  const names = JSON.parse(fs.readFileSync(path.join(RESOURCES, 'names_db.json'), 'utf8'));
+  return db.open(slotPath(slot), world, names);
 });
 
 ipcMain.handle('career:delete', async (_e, slot) => {
@@ -141,6 +142,8 @@ ipcMain.handle('car:specs', (_e, modelName) => {
 ipcMain.handle('garage:list', () => db.garage());
 
 ipcMain.handle('office:list',     () => db.officeOffers());
+ipcMain.handle('office:eligible', () => db.whereToRace());
+ipcMain.handle('office:choose',   (_e, id) => db.pickChampionship(id));
 ipcMain.handle('office:takeSeat', (_e, id) => db.officeTakeSeat(id));
 ipcMain.handle('office:formTeam', (_e, lvl, name) => db.officeFormTeam(lvl, name));
 ipcMain.handle('office:sign',     (_e, d, en) => db.officeSign(d, en));

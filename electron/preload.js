@@ -16,6 +16,8 @@ contextBridge.exposeInMainWorld('gt', {
   carSpecs:   name      => ipcRenderer.invoke('car:specs', name),
   garage:     ()        => ipcRenderer.invoke('garage:list'),
   office:     ()        => ipcRenderer.invoke('office:list'),
+  eligible:   ()        => ipcRenderer.invoke('office:eligible'),
+  chooseChamp:id        => ipcRenderer.invoke('office:choose', id),
   takeSeat:   id        => ipcRenderer.invoke('office:takeSeat', id),
   formTeam:   (lvl, nm) => ipcRenderer.invoke('office:formTeam', lvl, nm),
   signDriver: (d, e)    => ipcRenderer.invoke('office:sign', d, e),
