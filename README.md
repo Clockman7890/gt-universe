@@ -12,8 +12,14 @@ The repository builds itself on GitHub's Windows machines.
 2. Open the **Actions** tab, pick **Build Windows installer**,
    press **Run workflow**.
 3. Wait 5-8 minutes.
-4. Download the **GTUniverse-Setup** artifact from the finished run,
-   unzip it, run the .exe.
+4. Open the **Releases** page on the right of the repository home and
+   download the .exe from the newest build.
+
+The installer is published as a release rather than a build artifact.
+Artifacts come out of a 500 MB quota that a ninety-megabyte installer
+fills in five or six runs, and once that is full the upload fails even
+though the build itself worked.  A release does not touch the quota, and
+the .exe downloads directly instead of arriving inside a zip.
 
 The produced installer is self contained: Electron, the Node runtime and
 the compiled better-sqlite3 are all inside it.  Whoever runs it needs
