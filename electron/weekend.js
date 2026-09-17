@@ -1,4 +1,5 @@
 'use strict';
+const { engineHealth } = require('./market');
 
 // ---------------------------------------------------------------- calendar
 // The template in championship_tracks becomes real rounds and legs for a season.
@@ -106,7 +107,9 @@ function nextRound(db) {
     JOIN championships ch ON ch.id = r.championship_id
     JOIN tracks t ON t.id = r.track_id
     WHERE r.season = ? AND r.played = 0
-      AND r.championship_id IN (
+      -- the endurance rounds belong to the same entry as the sprint ones, so
+      -- an entry in one series puts the player on the grid for both
+      AND COALESCE(ch.shares_entries_with, ch.id) IN (
         SELECT e.championship_id FROM entries e
         JOIN entry_drivers ed ON ed.entry_id = e.id
         WHERE ed.driver_id = ? AND e.season = ?)
@@ -200,7 +203,7 @@ function gridFor(db, round, legNo) {
            s.fuel_management, s.blue_flag_conceding, s.weather_tyre_changes,
            s.avoidance_of_mistakes, s.avoidance_of_forced_mistakes,
            cp.weight_scalar, cp.power_scalar, cp.drag_scalar, ch.dev_bonus,
-           t.engineering, t.name team_name, t.is_privateer, ed.role
+           ch.engine_hours, t.engineering, t.name team_name, t.is_privateer, ed.role
     FROM entries e
     JOIN chassis ch ON ch.id = e.chassis_id
     JOIN car_models cm ON cm.id = ch.model_id
@@ -224,7 +227,9 @@ function gridFor(db, round, legNo) {
 
   for (const r of rows) {
     const n = Math.min(4, fleetSize[r.team_name] || 1);
-    r.reliability = (REL[r.engineering] || 0.72) * (FLEET_PENALTY[n] || 0.85);
+    // a tired engine is a tired engine whether the race is simulated or driven
+    r.reliability = (REL[r.engineering] || 0.72) * (FLEET_PENALTY[n] || 0.85)
+                  * engineHealth(r.engine_hours || 0);
 
     // a car that has been worked on carries a little more pace: one per cent of
     // power is worth about 0.13s, so convert the seconds back into a scalar

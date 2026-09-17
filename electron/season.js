@@ -58,8 +58,15 @@ function lockEntries(db, world, leaveOpen = 0) {
       : db.prepare(`SELECT * FROM car_models WHERE purchasable = 1 AND class IN (${
           champ.class === 'gt4' ? "'gt4'" : "'gt3_gen1','gt3_gen2','gto'"})`).all();
 
-    const perCar = db.prepare(`SELECT drivers_per_car n FROM championship_levels WHERE id = ?`)
-      .get(champ.level_id).n;
+    // The endurance rounds borrow the sprint field, and they need two drivers
+    // per car. Crewing that field for the sprint alone leaves every endurance
+    // entry a driver short, so the field is staffed for whichever championship
+    // asks for most.
+    const perCar = db.prepare(`
+      SELECT MAX(cl.drivers_per_car) n
+      FROM championships c2
+      JOIN championship_levels cl ON cl.id = c2.level_id
+      WHERE c2.id = @id OR c2.shares_entries_with = @id`).get({ id: w.id }).n;
 
     while (have < target) {
       // Try every model before giving up: one being out of numbers says nothing
@@ -133,7 +140,8 @@ const SPEED = { gt5: 128, gt4: 150, gt3: 170, lmdh: 190 };
 function resultSheet(db, roundId, legNo) {
   const c = db.prepare(`SELECT season, player_driver_id FROM career WHERE id = 1`).get();
   const round = db.prepare(`
-    SELECT r.*, ch.name championship, ch.class, ch.level_id, t.name track
+    SELECT r.*, ch.name championship, ch.class, ch.level_id, t.name track,
+           COALESCE(ch.shares_entries_with, ch.id) field_champ
     FROM rounds r JOIN championships ch ON ch.id = r.championship_id
     JOIN tracks t ON t.id = r.track_id WHERE r.id = ?`).get(roundId);
   if (!round) return null;
@@ -153,7 +161,7 @@ function resultSheet(db, roundId, legNo) {
     LEFT JOIN entry_drivers ed ON ed.entry_id = e.id AND ed.role = ?
     LEFT JOIN drivers d ON d.id = ed.driver_id
     WHERE e.season = ? AND e.championship_id = ?
-    ORDER BY l.livery_name`).all(role, c.season, round.championship_id);
+    ORDER BY l.livery_name`).all(role, c.season, round.field_champ);
 
   const already = db.prepare(`SELECT COUNT(*) n FROM results WHERE leg_id = ?`).get(leg.id).n;
   return {

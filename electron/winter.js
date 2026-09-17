@@ -271,6 +271,19 @@ function depreciate(db, season) {
               WHERE bought_season < ?`).run(season);
 }
 
+// Every AI outfit freshens its engines in the off-season; that is what a winter
+// is for. The player's cars are left alone, because deciding whether to spend
+// the money is the player's game to play. A car from a folded team keeps some
+// of its hours: that is why it is cheap.
+function serviceAiCars(db) {
+  const me = playerId(db);
+  db.prepare(`
+    UPDATE chassis SET engine_hours = CASE WHEN for_sale = 1
+                       THEN MIN(engine_hours, 11) ELSE 0 END
+    WHERE engine_hours > 0
+      AND owner_team_id NOT IN (SELECT id FROM teams WHERE owner_driver_id = ?)`).run(me);
+}
+
 // Rebuild the entry lists: surviving teams re-enter, their drivers stay where
 // they are wanted, and whatever is still open is filled from the free pool.
 let _me = null;
@@ -279,8 +292,12 @@ const playerId = db => (_me !== null ? _me
 
 function rebuildEntries(db, world, r, season, playerChampId) {
   const champs = db.prepare(`
-    SELECT c.*, cl.drivers_per_car FROM championships c
-    JOIN championship_levels cl ON cl.id = c.level_id
+    SELECT c.*, (
+      SELECT MAX(cl.drivers_per_car) FROM championships c2
+      JOIN championship_levels cl ON cl.id = c2.level_id
+      WHERE c2.id = c.id OR c2.shares_entries_with = c.id
+    ) drivers_per_car
+    FROM championships c
     WHERE c.active_from <= ? AND c.shares_entries_with IS NULL`).all(season);
 
   const taken = new Set();
@@ -446,6 +463,7 @@ function runWinter(db, world, namesDb, toSeason) {
     const rated = reviewRatings(db, toSeason, year);
     depreciate(db, toSeason);
     const teams = carryTeamsForward(db, world, r, toSeason);
+    serviceAiCars(db);
     rebuildEntries(db, world, r, toSeason, car.pc);
 
     // Anything still short is filled by somebody new: a championship running

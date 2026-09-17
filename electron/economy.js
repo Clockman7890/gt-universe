@@ -80,7 +80,9 @@ const OVERDRAFT = { gt5: -50000, gt4: -150000, gt3: -400000, lmdh: -600000 };
 function settleRound(db, roundId) {
   const c = db.prepare(`SELECT season, week, player_driver_id FROM career WHERE id = 1`).get();
   const round = db.prepare(`
-    SELECT r.*, ch.name championship FROM rounds r
+    SELECT r.*, ch.name championship,
+           COALESCE(ch.shares_entries_with, ch.id) field_champ
+    FROM rounds r
     JOIN championships ch ON ch.id = r.championship_id WHERE r.id = ?`).get(roundId);
   if (!round) return { missing: [] };
 
@@ -98,7 +100,7 @@ function settleRound(db, roundId) {
            (SELECT ed.driver_id FROM entry_drivers ed
             WHERE ed.entry_id = e.id ORDER BY ed.role LIMIT 1) driver_id
     FROM entries e JOIN teams t ON t.id = e.team_id
-    WHERE e.season = ? AND e.championship_id = ?`).all(c.season, round.championship_id) : [];
+    WHERE e.season = ? AND e.championship_id = ?`).all(c.season, round.field_champ) : [];
 
   const missing = [];
   const tx = db.transaction(() => {

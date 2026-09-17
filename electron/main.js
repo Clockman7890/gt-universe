@@ -129,6 +129,13 @@ ipcMain.handle('market:list', () => db.marketList());
 ipcMain.handle('market:buy', (_e, modelId, liveryId) => db.marketBuy(modelId, liveryId));
 ipcMain.handle('market:buyMany', (_e, modelId, ids) => db.marketBuyMany(modelId, ids));
 
+ipcMain.handle('market:used',     () => db.usedList());
+ipcMain.handle('market:buyUsed',  (_e, ch, lv) => db.buyUsed(ch, lv));
+ipcMain.handle('market:sellQuote',(_e, ch) => db.sellQuote(ch));
+ipcMain.handle('market:sell',     (_e, ch) => db.sellCar(ch));
+ipcMain.handle('market:fixQuote', (_e, ch) => db.rebuildQuote(ch));
+ipcMain.handle('market:fix',      (_e, ch) => db.rebuildEngine(ch));
+
 ipcMain.handle('market:image', (_e, modelName) => {
   const specs = JSON.parse(fs.readFileSync(path.join(RESOURCES, 'car_specs.json'), 'utf8'));
   return require('./market').image(RESOURCES, modelName, specs);
@@ -144,6 +151,8 @@ ipcMain.handle('garage:list', () => db.garage());
 ipcMain.handle('office:list',     () => db.officeOffers());
 ipcMain.handle('office:eligible', () => db.whereToRace());
 ipcMain.handle('office:choose',   (_e, id) => db.pickChampionship(id));
+ipcMain.handle('office:facDue',   () => db.facilitiesDue());
+ipcMain.handle('office:facUp',    () => db.upgradeFacilities());
 ipcMain.handle('office:takeSeat', (_e, id) => db.officeTakeSeat(id));
 ipcMain.handle('office:formTeam', (_e, lvl, name) => db.officeFormTeam(lvl, name));
 ipcMain.handle('office:sign',     (_e, d, en) => db.officeSign(d, en));

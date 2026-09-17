@@ -295,7 +295,9 @@ function runWeek(seasonNo, week) {
   const me = handle.prepare(`SELECT player_driver_id p FROM career WHERE id = 1`).get().p;
   // anything whose week has come, and anything left hanging behind it
   const due = handle.prepare(`
-    SELECT r.id, r.championship_id, r.week FROM rounds r
+    SELECT r.id, r.championship_id, r.week,
+           COALESCE(ch.shares_entries_with, ch.id) field_champ
+    FROM rounds r JOIN championships ch ON ch.id = r.championship_id
     WHERE r.season = ? AND r.week <= ? AND r.played = 0
     ORDER BY r.week, r.id`).all(seasonNo, week);
   if (!due.length) return null;
@@ -316,7 +318,7 @@ function runWeek(seasonNo, week) {
     const mine = handle.prepare(`
       SELECT e.id FROM entries e JOIN entry_drivers ed ON ed.entry_id = e.id
       WHERE ed.driver_id = ? AND e.season = ? AND e.championship_id = ?`)
-      .get(me, seasonNo, round.championship_id);
+      .get(me, seasonNo, round.field_champ);
     if (mine) {
       const away = handle.prepare(`SELECT 1 FROM round_absences
           WHERE round_id = ? AND entry_id = ?`).get(round.id, mine.id);
@@ -369,6 +371,28 @@ function marketBuyMany(modelId, liveryIds) {
   dirty = true;
   return res;
 }
+function usedList() { return handle ? market.usedList(handle) : null; }
+function buyUsed(chassisId, liveryId) {
+  if (!handle) throw new Error('No career open.');
+  const res = market.buyUsed(handle, chassisId, liveryId);
+  dirty = true;
+  return res;
+}
+function sellQuote(chassisId) { return handle ? market.sellQuote(handle, chassisId) : null; }
+function sellCar(chassisId) {
+  if (!handle) throw new Error('No career open.');
+  const res = market.sellCar(handle, chassisId);
+  dirty = true;
+  return res;
+}
+function rebuildQuote(chassisId) { return handle ? market.rebuildQuote(handle, chassisId) : null; }
+function rebuildEngine(chassisId) {
+  if (!handle) throw new Error('No career open.');
+  const res = market.rebuildEngine(handle, chassisId);
+  dirty = true;
+  return res;
+}
+
 function officeOffers() { return handle ? office.offers(handle) : null; }
 function officeTakeSeat(entryId) { const r = office.takeSeat(handle, entryId); dirty = true; return r; }
 function officeFormTeam(level, name) { const r = office.formTeam(handle, level, name); dirty = true; return r; }
@@ -379,7 +403,10 @@ function myEntries() {
   return handle.prepare(`
     SELECT e.id, cm.name car, l.livery_name livery, c.name championship,
            (SELECT COUNT(*) FROM entry_drivers ed WHERE ed.entry_id = e.id) filled,
-           cl.drivers_per_car need
+           (SELECT MAX(cl2.drivers_per_car) FROM championships c3
+            JOIN championship_levels cl2 ON cl2.id = c3.level_id
+            WHERE c3.id = e.championship_id
+               OR c3.shares_entries_with = e.championship_id) need
     FROM entries e
     JOIN teams t ON t.id = e.team_id
     JOIN chassis ch ON ch.id = e.chassis_id
@@ -458,7 +485,9 @@ function raceInfo() {
       done: !!l.simulated
     })),
     gridSize: handle.prepare(`SELECT COUNT(*) n FROM entries
-        WHERE season = (SELECT season FROM career WHERE id=1) AND championship_id = ?`)
+        WHERE season = (SELECT season FROM career WHERE id=1)
+          AND championship_id = (SELECT COALESCE(shares_entries_with, id)
+                                 FROM championships WHERE id = ?)`)
         .get(r.championship_id).n,
     lengthKm: r.length_km, roundId: r.id, played: r.played
   };
@@ -483,13 +512,24 @@ function myRoundCost() {
   const mine = handle.prepare(`
     SELECT e.id FROM entries e JOIN entry_drivers ed ON ed.entry_id = e.id
     WHERE ed.driver_id = ? AND e.season = (SELECT season FROM career WHERE id = 1)
-      AND e.championship_id = ?`).get(me, r.championship_id);
+      AND e.championship_id = (SELECT COALESCE(shares_entries_with, id)
+                               FROM championships WHERE id = ?)`)
+    .get(me, r.championship_id);
   if (!mine) return null;
   const cost = economy.roundCost(handle, mine.id, r.id);
   if (!cost) return null;
   const purse = economy.purseOf(handle, cost);
+  const me2 = handle.prepare(`SELECT player_driver_id p FROM career WHERE id = 1`).get().p;
+  // A contracted driver has already paid for the seat; the running costs of the
+  // meeting belong to whoever owns the car.
+  const mineToPay = purse.kind === 'driver' && purse.id === me2;
   return Object.assign(cost, { entryId: mine.id, roundId: r.id,
-                               capital: purse.capital, track: r.track });
+                               capital: purse.capital, track: r.track,
+                               paidBy: mineToPay ? 'you' : 'team',
+                               payerName: mineToPay ? null
+                                 : handle.prepare(`SELECT t.name n FROM entries e
+                                     JOIN teams t ON t.id = e.team_id WHERE e.id = ?`)
+                                     .get(mine.id).n });
 }
 function withdrawFromRound(roundId, entryId) {
   const r = economy.withdraw(handle, roundId, entryId);
@@ -497,6 +537,12 @@ function withdrawFromRound(roundId, entryId) {
   return r;
 }
 function whereToRace() { return handle ? office.eligible(handle) : null; }
+function facilitiesDue() { return handle ? office.upgradeDue(handle) : null; }
+function upgradeFacilities() {
+  const r = office.upgradeTeam(handle);
+  dirty = true;
+  return r;
+}
 function pickChampionship(id) {
   const r = office.choose(handle, id);
   dirty = true;
@@ -528,7 +574,9 @@ function payForMyRound(legId) {
   const row = handle.prepare(`
     SELECT l.round_id, e.id entry_id FROM legs l
     JOIN rounds r ON r.id = l.round_id
-    JOIN entries e ON e.season = r.season AND e.championship_id = r.championship_id
+    JOIN championships ch ON ch.id = r.championship_id
+    JOIN entries e ON e.season = r.season
+         AND e.championship_id = COALESCE(ch.shares_entries_with, ch.id)
     JOIN entry_drivers ed ON ed.entry_id = e.id
     WHERE l.id = ? AND ed.driver_id = ?`).get(legId, me);
   if (row) economy.chargePlayerRound(handle, row.round_id, row.entry_id);
@@ -540,8 +588,12 @@ function worldTree() {
   const c = handle.prepare(`SELECT season FROM career WHERE id = 1`).get();
   return handle.prepare(`
     SELECT ch.id, ch.name, ch.class, ch.home_continent AS continent,
+           -- an endurance series runs the sprint series' field, so count the
+           -- cars in the field it actually uses, not the ones entered under
+           -- its own name, of which there are none
            (SELECT COUNT(*) FROM entries e
-            WHERE e.season = ? AND e.championship_id = ch.id) entries,
+            WHERE e.season = ?
+              AND e.championship_id = COALESCE(ch.shares_entries_with, ch.id)) entries,
            (SELECT COUNT(*) FROM rounds r
             WHERE r.season = ? AND r.championship_id = ch.id AND r.played = 1) played,
            (SELECT COUNT(*) FROM rounds r
@@ -564,7 +616,8 @@ function standings(championshipId, kind) {
                  JOIN chassis c3 ON c3.id = e2.chassis_id
                  JOIN car_models cm2 ON cm2.id = c3.model_id
                  WHERE e2.team_id = t.id AND e2.season = @season
-                   AND e2.championship_id = @champ
+                   AND e2.championship_id = (SELECT COALESCE(shares_entries_with, id)
+                                             FROM championships WHERE id = @champ)
                  ORDER BY cm2.name) x) car,
              SUM(res.points) pts,
              SUM(CASE WHEN res.finish_pos = 1 THEN 1 ELSE 0 END) wins,
@@ -678,8 +731,11 @@ function lineup() {
   if (!team) return { team: null, open: c.week <= 4, cars: [], drivers: [] };
 
   const cars = handle.prepare(`
-    SELECT e.id entry_id, cm.name car, l.livery_name livery, cl.drivers_per_car seats,
-           ch.name championship
+    SELECT e.id entry_id, cm.name car, l.livery_name livery, ch.name championship,
+           (SELECT MAX(cl2.drivers_per_car) FROM championships c3
+            JOIN championship_levels cl2 ON cl2.id = c3.level_id
+            WHERE c3.id = e.championship_id
+               OR c3.shares_entries_with = e.championship_id) seats
     FROM entries e
     JOIN chassis c2 ON c2.id = e.chassis_id
     JOIN car_models cm ON cm.id = c2.model_id
@@ -789,9 +845,10 @@ function garage() {
 }
 
 module.exports = { create, open, peek, state, advanceWeek, save, close, isDirty,
-                   marketList, marketBuy, marketBuyMany, garage, myEntries, lineup, setCarDriver, newsList, newsRead, home, setTutorial, raceInfo, racePrepare, raceSheet, raceSave,
+                   marketList, marketBuy, marketBuyMany,
+                   usedList, buyUsed, sellQuote, sellCar, rebuildQuote, rebuildEngine, garage, myEntries, lineup, setCarDriver, newsList, newsRead, home, setTutorial, raceInfo, racePrepare, raceSheet, raceSave,
                    worldTree, standings, calendar,
                    roundBill, myRoundCost, withdrawFromRound, sponsors, simulateLeg,
-                   whereToRace, pickChampionship,
+                   whereToRace, pickChampionship, facilitiesDue, upgradeFacilities,
                    officeOffers, officeTakeSeat, officeFormTeam, officeSign,
                    handle: () => handle };

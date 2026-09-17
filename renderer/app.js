@@ -343,12 +343,15 @@ on('plaza', 'onclick', async () => {
   const rc = await window.gt.raceInfo();
   if (rc && rc.thisWeek) {
     const bill = await window.gt.raceCost();
-    const saved = bill ? `${signed(bill.total)} in crew hire and travel` : 'the cost of the meeting';
+    const saved = !bill ? ''
+      : bill.paidBy === 'you'
+        ? `You would keep ${signed(bill.total)} in crew hire and travel.\n\n`
+        : `${bill.payerName} carries the cost of the meeting, so there is nothing ` +
+          `for you to save.\n\n`;
     const ok = confirm(
       `You are entered at ${rc.track} this weekend.\n\n` +
       `Advancing the week means you do not turn up at all. No result, no points, ` +
-      `and the round goes on without you.\n\n` +
-      `You would keep ${saved}.\n\nSkip the round?`);
+      `and the round goes on without you.\n\n` + saved + `Skip the round?`);
     if (!ok) return;
     if (bill) await window.gt.withdraw(bill.roundId, bill.entryId);
   }
@@ -425,7 +428,7 @@ async function openMarket() {
   $('tab-new').className  = 'tab ' + (mkTab === 'new'  ? 'on' : 'off');
   $('tab-used').className = 'tab ' + (mkTab === 'used' ? 'on' : 'off');
   $('tab-used').textContent = mk.used ? `Used · ${mk.used} listed` : 'Used';
-  if (mkTab === 'used') { renderUsed(); return; }
+  if (mkTab === 'used') { await renderUsed(); return; }
   $('mk-deadline').textContent = mk.open
     ? `entry list closes at the end of week 4`
     : `closed — reopens next winter`;
@@ -686,6 +689,18 @@ async function openRace() {
     : `<span class="warn">No custom AI folder set — fix it in Settings.</span>`;
   box.appendChild(bar);
 
+  const bill = await window.gt.raceCost();
+  if (bill) {
+    const who = document.createElement('div');
+    who.className = 'pathbar';
+    who.innerHTML = bill.paidBy === 'you'
+      ? `This meeting costs you <b>${eur(bill.total)}</b> — ` +
+        `${eur(bill.crew)} crew, ${eur(bill.travel)} travel${bill.away ? ', away from home' : ''}.`
+      : `<b>${bill.payerName}</b> pays the ${eur(bill.total)} it costs to be here. ` +
+        `You bought your seat; the running of the car is theirs.`;
+    box.appendChild(who);
+  }
+
   // ---- leg tabs: one race at a time, in order ----
   const legs = info.legState || [{ leg: 1, done: false }];
   const firstOpen = (legs.find(l => !l.done) || legs[legs.length - 1]).leg;
@@ -797,10 +812,13 @@ async function openRace() {
   sim.textContent = 'Simulate this race';
   sim.onclick = async () => {
     const bill = await window.gt.raceCost();
+    const who = !bill ? ''
+      : bill.paidBy === 'you'
+        ? `\n\nThe meeting costs you ${signed(-bill.total)}.`
+        : `\n\nThe meeting costs ${eur(bill.total)}, paid by ${bill.payerName}.`;
     if (!confirm(`Run race ${rcLeg} without driving it?\n\n` +
                  `The result is worked out from the same numbers the game would ` +
-                 `have been given.` +
-                 (bill ? `\n\nThe meeting still costs ${signed(-bill.total)}.` : '')))
+                 `have been given.` + who))
       return;
     try {
       const res = await window.gt.simulate(info.roundId, rcLeg);
@@ -1180,6 +1198,40 @@ async function openHome() {
     }
   }
 
+  // ---- bringing the workshop up to the class you are aiming at ----
+  if (h.team && o && o.upgrade) {
+    const u = o.upgrade;
+    const up = document.createElement('div');
+    up.className = 'upgrade';
+    up.innerHTML = `<h4>${u.team} is not fitted for ${u.to.toUpperCase()}</h4>` +
+      `<p class="note">The workshop is built for ${u.from.toUpperCase()}. Bringing it up ` +
+      `costs ${signed(-u.cost)} in buildings and equipment, paid once and kept for as long ` +
+      `as the team lives. Until it is done the team cannot enter this class.</p>`;
+    if (o.open) {
+      const row = document.createElement('div');
+      row.className = 'rc-actions';
+      const b = document.createElement('button');
+      b.className = 'primary';
+      b.textContent = `Rebuild for ${u.to.toUpperCase()} — ${signed(-u.cost)}`;
+      b.disabled = u.cost > d.capital;
+      b.onclick = async () => {
+        try {
+          const r = await window.gt.upgradeFacilities();
+          alert(`${r.team} is now fitted for ${r.to.toUpperCase()}.\n` +
+                `${signed(-r.cost)} — ${eur(r.capital)} left.`);
+          await refresh(); await openHome();
+        } catch (e) { alert(String(e.message || e).replace(/^Error: /, '')); }
+      };
+      row.appendChild(b);
+      up.appendChild(row);
+      if (u.cost > d.capital)
+        up.innerHTML += `<p class="note">You have ${eur(d.capital)}.</p>`;
+    } else {
+      up.innerHTML += `<p class="note">The winter is over; this waits until next year.</p>`;
+    }
+    box.appendChild(up);
+  }
+
   // ---- how you go racing ----
   if (!h.team && o && !o.open) {
     const done = document.createElement('div');
@@ -1390,10 +1442,110 @@ async function openOffice() {
   }
 }
 
-function renderUsed() {
-  $('mk-list').innerHTML = '';
+// The second-hand market. Stock comes from teams that folded or moved up over
+// the winter, so it is empty in season one and fills from season two onwards.
+let ud = null, udCar = null, udLivery = null;
+
+async function renderUsed() {
+  ud = await window.gt.usedCars();
+  udCar = null; udLivery = null;
+  $('mk-deadline').textContent = ud.open
+    ? 'entry list closes at the end of week 4'
+    : 'closed — reopens next winter';
+  renderUsedList();
+  $('mk-detail').innerHTML = ud.cars.length
+    ? `<p class="note">${ud.championship
+        ? 'Pick a car to enter the ' + ud.championship + '.'
+        : 'Choose a championship at the Office first.'}</p>`
+    : `<div class="bubble"><b>No used cars listed</b><p>${ud.note || ''}</p></div>`;
+}
+
+function renderUsedList() {
+  const box = $('mk-list');
+  box.innerHTML = '';
+  const order = ['gt3_gen2','gt3_gen1','gto','gt4','gt5'];
+  const label = { gt3_gen2:'GT3', gt3_gen1:'GT3', gto:'GT3', gt4:'GT4', gt5:'GT5' };
+  let last = null;
+  for (const cls of order) {
+    for (const c of ud.cars.filter(x => x.cls === cls)) {
+      if (label[cls] !== last) {
+        const g = document.createElement('div');
+        g.className = 'group'; g.textContent = label[cls];
+        box.appendChild(g); last = label[cls];
+      }
+      const row = document.createElement('div');
+      row.className = 'car' + (c.affordable ? '' : ' no') +
+                      (udCar === c.chassisId ? ' sel' : '');
+      row.innerHTML = `<span>${c.model}</span>` +
+        `<span class="sub2">${c.hours.toFixed(0)}h${c.age ? ' · ' + c.age + 'y' : ''}</span>` +
+        `<span class="sp"></span><span class="price out">${signed(-c.price)}</span>`;
+      row.onclick = () => selectUsed(c);
+      box.appendChild(row);
+    }
+  }
+}
+
+async function selectUsed(c) {
+  udCar = c.chassisId; udLivery = null;
+  renderUsedList();
+  const [img, spec] = await Promise.all([window.gt.carImage(c.model), window.gt.carSpecs(c.model)]);
+  const specRow = (k, v) => `<div><span>${k}</span><span>${v}</span></div>`;
+  const eng = Math.min(1, c.hours / 30);
+  const bar = eng > .85 ? 'bad' : eng > .6 ? 'warn' : '';
   $('mk-detail').innerHTML =
-    `<div class="bubble"><b>No used cars yet</b><p>${mk.usedNote || ''}</p></div>`;
+    `<h3>${c.model}</h3><div class="maker">${c.manufacturer}` +
+      (c.seller ? ` · from ${c.seller}` : '') + `</div>` +
+    (img ? `<img src="${img}" alt="">` : '') +
+    `<div class="bar-wrap">Engine hours
+       <div class="bar-out"><div class="bar-in ${bar}" style="width:${(eng*100).toFixed(0)}%"></div></div>
+       ${c.hours.toFixed(1)} / 30 · reliability ${(c.health*100).toFixed(0)}%</div>` +
+    (spec ? `<div class="specs">
+        ${specRow('Power', spec.power_hp + ' HP')}${specRow('Torque', spec.torque_nm + ' Nm')}
+        ${specRow('Weight', spec.weight_kg.toLocaleString('en-GB') + ' kg')}${specRow('Engine', spec.engine)}
+        ${specRow('Drive', spec.drive + ' · ' + spec.gears + ' ' + spec.shift.toLowerCase())}
+        ${specRow('Balance', spec.weight_dist)}</div>` : '') +
+    (c.liveries.length ? `<div class="numbers">ENTRY NUMBER</div><div class="nums" id="ud-nums"></div>` : '') +
+    `<div class="buyrow"><span class="big out">${signed(-c.price)}</span><span class="sp"></span>` +
+    (c.affordable && ud.open
+      ? `<span class="why" id="ud-hint"></span><button class="primary" id="ud-buy">Buy</button>`
+      : `<span class="why">${c.why || 'Market closed'}</span>`) +
+    `</div>`;
+
+  if (c.liveries.length) {
+    const nums = $('ud-nums');
+    c.liveries.forEach((lv, i) => {
+      const b = document.createElement('span');
+      b.className = 'num' + (i === 0 ? ' sel' : '');
+      b.textContent = lv.livery_name;
+      b.onclick = () => {
+        udLivery = lv.id;
+        [...nums.children].forEach(x => x.classList.remove('sel'));
+        b.classList.add('sel');
+        const hint = $('ud-hint'); if (hint) hint.textContent = '';
+      };
+      nums.appendChild(b);
+    });
+    udLivery = c.liveries[0].id;
+  }
+  const buy = $('ud-buy');
+  if (buy) buy.onclick = async () => {
+    if (!udLivery) {
+      const hint = $('ud-hint');
+      if (hint) hint.textContent = 'Choose an entry number first';
+      return;
+    }
+    try {
+      const res = await window.gt.buyUsed(udCar, udLivery);
+      alert(`${res.model}\n${res.livery}\n\n` +
+            `${res.hours.toFixed(1)} hours on the engine.\n` +
+            (res.needsDriver ? 'Car entered. Sign a driver in the Office.\n' : '') +
+            `${signed(-res.spent)} — ${eur(res.capital)} left.`);
+      await refresh();
+      await openMarket();
+    } catch (err) {
+      alert(String(err && err.message ? err.message : err).replace(/^Error: /, ''));
+    }
+  };
 }
 
 on('mk-skip', 'onclick', () => leaveView('hub'));
@@ -1435,8 +1587,12 @@ async function openGarage() {
                              : 'Needs a driver — sign one in the Office.')
                  : 'Team property — you can see its condition but cannot work on it.') +
          `</div>` +
+      `<div class="carwork"></div>` +
       `<div class="seats" data-entry="${lineCar ? lineCar.entry_id : ''}"></div></div>`;
     box.appendChild(el);
+
+    // rebuild and sale, for cars the player actually owns
+    if (c.mine) await carWork(el.querySelector('.carwork'), c);
 
     // a picker per seat, for as long as line-ups can still be changed
     if (lineCar && lu.team) {
@@ -1480,6 +1636,69 @@ async function openGarage() {
         holder.appendChild(lock);
       }
     }
+  }
+}
+
+// The two things an owner can do to a car: freshen the engine, or take the
+// dealer's money. A car in this season's entry list cannot be sold.
+async function carWork(holder, c) {
+  if (!holder) return;
+  const [fix, offer] = await Promise.all([
+    window.gt.fixQuote(c.id), window.gt.sellQuote(c.id)
+  ]);
+  holder.innerHTML = '';
+
+  if (fix) {
+    const b = document.createElement('button');
+    const worn = c.engine_hours >= 30 * 0.65;
+    b.className = worn ? 'primary small' : 'small';
+    b.textContent = `Rebuild engine · ${eur(fix.cost)}`;
+    b.title = c.engine_hours < 1
+      ? 'This engine is fresh — there is nothing to gain yet.'
+      : `Reliability is at ${(fix.health * 100).toFixed(0)}%. A rebuild puts it back to full.`;
+    b.onclick = async () => {
+      if (!confirm(`Rebuild the ${c.model} engine?\n\n` +
+                   `${c.engine_hours.toFixed(1)} hours on it, reliability ` +
+                   `${(fix.health * 100).toFixed(0)}%.\n` +
+                   `Cost ${eur(fix.cost)}.`)) return;
+      try {
+        const res = await window.gt.fixEngine(c.id);
+        alert(`${res.model} — engine rebuilt.\n${signed(-res.cost)} — ${eur(res.capital)} left.`);
+        await refresh(); await openGarage();
+      } catch (e) {
+        alert(String(e.message || e).replace(/^Error: /, ''));
+      }
+    };
+    holder.appendChild(b);
+  }
+
+  if (offer) {
+    const b = document.createElement('button');
+    b.className = 'small';
+    if (offer.entered) {
+      b.disabled = true;
+      b.textContent = 'Sell — entered this season';
+      b.title = 'Withdraw the entry first, or wait for the winter.';
+    } else {
+      b.textContent = `Sell · ${eur(offer.offer)}`;
+      b.title = `Book value ${eur(offer.value)}. A dealer takes it at seven tenths, ` +
+                'less whatever the engine has left in it.';
+      b.onclick = async () => {
+        if (!confirm(`Sell the ${c.model}?\n\n` +
+                     `Book value ${eur(offer.value)}, dealer offers ${eur(offer.offer)}.\n` +
+                     'Any development work on this car is lost with it.')) return;
+        try {
+          const res = await window.gt.sellCar(c.id);
+          alert(`${res.model} sold for ${eur(res.offer)}.\n` +
+                (res.carsLeft ? `${res.carsLeft} car${res.carsLeft === 1 ? '' : 's'} left.`
+                              : 'No cars left in the garage.'));
+          await refresh(); await openGarage();
+        } catch (e) {
+          alert(String(e.message || e).replace(/^Error: /, ''));
+        }
+      };
+    }
+    holder.appendChild(b);
   }
 }
 

@@ -1,5 +1,6 @@
 'use strict';
 const { rng } = require('./names');
+const { engineHealth } = require('./market');
 
 // A race is decided by the same three things the game is given: how quick the
 // driver is, how quick the car is, and how much either of them varies. Nothing
@@ -36,9 +37,13 @@ const tierOf = cls => cls === 'gt5' ? 'gt5' : cls === 'gt4' ? 'gt4'
 function fieldFor(db, roundId, legNo) {
   const c = db.prepare(`SELECT season FROM career WHERE id = 1`).get();
   const round = db.prepare(`
-    SELECT r.*, ch.class, ch.level_id, t.length_km
+    SELECT r.*, ch.class, ch.level_id, ch.shares_entries_with, t.length_km
     FROM rounds r JOIN championships ch ON ch.id = r.championship_id
     JOIN tracks t ON t.id = r.track_id WHERE r.id = ?`).get(roundId);
+  // An endurance round is contested by the sprint series' cars: the entry list
+  // is one list, shared. Without this the field comes back empty and the round
+  // is never run at all.
+  const fieldChamp = round.shares_entries_with || round.championship_id;
   const perCar = db.prepare(`SELECT drivers_per_car n FROM championship_levels WHERE id = ?`)
     .get(round.level_id).n;
   const role = perCar > 1 && legNo === 2 ? 2 : 1;
@@ -49,7 +54,7 @@ function fieldFor(db, roundId, legNo) {
            s.avoidance_of_mistakes, s.avoidance_of_forced_mistakes, s.start_reactions,
            s.tyre_management, s.stamina,
            cp.weight_scalar, cp.power_scalar, cp.drag_scalar, ch2.dev_bonus,
-           t.engineering,
+           ch2.engine_hours, t.engineering,
            (SELECT COUNT(*) FROM entries e2 WHERE e2.team_id = t.id AND e2.season = e.season) fleet
     FROM entries e
     JOIN chassis ch2 ON ch2.id = e.chassis_id
@@ -61,7 +66,7 @@ function fieldFor(db, roundId, legNo) {
     JOIN driver_skills s ON s.driver_id = d.id
     WHERE e.season = ? AND e.championship_id = ?
       AND e.id NOT IN (SELECT entry_id FROM round_absences WHERE round_id = ?)`)
-    .all(role, c.season, round.championship_id, roundId);
+    .all(role, c.season, fieldChamp, roundId);
 }
 
 // The seconds a model's balancing correction is worth. On its own this number
@@ -166,9 +171,11 @@ function simulateLeg(db, roundId, legNo, seed) {
       total += lvl.mandatory_stops * (1 - c.avoidance_of_mistakes) * 2.2;
     c.time = total;
 
-    // mechanical trouble, scaled by how long the race is
+    // mechanical trouble, scaled by how long the race is. An engine past two
+    // thirds of its life is a liability, and one past its life is a gamble.
     const fleet = Math.min(4, c.fleet || 1);
-    const rel = (REL[c.engineering] || 0.72) * (FLEET_PENALTY[fleet] || 0.85);
+    const rel = (REL[c.engineering] || 0.72) * (FLEET_PENALTY[fleet] || 0.85)
+              * engineHealth(c.engine_hours || 0);
     const mechRisk = (1 - rel) * (leg.distance_km / 260);
     // and contact, from his own care and the temper of the field
     const contactRisk = (1 - c.avoidance_of_mistakes) * 0.05

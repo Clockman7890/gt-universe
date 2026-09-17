@@ -224,6 +224,11 @@ button.primary:hover { background: var(--accent-soft); }
 .bar-in.warn { background: var(--accent-soft); }
 .bar-in.bad  { background: var(--red); }
 .tagline { font-size: 11px; color: var(--text-muted); }
+.carwork { display: flex; gap: 8px; margin-top: 12px; }
+.carwork:empty { display: none; }
+button.small { padding: 7px 14px; font-size: 12px; }
+.car .sub2 { font-size: 11px; color: var(--text-2); }
+.car.no .sub2 { color: var(--text-dim); }
 
 .stub-text { padding: 0 24px; color: var(--text-2); font-size: 13px; max-width: 520px; }
 .row { display: flex; gap: 8px; }

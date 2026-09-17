@@ -143,6 +143,7 @@ function offers(db) {
     capital: player.capital, hasSeat: !!seat,
     team: myTeam ? { id: myTeam.id, name: myTeam.name, engineering: myTeam.engineering } : null,
     franchiseOnly: FRANCHISE.has(champ.id),
+    upgrade: upgradeDue(db),
     canFormTeam: !myTeam && t !== 'gt3' && !FRANCHISE.has(champ.id)
                  && player.capital >= MIN_CAPITAL[t],
     noTeamsHere: t === 'gt3',
@@ -162,11 +163,12 @@ function takeSeat(db, entryId) {
 
   const row = db.prepare(`
     SELECT e.*, t.engineering, t.name team, t.id team_id, t.goals, cm.name car,
-           cl.drivers_per_car seats
+           (SELECT MAX(cl.drivers_per_car) FROM championships c2
+            JOIN championship_levels cl ON cl.id = c2.level_id
+            WHERE c2.id = e.championship_id
+               OR c2.shares_entries_with = e.championship_id) seats
     FROM entries e JOIN teams t ON t.id = e.team_id
     JOIN chassis ch ON ch.id = e.chassis_id JOIN car_models cm ON cm.id = ch.model_id
-    JOIN championships c ON c.id = e.championship_id
-    JOIN championship_levels cl ON cl.id = c.level_id
     WHERE e.id = ?`).get(entryId);
   if (!row) throw new Error('That seat is gone.');
 
@@ -234,7 +236,8 @@ function formTeam(db, engineering, customName) {
     throw new Error('The cars in this series belong to its teams. You can only take a seat.');
   const t = tier(ctx.champ.class);
   if (t === 'gt3')
-    throw new Error('No team is founded straight into GT3. Build one lower down and bring it up.');
+    throw new Error('No team is founded straight into GT3. Build one lower down, ' +
+                    'race it a season, and bring the workshop up.');
   const core = CORE_BY_CLASS[t][engineering];
   if (!core) throw new Error('Unknown engineering level.');
   const facility = FACILITIES[t];
@@ -313,6 +316,60 @@ function signDriver(db, driverId, entryId) {
   })();
 }
 
+// --------------------------------------------------- bringing a team up a tier
+// Buildings and equipment are bought once and kept. A team that works its way
+// up pays only the difference between the workshop it has and the one the next
+// class needs, and never pays for a tier it has already been fitted for.
+const TIER_ORDER = ['gt5', 'gt4', 'gt3'];
+
+function upgradeDue(db) {
+  const c = db.prepare(`SELECT player_driver_id, player_championship_id FROM career
+                        WHERE id = 1`).get();
+  const team = db.prepare(`SELECT * FROM teams WHERE owner_driver_id = ?
+      AND status = 'active' AND is_privateer = 0`).get(c.player_driver_id);
+  if (!team || !c.player_championship_id) return null;
+  const champ = db.prepare(`SELECT class FROM championships WHERE id = ?`)
+    .get(c.player_championship_id);
+  if (!champ) return null;
+
+  const want = tier(champ.class);
+  const have = team.facilities || 'gt5';
+  const from = TIER_ORDER.indexOf(have), to = TIER_ORDER.indexOf(want);
+  if (to <= from) return null;
+
+  let cost = 0;
+  const steps = [];
+  for (let k = from + 1; k <= to; k++) {
+    cost += UPGRADE[TIER_ORDER[k]] || 0;
+    steps.push(TIER_ORDER[k]);
+  }
+  return { team: team.name, teamId: team.id, from: have, to: want, steps, cost };
+}
+
+function upgradeTeam(db) {
+  const c = db.prepare(`SELECT season, week, player_driver_id FROM career WHERE id = 1`).get();
+  if (c.week > 4) throw new Error('The workshop can only be rebuilt in the winter.');
+  const due = upgradeDue(db);
+  if (!due) throw new Error('Your workshop is already fit for that class.');
+
+  const me = db.prepare(`SELECT capital FROM drivers WHERE id = ?`).get(c.player_driver_id);
+  if (me.capital < due.cost)
+    throw new Error('You cannot afford to rebuild the workshop for that class.');
+
+  return db.transaction(() => {
+    db.prepare(`UPDATE teams SET facilities = ? WHERE id = ?`).run(due.to, due.teamId);
+    db.prepare(`UPDATE drivers SET capital = capital - ? WHERE id = ?`)
+      .run(due.cost, c.player_driver_id);
+    db.prepare(`INSERT INTO ledger (season,week,entity_type,entity_id,amount,reason)
+                VALUES (?,?,'driver',?,?, 'facilities')`)
+      .run(c.season, c.week, c.player_driver_id, -due.cost);
+    db.prepare(`INSERT INTO news (season,week,category,headline,body) VALUES (?,?,'team',?,?)`)
+      .run(c.season, c.week, `${due.team} rebuilds for ${due.to.toUpperCase()}`,
+           `Workshop and equipment brought up from ${due.from.toUpperCase()}.`);
+    return Object.assign(due, { capital: me.capital - due.cost });
+  })();
+}
+
 // ------------------------------------------------------------- where to race
 // The championships the player may enter this winter. A driver may always go
 // back down, stay where they are, or take one step up; GT3 asks for a licence,
@@ -328,6 +385,14 @@ function eligible(db) {
     JOIN entry_drivers ed ON ed.entry_id = e.id
     JOIN championships ch ON ch.id = e.championship_id
     WHERE ed.driver_id = ?`).all(me.id).map(r => r.class);
+
+  // The tier they count as is the highest they have raced, or the one they are
+  // already aiming at if they have not raced yet: a driver who chose GT4 at the
+  // start has not driven a race, but GT4 is still where they belong.
+  const aiming = c.player_championship_id
+    ? db.prepare(`SELECT class FROM championships WHERE id = ?`).get(c.player_championship_id)
+    : null;
+  if (aiming) raced.push(aiming.class);
 
   const ORDER = ['gt5', 'gt4', 'gt3', 'lmdh'];
   const best = raced.reduce((m, x) => Math.max(m, ORDER.indexOf(x)), -1);
@@ -386,4 +451,5 @@ function choose(db, championshipId) {
 }
 
 module.exports = { offers, takeSeat, formTeam, signDriver, eligible, choose,
+                   upgradeDue, upgradeTeam,
                    CORE_BY_CLASS, MIN_CAPITAL, FACILITIES, UPGRADE };
