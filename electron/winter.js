@@ -8,7 +8,7 @@
 // get their four weeks to arrange a drive, which is why this has to run before
 // week one rather than at week five.
 
-const { rng, pick, NameFactory, TeamFactory } = require('./names');
+const { rng, pick, pickWeighted, NameFactory, TeamFactory } = require('./names');
 const { ageUp, skills, yearlyGain, clamp, round3, between, irange } = require('./population');
 const { lockEntries } = require('./season');
 
@@ -83,47 +83,38 @@ function retirements(db, r, year, season) {
   return out;
 }
 
-// How many more drivers each block needs than it has. A tier arriving for the
-// first time asks for a lot of people at once, and a region that is already
-// fully employed cannot supply them, so they have to be born.
-function shortfall(db, world, season) {
-  // A championship's seats are shared among the blocks that feed it, so each
-  // block carries its own share of the demand rather than the whole of it.
-  const demandOf = {};
-  for (const w of world.championships) {
-    if (w.active_from > season || w.shares_entries_with) continue;
-    const feeds = db.prepare(`SELECT block_id FROM championship_blocks WHERE championship_id = ?`)
-      .all(w.id).map(x => x.block_id);
-    if (!feeds.length) continue;
-    const seats = (w.grid || w.grid_first || 20) * (w.drivers_per_car || 1);
-    const each = seats / feeds.length;
-    for (const b of feeds) demandOf[b] = (demandOf[b] || 0) + each;
-  }
+// How many people take up racing this year, and where they come from.
+//
+// This deliberately does NOT look at how many seats are empty. Counting the
+// grid and then producing exactly enough drivers to fill it means a
+// championship can never be short, which is the opposite of how racing works:
+// a series that cannot find drivers runs a thin grid until it becomes worth
+// entering. Production follows the regions and the countries that actually
+// produce racing drivers, and the grids take what that gives them.
+//
+// A region's intake is its share of a modest worldwide crop, set against the
+// people already racing there. Somewhere with a lot of active drivers keeps
+// producing more of them; somewhere small stays small.
+const INTAKE = 0.060;          // newcomers per active driver per year, worldwide
+const INTAKE_MIN = 6;
+const INTAKE_MAX = 34;
 
-  // A region should have more licensed drivers than seats, so there is always
-  // somebody waiting for a drive and somebody to replace a retirement.
-  const RESERVE = 1.35;
-  const need = {};
-  for (const [block, seats] of Object.entries(demandOf)) {
-    const have = db.prepare(`SELECT COUNT(*) n FROM drivers
-      WHERE block_id = ? AND status = 'active' AND is_player = 0`).get(block).n;
-    const want = Math.ceil(seats * RESERVE);
-    if (have < want) need[block] = want - have;
-  }
-  return need;
+function intake(db, r) {
+  const active = db.prepare(`SELECT COUNT(*) n FROM drivers
+                             WHERE status = 'active' AND is_player = 0`).get().n;
+  const crop = Math.round(active * INTAKE * (0.82 + r() * 0.36));
+  return Math.max(INTAKE_MIN, Math.min(INTAKE_MAX, crop));
 }
 
-// New people arrive to replace them, weighted to the blocks that produce most.
-// A block named in `demand` gets exactly what it is short of, on top.
-function newTalent(db, world, r, namesDb, year, count, demand = {}) {
-  const extra = Object.values(demand).reduce((m, v) => m + v, 0);
-  if (count + extra <= 0) return [];
+// New people arrive, weighted to the blocks that produce most and, inside each
+// block, to the countries that produce most.
+function newTalent(db, world, r, namesDb, year, count) {
+  if (count <= 0) return [];
   const blocks = db.prepare(`SELECT id, continent, production_weight FROM blocks`).all();
   const total = blocks.reduce((m, b) => m + b.production_weight, 0);
   const countries = {};
   for (const b of blocks)
-    countries[b.id] = db.prepare(`SELECT code FROM countries WHERE block_id = ?`).all(b.id)
-      .map(x => x.code);
+    countries[b.id] = db.prepare(`SELECT code, weight FROM countries WHERE block_id = ?`).all(b.id);
 
   const nf = new NameFactory(namesDb, (year * 31 + count) >>> 0);
   const insD = db.prepare(`INSERT INTO drivers
@@ -134,11 +125,8 @@ function newTalent(db, world, r, namesDb, year, count, demand = {}) {
     (driver_id,` + SKILL_FIELDS.join(',') + `)
     VALUES (@id,` + SKILL_FIELDS.map(f => '@' + f).join(',') + `)`);
 
-  // the blocks that are short get their names first, then the rest is spread
-  // across the world by how much racing each region produces
+  // every place is drawn from the world's production, nobody is conscripted
   const queue = [];
-  for (const [id, n] of Object.entries(demand))
-    for (let k = 0; k < n; k++) queue.push(blocks.find(b => b.id === id));
   for (let k = 0; k < count; k++) queue.push(null);
 
   const made = [];
@@ -148,8 +136,8 @@ function newTalent(db, world, r, namesDb, year, count, demand = {}) {
       let roll = r() * total; block = blocks[0];
       for (const b of blocks) { roll -= b.production_weight; if (roll <= 0) { block = b; break; } }
     }
-    const pool = countries[block.id] || ['GBR'];
-    const code = pick(r, pool);
+    const pool = countries[block.id] || [{ code: 'GBR', weight: 1 }];
+    const code = pickWeighted(r, pool, x => x.weight).code;
     const age = irange(r, 18, 24);
     const pot = {
       speed: round3(between(r, 0.62, 0.95)),
@@ -290,7 +278,7 @@ let _me = null;
 const playerId = db => (_me !== null ? _me
   : (_me = db.prepare(`SELECT player_driver_id p FROM career WHERE id = 1`).get().p));
 
-function rebuildEntries(db, world, r, season, playerChampId) {
+function rebuildEntries(db, world, r, season, playerChampId, moving = new Set()) {
   const champs = db.prepare(`
     SELECT c.*, (
       SELECT MAX(cl.drivers_per_car) FROM championships c2
@@ -300,7 +288,8 @@ function rebuildEntries(db, world, r, season, playerChampId) {
     FROM championships c
     WHERE c.active_from <= ? AND c.shares_entries_with IS NULL`).all(season);
 
-  const taken = new Set();
+  // anyone promoted out of this class is already spoken for
+  const taken = new Set(moving);
   const insEntry = db.prepare(`INSERT INTO entries
     (season,championship_id,team_id,chassis_id,livery_id,class_cup,works_support)
     VALUES (?,?,?,?,?,NULL,0)`);
@@ -368,6 +357,7 @@ function rebuildEntries(db, world, r, season, playerChampId) {
       }
       // any seat still open goes to the best free driver the region has
       while (role <= c.drivers_per_car) {
+        // a driver promised to the class above is not available down here
         const d = db.prepare(`
           SELECT d.id FROM drivers d
           JOIN driver_skills s ON s.driver_id = d.id
@@ -375,7 +365,8 @@ function rebuildEntries(db, world, r, season, playerChampId) {
             AND d.block_id IN (SELECT block_id FROM championship_blocks WHERE championship_id = ?)
             AND d.id NOT IN (SELECT ed.driver_id FROM entry_drivers ed
                              JOIN entries e2 ON e2.id = ed.entry_id WHERE e2.season = ?)
-          ORDER BY s.race_skill DESC LIMIT 1`).get(c.id, season);
+          ORDER BY s.race_skill DESC LIMIT 40`).all(c.id, season)
+          .find(x => !taken.has(x.id));
         if (!d) break;
         insSeat.run(entryId, d.id, role++);
         taken.add(d.id);
@@ -460,19 +451,23 @@ function runWinter(db, world, namesDb, toSeason) {
     const titles = awardTitles(db, toSeason - 1, toSeason);
     const aged = ageEveryone(db, r, year);
     const gone = retirements(db, r, year, toSeason);
-    const short = shortfall(db, world, toSeason);
-    const fresh = newTalent(db, world, r, namesDb, year,
-                            gone.length + irange(r, 4, 14), short);
+    // The crop is what the world produces, not what the grids are missing. A
+    // year where more people stop than start leaves the paddock thinner, and
+    // the thin grids that follow are the point rather than a fault.
+    const fresh = newTalent(db, world, r, namesDb, year, intake(db, r));
     const rated = reviewRatings(db, toSeason, year);
     depreciate(db, toSeason);
     const teams = carryTeamsForward(db, world, r, toSeason);
     serviceAiCars(db);
-    rebuildEntries(db, world, r, toSeason, car.pc);
+
+    // who steps up a class, decided before anyone is re-seated where they were
+    const step = promote(db, world, toSeason);
+    rebuildEntries(db, world, r, toSeason, car.pc, step.moving);
 
     // Anything still short is filled by somebody new: a championship running
     // for the first time has no history to carry, and a folded team leaves a
     // hole. Two places stay open everywhere so the player has a way in.
-    const grids = lockEntries(db, world, 2);
+    const grids = lockEntries(db, world, 2, step.prefer, step.moving);
 
     // licences for everyone the winter has just put into a graded seat
     const graded = gradeSeats(db, toSeason, year);
@@ -528,6 +523,58 @@ function gradeSeats(db, season, year) {
   const set = db.prepare(`UPDATE drivers SET fia_rating = ? WHERE id = ?`);
   for (const d of rows) set.run(year - d.birth_year < 25 ? 'Silver' : 'Bronze', d.id);
   return rows.length;
+}
+
+// ---------------------------------------------------------------- moving up
+// A class does not recruit strangers. The people who fill GT3 are the ones who
+// earned it in GT4 last year, and the size of a new championship's grid is
+// however many of them are ready — not a number decided in advance and then
+// made true by inventing drivers to meet it.
+const STEP_DOWN = { gt4: 'gt5', gt3: 'gt4', lmdh: 'gt3' };
+
+function promote(db, world, season) {
+  const prefer = {};                 // championship id -> [driver ids], best first
+  const moving = new Set();
+  const champs = db.prepare(`SELECT c.*, (
+      SELECT MAX(cl.drivers_per_car) FROM championships c2
+      JOIN championship_levels cl ON cl.id = c2.level_id
+      WHERE c2.id = c.id OR c2.shares_entries_with = c.id) drivers_per_car
+    FROM championships c
+    WHERE c.active_from <= ? AND c.shares_entries_with IS NULL`).all(season);
+
+  for (const c of champs) {
+    const from = STEP_DOWN[c.class];
+    if (!from) continue;
+    const w = world.championships.find(x => x.id === c.id) || {};
+    const age = season - (c.active_from || 1);
+    const cars = age <= 0 ? ((w.grid_first || w.grid) || c.min_grid) : (w.grid || c.min_grid);
+    const seats = cars * (c.drivers_per_car || 1);
+
+    // Everybody who scored in the class below, in a region that feeds this
+    // championship, best first. Scoring at all is the bar: a driver who never
+    // troubled the points in GT4 has not earned a GT3 seat.
+    const ready = db.prepare(`
+      SELECT d.id, SUM(res.points) pts
+      FROM results res
+      JOIN legs l ON l.id = res.leg_id
+      JOIN rounds r ON r.id = l.round_id
+      JOIN championships low ON low.id = r.championship_id
+      JOIN entry_drivers ed ON ed.entry_id = res.entry_id
+      JOIN drivers d ON d.id = ed.driver_id
+      WHERE r.season = @last AND low.class = @from
+        AND d.status = 'active' AND d.is_player = 0
+        AND d.block_id IN (SELECT block_id FROM championship_blocks
+                           WHERE championship_id = @champ)
+      GROUP BY d.id HAVING pts > 0
+      ORDER BY pts DESC
+      LIMIT @seats`).all({ last: season - 1, from, champ: c.id, seats });
+
+    const take = ready.filter(x => !moving.has(x.id));
+    if (!take.length) continue;
+    prefer[c.id] = take.map(x => x.id);
+    for (const x of take) moving.add(x.id);
+  }
+  return { prefer, moving };
 }
 
 // ---------------------------------------------------------------- the titles
@@ -609,4 +656,4 @@ function awardTitles(db, lastSeason, toSeason) {
   return awarded;
 }
 
-module.exports = { runWinter, briefing, awardTitles, gradeSeats, RETIRE_AT };
+module.exports = { runWinter, briefing, awardTitles, gradeSeats, intake, promote, RETIRE_AT };

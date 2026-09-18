@@ -30,11 +30,19 @@ const shuffled = (r, arr) => {
 // ---------------------------------------------------------------- week 4 lock
 // Any place still open when the entry list closes is taken by somebody else.
 // A championship never starts a season short of cars.
-function lockEntries(db, world, leaveOpen = 0) {
+function lockEntries(db, world, leaveOpen = 0, prefer = {}, reserved = new Set()) {
   const c = db.prepare(`SELECT season FROM career WHERE id = 1`).get();
   const filled = [];
 
-  for (const w of world.championships) {
+  // Highest class first. A GT3 seat is settled before a GT4 one so the drivers
+  // who earned their way up are taken by the championship they earned, rather
+  // than being absorbed into the class they were leaving because that grid
+  // happened to be filled first.
+  const RANK = { lmdh: 0, gt3: 1, gt4: 2, gt5: 3 };
+  const order = world.championships.slice().sort(
+    (a, b) => (RANK[a.cls] ?? 9) - (RANK[b.cls] ?? 9));
+
+  for (const w of order) {
     if (w.active_from > c.season || w.shares_entries_with) continue;
     const champ = db.prepare(`SELECT * FROM championships WHERE id = ?`).get(w.id);
     if (!champ) continue;
@@ -46,11 +54,23 @@ function lockEntries(db, world, leaveOpen = 0) {
     // field grid_first describes, and from the third it settles at grid. Force
     // the full number from day one and a brand new class arrives looking like
     // it has always been there.
+    // A championship that exists from the start opens full: the world begins
+    // healthy. The scarcity rule is only for a class that arrives later, which
+    // has to be built out of drivers who earned their way into it.
+    const arrivesLater = (w.active_from || 1) > 1;
     const age = c.season - (w.active_from || 1);
     const opening = (w.grid_first || w.grid) || w.grid;
-    const full = age <= 0 ? Math.min(opening, champ.min_grid)
-               : age === 1 ? opening
-               : w.grid || opening;
+    // In a debut year the grid is as big as the people who earned their way
+    // into it — the drivers promoted from the class below — floored at the
+    // number the championship needs to run and capped at what it opens with.
+    // Nobody is invented to reach a figure decided in advance.
+    // one driver who earned it leads each car; a co-driver for the endurance
+    // rounds can come from the region's pool, as it does in reality
+    const earned = (prefer[w.id] || []).length;
+    const full = (arrivesLater && age <= 0)
+      ? Math.max(champ.min_grid, Math.min(opening, earned))
+      : age <= 1 ? opening
+      : w.grid || opening;
     // leaveOpen holds places back so the player still has somewhere to enter
     // during their four weeks; at the lock itself nothing is held back.
     const target = Math.max(1, full - leaveOpen);
@@ -88,15 +108,36 @@ function lockEntries(db, world, leaveOpen = 0) {
       }
       if (!lv) break;                            // the whole class is out of numbers
 
-      const free = db.prepare(`
-        SELECT d.* FROM drivers d
-        JOIN blocks b ON b.id = d.block_id
-        WHERE d.is_player = 0 AND d.status = 'active'
-          AND d.id NOT IN (SELECT driver_id FROM entry_drivers ed
-                           JOIN entries e ON e.id = ed.entry_id WHERE e.season = ?)
-          AND d.block_id IN (SELECT block_id FROM championship_blocks WHERE championship_id = ?)
-        ORDER BY (SELECT race_skill FROM driver_skills WHERE driver_id = d.id) DESC
-        LIMIT ?`).all(c.season, w.id, perCar);
+      // The drivers who stepped up are seated first, in the order they earned
+      // it; only once they run out does the region's free pool get a look in.
+      const seated = db.prepare(`SELECT driver_id FROM entry_drivers ed
+          JOIN entries e ON e.id = ed.entry_id WHERE e.season = ?`).all(c.season)
+        .reduce((m, x) => (m.add(x.driver_id), m), new Set());
+      // exactly one of them leads each car. Crewing a whole endurance entry out
+      // of the promoted list would spend it at half the rate and leave the grid
+      // short of the very drivers who earned their way onto it.
+      const free = [];
+      for (const id of (prefer[w.id] || [])) {
+        if (free.length >= 1) break;
+        if (seated.has(id)) continue;
+        const d = db.prepare(`SELECT * FROM drivers WHERE id = ? AND status = 'active'`).get(id);
+        if (d) free.push(d);
+      }
+      if (free.length < perCar) {
+        for (const d of db.prepare(`
+          SELECT d.* FROM drivers d
+          JOIN blocks b ON b.id = d.block_id
+          WHERE d.is_player = 0 AND d.status = 'active'
+            AND d.id NOT IN (SELECT driver_id FROM entry_drivers ed
+                             JOIN entries e ON e.id = ed.entry_id WHERE e.season = ?)
+            AND d.block_id IN (SELECT block_id FROM championship_blocks WHERE championship_id = ?)
+          ORDER BY (SELECT race_skill FROM driver_skills WHERE driver_id = d.id) DESC
+          LIMIT ?`).all(c.season, w.id, perCar * 6)) {
+          if (free.length >= perCar) break;
+          if (free.some(x => x.id === d.id)) continue;
+          free.push(d);
+        }
+      }
       if (free.length < perCar) break;            // nobody left to put in it
 
       const lead = free[0];

@@ -864,7 +864,7 @@
    "cls": "gt4",
    "model": null,
    "continent": "europe",
-   "prestige": 1.0,
+   "prestige": 1,
    "rounds": 6,
    "winter": false,
    "active_from": 1,
@@ -887,7 +887,7 @@
    "grid": 26,
    "shares_entries_with": null,
    "drivers_per_car": 1,
-   "grid_first": 20
+   "grid_first": 24
   },
   {
    "id": "gt4_americas",
@@ -919,7 +919,7 @@
    "grid": 22,
    "shares_entries_with": null,
    "drivers_per_car": 1,
-   "grid_first": 17
+   "grid_first": 22
   },
   {
    "id": "gt4_asia_pacific",
@@ -948,10 +948,10 @@
     37,
     45
    ],
-   "grid": 18,
+   "grid": 20,
    "shares_entries_with": null,
    "drivers_per_car": 1,
-   "grid_first": 13
+   "grid_first": 20
   },
   {
    "id": "gt4_africa_me",
@@ -978,10 +978,10 @@
     9,
     10
    ],
-   "grid": 16,
+   "grid": 20,
    "shares_entries_with": null,
    "drivers_per_car": 1,
-   "grid_first": 12
+   "grid_first": 20
   },
   {
    "id": "gtwc_europe_sprint",
@@ -990,7 +990,7 @@
    "cls": "gt3",
    "model": null,
    "continent": "europe",
-   "prestige": 1.0,
+   "prestige": 1,
    "rounds": 5,
    "winter": false,
    "active_from": 2,
@@ -1020,7 +1020,7 @@
    "cls": "gt3",
    "model": null,
    "continent": "europe",
-   "prestige": 1.0,
+   "prestige": 1,
    "rounds": 5,
    "winter": false,
    "active_from": 2,
@@ -1110,7 +1110,7 @@
    "cls": "lmdh",
    "model": null,
    "continent": "europe",
-   "prestige": 1.0,
+   "prestige": 1,
    "rounds": 8,
    "winter": false,
    "active_from": 7,
@@ -1149,7 +1149,7 @@
    "price": 700000,
    "purchasable": true,
    "works": true,
-   "run_cost": 1.0,
+   "run_cost": 1,
    "power": 561,
    "torque": 671,
    "weight": 1425,
@@ -1182,7 +1182,7 @@
    "price": 660000,
    "purchasable": true,
    "works": true,
-   "run_cost": 1.0,
+   "run_cost": 1,
    "power": 541,
    "torque": 632,
    "weight": 1385,
@@ -1217,7 +1217,7 @@
    "price": 640000,
    "purchasable": true,
    "works": true,
-   "run_cost": 1.0,
+   "run_cost": 1,
    "power": 544,
    "torque": 508,
    "weight": 1390,
@@ -1231,9 +1231,9 @@
    "wheelbase": "2.51m",
    "image": "Porsche_992_GT3.png",
    "scalars": {
-    "weight": 1.0,
-    "power": 1.0,
-    "drag": 1.0
+    "weight": 1,
+    "power": 1,
+    "drag": 1
    },
    "liveries": [
     "Porsche 992 GT3 R #43 (IMSA 2024)",
@@ -1253,7 +1253,7 @@
    "price": 640000,
    "purchasable": true,
    "works": true,
-   "run_cost": 1.0,
+   "run_cost": 1,
    "power": 565,
    "torque": 528,
    "weight": 1410,
@@ -1287,7 +1287,7 @@
    "price": 620000,
    "purchasable": true,
    "works": true,
-   "run_cost": 1.0,
+   "run_cost": 1,
    "power": 548,
    "torque": 622,
    "weight": 1370,
@@ -1324,7 +1324,7 @@
    "price": 610000,
    "purchasable": true,
    "works": true,
-   "run_cost": 1.0,
+   "run_cost": 1,
    "power": 549,
    "torque": 636,
    "weight": 1385,
@@ -1359,7 +1359,7 @@
    "price": 600000,
    "purchasable": true,
    "works": true,
-   "run_cost": 1.0,
+   "run_cost": 1,
    "power": 541,
    "torque": 671,
    "weight": 1440,
@@ -1394,7 +1394,7 @@
    "price": 570000,
    "purchasable": true,
    "works": true,
-   "run_cost": 1.0,
+   "run_cost": 1,
    "power": 565,
    "torque": 528,
    "weight": 1390,
@@ -1429,7 +1429,7 @@
    "price": 305000,
    "purchasable": true,
    "works": false,
-   "run_cost": 1.0,
+   "run_cost": 1,
    "power": 526,
    "torque": 693,
    "weight": 1400,
@@ -1464,7 +1464,7 @@
    "price": 300000,
    "purchasable": true,
    "works": false,
-   "run_cost": 1.0,
+   "run_cost": 1,
    "power": 530,
    "torque": 498,
    "weight": 1328,
@@ -1500,7 +1500,7 @@
    "price": 290000,
    "purchasable": true,
    "works": false,
-   "run_cost": 1.0,
+   "run_cost": 1,
    "power": 522,
    "torque": 635,
    "weight": 1380,
@@ -1535,7 +1535,7 @@
    "price": 280000,
    "purchasable": true,
    "works": false,
-   "run_cost": 1.0,
+   "run_cost": 1,
    "power": 521,
    "torque": 604,
    "weight": 1370,
@@ -1571,7 +1571,7 @@
    "price": 270000,
    "purchasable": true,
    "works": false,
-   "run_cost": 1.0,
+   "run_cost": 1,
    "power": 559,
    "torque": 523,
    "weight": 1395,
@@ -1607,7 +1607,7 @@
    "price": 255000,
    "purchasable": true,
    "works": false,
-   "run_cost": 1.0,
+   "run_cost": 1,
    "power": 542,
    "torque": 649,
    "weight": 1385,
@@ -1643,7 +1643,7 @@
    "price": 235000,
    "purchasable": true,
    "works": false,
-   "run_cost": 1.0,
+   "run_cost": 1,
    "power": 536,
    "torque": 524,
    "weight": 1185,
@@ -1680,7 +1680,7 @@
    "price": 210000,
    "purchasable": true,
    "works": false,
-   "run_cost": 1.0,
+   "run_cost": 1,
    "power": 538,
    "torque": 626,
    "weight": 1185,
@@ -1761,7 +1761,7 @@
    "price": 245000,
    "purchasable": true,
    "works": true,
-   "run_cost": 1.0,
+   "run_cost": 1,
    "power": 460,
    "torque": 568,
    "weight": 1475,
@@ -1775,9 +1775,9 @@
    "wheelbase": "2.66m",
    "image": "Mercedes-AMG_GT4.png",
    "scalars": {
-    "weight": 1.0,
-    "power": 1.0,
-    "drag": 1.0
+    "weight": 1,
+    "power": 1,
+    "drag": 1
    },
    "liveries": [
     "Mercedes-AMG GT4 #31",
@@ -1796,7 +1796,7 @@
    "price": 238000,
    "purchasable": true,
    "works": true,
-   "run_cost": 1.0,
+   "run_cost": 1,
    "power": 463,
    "torque": 633,
    "weight": 1510,
@@ -1831,7 +1831,7 @@
    "price": 232000,
    "purchasable": true,
    "works": true,
-   "run_cost": 1.0,
+   "run_cost": 1,
    "power": 404,
    "torque": 420,
    "weight": 1390,
@@ -1866,7 +1866,7 @@
    "price": 228000,
    "purchasable": true,
    "works": true,
-   "run_cost": 1.0,
+   "run_cost": 1,
    "power": 468,
    "torque": 568,
    "weight": 1550,
@@ -1880,9 +1880,9 @@
    "wheelbase": "2.70m",
    "image": "Aston_Martin_Vantage_GT4.png",
    "scalars": {
-    "weight": 1.0,
-    "power": 1.0,
-    "drag": 1.0
+    "weight": 1,
+    "power": 1,
+    "drag": 1
    },
    "liveries": [
     "AMR Vantage GT4 Evo #301",
@@ -1901,7 +1901,7 @@
    "price": 222000,
    "purchasable": true,
    "works": true,
-   "run_cost": 1.0,
+   "run_cost": 1,
    "power": 455,
    "torque": 475,
    "weight": 1530,
@@ -1915,9 +1915,9 @@
    "wheelbase": "2.67m",
    "image": "McLaren_570S_GT4.png",
    "scalars": {
-    "weight": 1.0,
-    "power": 1.0,
-    "drag": 1.0
+    "weight": 1,
+    "power": 1,
+    "drag": 1
    },
    "liveries": [
     "McLaren 570S GT4 #001",
@@ -1936,7 +1936,7 @@
    "price": 210000,
    "purchasable": true,
    "works": true,
-   "run_cost": 1.0,
+   "run_cost": 1,
    "power": 396,
    "torque": 463,
    "weight": 1165,
@@ -1950,9 +1950,9 @@
    "wheelbase": "2.42m",
    "image": "Alphine_A110_GT4.png",
    "scalars": {
-    "weight": 1.0,
-    "power": 1.0,
-    "drag": 1.0
+    "weight": 1,
+    "power": 1,
+    "drag": 1
    },
    "liveries": [
     "Alpine A110 GT4 Evo #36",
@@ -1970,7 +1970,7 @@
    "price": 208000,
    "purchasable": true,
    "works": true,
-   "run_cost": 1.0,
+   "run_cost": 1,
    "power": 459,
    "torque": 529,
    "weight": 1545,
@@ -1984,9 +1984,9 @@
    "wheelbase": "2.65m",
    "image": "Audi_R8_LMS_GT4.png",
    "scalars": {
-    "weight": 1.0,
-    "power": 1.0,
-    "drag": 1.0
+    "weight": 1,
+    "power": 1,
+    "drag": 1
    },
    "liveries": [
     "Audi R8 LMS GT4 #00",
@@ -2039,7 +2039,7 @@
    "price": 68000,
    "purchasable": true,
    "works": false,
-   "run_cost": 1.0,
+   "run_cost": 1,
    "power": 290,
    "torque": 370,
    "weight": 1490,
@@ -2053,9 +2053,9 @@
    "wheelbase": "2.65m",
    "image": "Mitsubishi_Lancer_Cup.png",
    "scalars": {
-    "weight": 1.0,
-    "power": 1.0,
-    "drag": 1.0
+    "weight": 1,
+    "power": 1,
+    "drag": 1
    },
    "liveries": [
     "Privateer Sport #01",
@@ -2084,7 +2084,7 @@
    "price": 62000,
    "purchasable": true,
    "works": false,
-   "run_cost": 1.0,
+   "run_cost": 1,
    "power": 159,
    "torque": 188,
    "weight": 890,
@@ -2098,9 +2098,9 @@
    "wheelbase": "2.25m",
    "image": "Ginetta_G40_GT5.png",
    "scalars": {
-    "weight": 1.0,
-    "power": 1.0,
-    "drag": 1.0
+    "weight": 1,
+    "power": 1,
+    "drag": 1
    },
    "liveries": [
     "Ginetta G40 GT5 #01",
@@ -2133,7 +2133,7 @@
    "price": 60000,
    "purchasable": true,
    "works": false,
-   "run_cost": 1.0,
+   "run_cost": 1,
    "power": 173,
    "torque": 237,
    "weight": 940,
@@ -2147,9 +2147,9 @@
    "wheelbase": "2.47m",
    "image": "Puma_P052_GT5.png",
    "scalars": {
-    "weight": 1.0,
-    "power": 1.0,
-    "drag": 1.0
+    "weight": 1,
+    "power": 1,
+    "drag": 1
    },
    "liveries": [
     "Puma P052 #4",
@@ -2182,7 +2182,7 @@
    "price": 56000,
    "purchasable": true,
    "works": false,
-   "run_cost": 1.0,
+   "run_cost": 1,
    "power": 142,
    "torque": 176,
    "weight": 925,
@@ -2196,9 +2196,9 @@
    "wheelbase": "2.25m",
    "image": "Ginetta_G40_Cup.png",
    "scalars": {
-    "weight": 1.0,
-    "power": 1.0,
-    "drag": 1.0
+    "weight": 1,
+    "power": 1,
+    "drag": 1
    },
    "liveries": [
     "Ginetta G40 Cup #01",
@@ -2248,9 +2248,9 @@
    "wheelbase": "1.84m",
    "image": "ARC_Camaro_Cup.png",
    "scalars": {
-    "weight": 1.0,
-    "power": 1.0,
-    "drag": 1.0
+    "weight": 1,
+    "power": 1,
+    "drag": 1
    },
    "liveries": [
     "Leo Panthera Autosports #1",
@@ -2285,7 +2285,7 @@
    "price": null,
    "purchasable": false,
    "works": true,
-   "run_cost": 1.0,
+   "run_cost": 1,
    "power": 670,
    "torque": 596,
    "weight": 1130,
@@ -2299,9 +2299,9 @@
    "wheelbase": "3.15m",
    "image": "Alpine_LMDh.png",
    "scalars": {
-    "weight": 1.0,
-    "power": 1.0,
-    "drag": 1.0
+    "weight": 1,
+    "power": 1,
+    "drag": 1
    },
    "liveries": [
     "Alpine A424 #36",
@@ -2318,7 +2318,7 @@
    "price": null,
    "purchasable": false,
    "works": true,
-   "run_cost": 1.0,
+   "run_cost": 1,
    "power": 693,
    "torque": 627,
    "weight": 1140,
@@ -2332,9 +2332,9 @@
    "wheelbase": "3.15m",
    "image": "Aston_Martin_Valkyrie_LMDh.png",
    "scalars": {
-    "weight": 1.0,
-    "power": 1.0,
-    "drag": 1.0
+    "weight": 1,
+    "power": 1,
+    "drag": 1
    },
    "liveries": [
     "Aston Martin Valkyrie Hypercar #23 (IMSA 2025)",
@@ -2351,7 +2351,7 @@
    "price": null,
    "purchasable": false,
    "works": true,
-   "run_cost": 1.0,
+   "run_cost": 1,
    "power": 670,
    "torque": 670,
    "weight": 1120,
@@ -2365,9 +2365,9 @@
    "wheelbase": "3.15m",
    "image": "BMW_M_Hybrid_V8_LMDh.png",
    "scalars": {
-    "weight": 1.0,
-    "power": 1.0,
-    "drag": 1.0
+    "weight": 1,
+    "power": 1,
+    "drag": 1
    },
    "liveries": [
     "BMW M Hybrid V8 #24 (IMSA 2024)",
@@ -2384,7 +2384,7 @@
    "price": null,
    "purchasable": false,
    "works": true,
-   "run_cost": 1.0,
+   "run_cost": 1,
    "power": 670,
    "torque": 610,
    "weight": 1130,
@@ -2398,9 +2398,9 @@
    "wheelbase": "3.14m",
    "image": "Cadillac_V-Series_R_LMDh.png",
    "scalars": {
-    "weight": 1.0,
-    "power": 1.0,
-    "drag": 1.0
+    "weight": 1,
+    "power": 1,
+    "drag": 1
    },
    "liveries": [
     "Cadillac V-Series.R #01 (IMSA 2024)",
@@ -2417,7 +2417,7 @@
    "price": null,
    "purchasable": false,
    "works": true,
-   "run_cost": 1.0,
+   "run_cost": 1,
    "power": 670,
    "torque": 650,
    "weight": 1130,
@@ -2431,9 +2431,9 @@
    "wheelbase": "3.15m",
    "image": "Lamborghini_SC63_LMDh.png",
    "scalars": {
-    "weight": 1.0,
-    "power": 1.0,
-    "drag": 1.0
+    "weight": 1,
+    "power": 1,
+    "drag": 1
    },
    "liveries": [
     "Lamborghini SC63 #63 (IMSA 2024)",
@@ -2450,7 +2450,7 @@
    "price": null,
    "purchasable": false,
    "works": true,
-   "run_cost": 1.0,
+   "run_cost": 1,
    "power": 670,
    "torque": 658,
    "weight": 1130,
@@ -2464,9 +2464,9 @@
    "wheelbase": "3.15m",
    "image": "Porsche_963_LMDh.png",
    "scalars": {
-    "weight": 1.0,
-    "power": 1.0,
-    "drag": 1.0
+    "weight": 1,
+    "power": 1,
+    "drag": 1
    },
    "liveries": [
     "Porsche 963 #5 (IMSA 2024)",
