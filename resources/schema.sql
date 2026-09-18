@@ -274,6 +274,7 @@ CREATE TABLE manufacturer_programs (
 CREATE TABLE ledger (                          -- every euro that moves
   id          INTEGER PRIMARY KEY,
   round_id    INTEGER REFERENCES rounds(id),    -- set for anything tied to a meeting
+  entry_id    INTEGER REFERENCES entries(id),   -- which car, when a cost belongs to one
   season      INTEGER NOT NULL,
   week        INTEGER NOT NULL,
   entity_type TEXT NOT NULL,                   -- driver | team | manufacturer
@@ -387,8 +388,8 @@ CREATE TABLE sponsors (
   id            INTEGER PRIMARY KEY,
   driver_id     INTEGER NOT NULL REFERENCES drivers(id),
   name          TEXT NOT NULL,
-  per_race      INTEGER NOT NULL,
-  races_left    INTEGER NOT NULL,
+  per_round     INTEGER NOT NULL,             -- paid once per round, not per race
+  rounds_left   INTEGER NOT NULL,             -- a term is rounds: a weekend is never split
   season_signed INTEGER NOT NULL,
   tier          TEXT NOT NULL DEFAULT 'local'    -- local | regional | national | international
 );

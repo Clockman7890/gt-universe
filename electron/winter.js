@@ -455,6 +455,9 @@ function runWinter(db, world, namesDb, toSeason) {
   const r = rng((toSeason * 2654435761) >>> 0);
 
   const out = db.transaction(() => {
+    // Last season is settled before anyone ages out of it: a champion who
+    // retires this winter still collects the title he won.
+    const titles = awardTitles(db, toSeason - 1, toSeason);
     const aged = ageEveryone(db, r, year);
     const gone = retirements(db, r, year, toSeason);
     const short = shortfall(db, world, toSeason);
@@ -470,6 +473,9 @@ function runWinter(db, world, namesDb, toSeason) {
     // for the first time has no history to carry, and a folded team leaves a
     // hole. Two places stay open everywhere so the player has a way in.
     const grids = lockEntries(db, world, 2);
+
+    // licences for everyone the winter has just put into a graded seat
+    const graded = gradeSeats(db, toSeason, year);
 
     // the championships that exist for the first time this year
     const arrived = db.prepare(`SELECT name, class FROM championships WHERE active_from = ?`)
@@ -498,9 +504,109 @@ function runWinter(db, world, namesDb, toSeason) {
     if (brief) news.run(toSeason, 'market', brief.headline, brief.body);
 
     return { aged, retired: gone.length, newcomers: fresh.length, rated: rated.length,
-             folded: teams.folded, grids, arrived: arrived.map(a => a.name) };
+             folded: teams.folded, grids, arrived: arrived.map(a => a.name), titles, graded };
   });
   return out();
 }
 
-module.exports = { runWinter, briefing, RETIRE_AT };
+// A licence is issued on stepping up, not a year afterwards. The ratings review
+// works from last season's results, so a driver the winter has just put into a
+// GT3 or GT4 seat has nothing to be judged on and stays ungraded for his whole
+// first season there. That left most of a new GT3 field unrated and every one of
+// them swept into the Bronze cup, the second best driver in the championship
+// among them. Anyone holding a graded seat without a licence gets one now, on
+// the same rule used when a career is first built: Silver if he is young enough
+// to be worth watching, Bronze otherwise.
+function gradeSeats(db, season, year) {
+  const rows = db.prepare(`
+    SELECT DISTINCT d.id, d.name, d.birth_year FROM entry_drivers ed
+    JOIN entries e ON e.id = ed.entry_id
+    JOIN championships c ON c.id = e.championship_id
+    JOIN drivers d ON d.id = ed.driver_id
+    WHERE e.season = ? AND c.class IN ('gt4','gt3','lmdh') AND d.fia_rating IS NULL`)
+    .all(season);
+  const set = db.prepare(`UPDATE drivers SET fia_rating = ? WHERE id = ?`);
+  for (const d of rows) set.run(year - d.birth_year < 25 ? 'Silver' : 'Bronze', d.id);
+  return rows.length;
+}
+
+// ---------------------------------------------------------------- the titles
+// What a championship is worth at the end of it. The overall title is the one
+// everybody wants; the licence cups are what a Silver or a Bronze can realistically
+// win, and paying them makes the cup a goal rather than a line in a table.
+const TITLE_PRIZE = { gt5: 20000, gt4: 70000, gt3: 260000, lmdh: 900000 };
+const CUP_PRIZE   = { gt5: 0,     gt4: 30000, gt3: 110000, lmdh: 350000 };
+const CUP_OF = { Platinum: 'Gold', Gold: 'Gold', Silver: 'Silver', Bronze: 'Bronze' };
+const cupFor = rating => CUP_OF[rating] || 'Bronze';
+const GRADED = new Set(['gt3', 'gt4', 'lmdh']);
+
+// Decided on last season's results, paid and announced as the new year opens.
+function awardTitles(db, lastSeason, toSeason) {
+  const tierOf = cls => cls === 'gt5' ? 'gt5' : cls === 'gt4' ? 'gt4'
+                      : cls === 'lmdh' ? 'lmdh' : 'gt3';
+  const champs = db.prepare(`
+    SELECT c.id, c.name, c.class, c.prestige FROM championships c
+    WHERE EXISTS (SELECT 1 FROM rounds r WHERE r.championship_id = c.id
+                  AND r.season = ? AND r.played = 1)`).all(lastSeason);
+
+  const pay = db.prepare(`UPDATE drivers SET capital = capital + ?,
+                          reputation = MIN(1.0, reputation + ?) WHERE id = ?`);
+  const ledger = db.prepare(`INSERT INTO ledger (season,week,entity_type,entity_id,amount,reason)
+                             VALUES (?,1,'driver',?,?,?)`);
+  const news = db.prepare(`INSERT INTO news (season,week,category,headline,body)
+                           VALUES (?,1,'driver',?,?)`);
+  const awarded = [];
+
+  for (const ch of champs) {
+    const table = db.prepare(`
+      SELECT d.id, d.name, d.is_player, d.fia_rating rating, SUM(res.points) pts,
+             SUM(CASE WHEN res.finish_pos = 1 THEN 1 ELSE 0 END) wins
+      FROM results res
+      JOIN legs l ON l.id = res.leg_id
+      JOIN rounds r ON r.id = l.round_id
+      JOIN (SELECT DISTINCT r2.entry_id, lg.round_id, r2.driver_id
+            FROM results r2 JOIN legs lg ON lg.id = r2.leg_id) crew
+           ON crew.entry_id = res.entry_id AND crew.round_id = l.round_id
+      JOIN drivers d ON d.id = crew.driver_id
+      WHERE r.season = ? AND r.championship_id = ?
+      GROUP BY d.id HAVING pts > 0
+      ORDER BY pts DESC, wins DESC`).all(lastSeason, ch.id);
+    if (!table.length) continue;
+
+    const t = tierOf(ch.class);
+    const give = (row, amount, rep, what) => {
+      const money = Math.round(amount * ch.prestige / 500) * 500;
+      if (money) {
+        pay.run(money, rep, row.id);
+        ledger.run(toSeason, row.id, money, what === 'title' ? 'title_prize' : 'cup_prize');
+      } else {
+        pay.run(0, rep, row.id);
+      }
+      awarded.push({ championship: ch.name, driver: row.name, what, money,
+                     isPlayer: !!row.is_player });
+      return money;
+    };
+
+    const winner = table[0];
+    const money = give(winner, TITLE_PRIZE[t] || 0, 0.10, 'title');
+    news.run(toSeason, `${winner.name} takes the ${ch.name}`,
+      `${winner.pts} points, ${winner.wins} win${winner.wins === 1 ? '' : 's'}.` +
+      (money ? `\nPrize ${money.toLocaleString('en-GB')}.` : ''));
+
+    if (!GRADED.has(ch.class)) continue;
+    const lines = [];
+    for (const cup of ['Gold', 'Silver', 'Bronze']) {
+      const best = table.find(x => cupFor(x.rating) === cup);
+      // the overall champion does not also collect his own cup
+      if (!best || best.id === winner.id) continue;
+      const m = give(best, CUP_PRIZE[t] || 0, 0.06, 'cup');
+      lines.push(`${cup} Cup — ${best.name}, ${best.pts} points` +
+                 (m ? ` (${m.toLocaleString('en-GB')})` : ''));
+    }
+    if (lines.length)
+      news.run(toSeason, `${ch.name} licence cups`, lines.join('\n'));
+  }
+  return awarded;
+}
+
+module.exports = { runWinter, briefing, awardTitles, gradeSeats, RETIRE_AT };

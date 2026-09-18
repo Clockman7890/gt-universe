@@ -343,10 +343,14 @@ on('plaza', 'onclick', async () => {
   if (rc && rc.thisWeek) {
     const bill = await window.gt.raceCost();
     const saved = !bill ? ''
-      : bill.paidBy === 'you'
-        ? `You would keep ${signed(bill.total)} in crew hire and travel.\n\n`
-        : `${bill.payerName} carries the cost of the meeting, so there is nothing ` +
-          `for you to save.\n\n`;
+      : bill.paidBy !== 'you'
+        ? `${bill.payerName} carries the cost of the meeting, so there is nothing ` +
+          `for you to save.\n\n`
+        : bill.fleet
+          ? `You would keep ${signed(bill.total)} on your own car. The other ` +
+            `${bill.fleet.cars - 1} you enter still travel and still cost you ` +
+            `${eur(bill.fleet.total - bill.total)}.\n\n`
+          : `You would keep ${signed(bill.total)} in crew hire and travel.\n\n`;
     const ok = confirm(
       `You are entered at ${rc.track} this weekend.\n\n` +
       `Advancing the week means you do not turn up at all. No result, no points, ` +
@@ -586,6 +590,8 @@ async function renderStandings(main, champ) {
   const kinds = [['drivers', 'Drivers'], ['teams', 'Teams']];
   // a one-make series has a single manufacturer, so the tab is pointless there
   if (champ.class !== 'gt5') kinds.push(['manufacturers', 'Manufacturers']);
+  // and only the graded classes run licence cups
+  if (champ.class !== 'gt5') kinds.push(['cups', 'Cups']);
   kinds.push(['calendar', 'Calendar']);
   if (!kinds.some(k => k[0] === wdKind)) wdKind = 'drivers';
   main.innerHTML = '';
@@ -612,6 +618,45 @@ async function renderStandings(main, champ) {
              `<span class="tk">${r.track}</span>${won}</div>`;
     }).join('');
     main.appendChild(wrap);
+    return;
+  }
+
+  // Three tables in one tab, one per licence grade, so a Bronze can see the
+  // championship he is actually racing for rather than his place among
+  // professionals.
+  if (wdKind === 'cups') {
+    const cups = await window.gt.standings(champ.id, 'cups');
+    if (!cups || !cups.length) {
+      const p = document.createElement('p');
+      p.className = 'note';
+      p.textContent = 'No races run yet.';
+      main.appendChild(p);
+      return;
+    }
+    for (const c of cups) {
+      const g = document.createElement('div');
+      g.className = 'sect';
+      g.textContent = `${c.cup.toUpperCase()} CUP · ${c.drivers.length} drivers`;
+      main.appendChild(g);
+      const head = document.createElement('div');
+      head.className = 'srow head2';
+      head.innerHTML = `<span class="rk">#</span><span class="nm">NAME</span>` +
+        `<span class="tm">TEAM</span><span class="cr">CAR</span>` +
+        `<span class="num">WINS</span><span class="num">POD</span><span class="pt">POINTS</span>`;
+      main.appendChild(head);
+      c.drivers.forEach((r, i) => {
+        const el = document.createElement('div');
+        el.className = 'srow' + (r.mine ? ' me' : '');
+        el.innerHTML = `<span class="rk">${i + 1}</span>` +
+          `<span class="nm">${r.name}${r.country ? ' · ' + r.country : ''}</span>` +
+          `<span class="tm">${r.team || ''}</span>` +
+          `<span class="cr">${r.car || ''}</span>` +
+          `<span class="num">${r.wins || 0}</span>` +
+          `<span class="num">${r.podiums || 0}</span>` +
+          `<span class="pt">${r.pts || 0}</span>`;
+        main.appendChild(el);
+      });
+    }
     return;
   }
 
@@ -692,11 +737,19 @@ async function openRace() {
   if (bill) {
     const who = document.createElement('div');
     who.className = 'pathbar';
-    who.innerHTML = bill.paidBy === 'you'
-      ? `This meeting costs you <b>${eur(bill.total)}</b> — ` +
-        `${eur(bill.crew)} crew, ${eur(bill.travel)} travel${bill.away ? ', away from home' : ''}.`
-      : `<b>${bill.payerName}</b> pays the ${eur(bill.total)} it costs to be here. ` +
-        `You bought your seat; the running of the car is theirs.`;
+    who.innerHTML = bill.paidBy !== 'you'
+      ? `<b>${bill.payerName}</b> pays the ${eur(bill.total)} it costs to run the car ` +
+        `this weekend — ${eur(bill.crew)} crew, ${eur(bill.travel)} travel` +
+        `${bill.away ? ', away from home' : ''}. Nothing leaves your account here` +
+        (bill.seatFee ? `: you paid ${eur(bill.seatFee)} for the seat and that was the deal.`
+                      : `. The running of the car is theirs.`)
+      : bill.fleet
+        ? `This weekend costs you <b>${eur(bill.fleet.total)}</b> for the ` +
+          `${bill.fleet.cars} cars you enter — ${eur(bill.total)} of it is your own ` +
+          `(${eur(bill.crew)} crew, ${eur(bill.travel)} travel` +
+          `${bill.away ? ', away from home' : ''}).`
+        : `This meeting costs you <b>${eur(bill.total)}</b> — ` +
+          `${eur(bill.crew)} crew, ${eur(bill.travel)} travel${bill.away ? ', away from home' : ''}.`;
     box.appendChild(who);
   }
 
@@ -812,9 +865,12 @@ async function openRace() {
   sim.onclick = async () => {
     const bill = await window.gt.raceCost();
     const who = !bill ? ''
-      : bill.paidBy === 'you'
-        ? `\n\nThe meeting costs you ${signed(-bill.total)}.`
-        : `\n\nThe meeting costs ${eur(bill.total)}, paid by ${bill.payerName}.`;
+      : bill.paidBy !== 'you'
+        ? `\n\nThe meeting costs ${eur(bill.total)}, paid by ${bill.payerName}, not you.`
+        : bill.fleet
+          ? `\n\nThe weekend costs you ${signed(-bill.fleet.total)} across ` +
+            `${bill.fleet.cars} cars.`
+          : `\n\nThe meeting costs you ${signed(-bill.total)}.`;
     if (!confirm(`Run race ${rcLeg} without driving it?\n\n` +
                  `The result is worked out from the same numbers the game would ` +
                  `have been given.` + who))
@@ -1193,14 +1249,15 @@ async function openHome() {
       row.className = 'choice';
       for (const opt of el.options) {
         const el2 = document.createElement('div');
-        el2.className = 'opt';
+        el2.className = 'opt' + (opt.locked ? ' no' : '');
         el2.innerHTML = `<b>${opt.name}</b><span>` +
           `${CLASS_LABEL[opt.cls] || opt.cls.toUpperCase()} · ${opt.cars} cars` +
-          (opt.current ? ' · where you are now'
+          (opt.locked ? ' · ' + opt.why
+            : opt.current ? ' · where you are now'
             : opt.step === 'up' ? ' · a step up'
             : opt.step === 'down' ? ' · a step back' : '') +
-          (opt.home ? '' : ' · away from home') + `</span>`;
-        el2.onclick = async () => {
+          (opt.home || opt.locked ? '' : ' · away from home') + `</span>`;
+        if (!opt.locked) el2.onclick = async () => {
           try {
             await window.gt.chooseChamp(opt.id);
             await refresh(); await openHome();
@@ -1208,6 +1265,18 @@ async function openHome() {
         };
         row.appendChild(el2);
       }
+      // one line per class held back, since GT4 and GT3 ask for different money
+      const floors = [];
+      for (const o of el.options) {
+        if (!o.locked) continue;
+        const lbl = CLASS_LABEL[o.cls] || o.cls.toUpperCase();
+        if (!floors.some(f => f.lbl === lbl)) floors.push({ lbl, floor: o.floor });
+      }
+      if (floors.length)
+        pick.innerHTML += `<p class="note">` +
+          floors.map(f => `<b>${f.lbl}</b> asks for ${eur(f.floor)}`).join(', ') +
+          ` in capital before anyone will let you near it, whether you buy the car ` +
+          `or are paid to drive somebody else's. You have ${eur(d.capital)}.</p>`;
       pick.appendChild(row);
       box.appendChild(pick);
     }

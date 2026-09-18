@@ -218,15 +218,26 @@ function create(file, schemaSql, profile, world, namesDb) {
 // put back on open. Only additions belong here: anything that needs data moved
 // around is a new career.
 const PATCHES = [
-  ['career', 'champ_chosen_season', 'INTEGER']
+  ['career', 'champ_chosen_season', 'INTEGER'],
+  ['ledger', 'entry_id', 'INTEGER']
+];
+
+// Columns that were renamed rather than added. Each is applied only if the old
+// name is still there, so opening the same file twice is harmless.
+const RENAMES = [
+  ['sponsors', 'per_race', 'per_round'],
+  ['sponsors', 'races_left', 'rounds_left']
 ];
 
 function migrate(db) {
-  for (const [table, column, type] of PATCHES) {
-    const has = db.prepare(`SELECT COUNT(*) n FROM pragma_table_info(?)
-                            WHERE name = ?`).get(table, column).n;
-    if (!has) db.prepare(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`).run();
-  }
+  const hasCol = (t, c) => db.prepare(`SELECT COUNT(*) n FROM pragma_table_info(?)
+                                       WHERE name = ?`).get(t, c).n > 0;
+  for (const [table, column, type] of PATCHES)
+    if (!hasCol(table, column))
+      db.prepare(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`).run();
+  for (const [table, from, to] of RENAMES)
+    if (hasCol(table, from) && !hasCol(table, to))
+      db.prepare(`ALTER TABLE ${table} RENAME COLUMN ${from} TO ${to}`).run();
 }
 
 function open(file, world, namesDb) {
@@ -290,6 +301,10 @@ function advanceWeek() {
   let filled = null;
   if (c.week === 4 && week === 5 && worldData) {
     filled = season.lockEntries(handle, worldData);
+    // the lock puts new people into graded seats too, and they need licences
+    // just as much as the ones the winter placed
+    winter.gradeSeats(handle, s,
+      handle.prepare(`SELECT calendar_year y FROM career WHERE id = 1`).get().y);
 
 
     const short = filled.filter(f => f.to < f.target);
@@ -540,9 +555,39 @@ function myRoundCost() {
   // A contracted driver has already paid for the seat; the running costs of the
   // meeting belong to whoever owns the car.
   const mineToPay = purse.kind === 'driver' && purse.id === me2;
+
+  // An owner pays for every car they enter, not only the one they sit in, so
+  // the figure on the race card has to be the whole bill for the weekend or it
+  // understates what is about to leave their account.
+  let fleet = null;
+  if (mineToPay) {
+    const mates = handle.prepare(`
+      SELECT e.id FROM entries e JOIN teams t ON t.id = e.team_id
+      WHERE t.owner_driver_id = @me AND e.season = @season
+        AND e.championship_id = @champ
+        AND e.id NOT IN (SELECT entry_id FROM round_absences WHERE round_id = @round)`)
+      .all({ me: me2, season: handle.prepare(`SELECT season FROM career WHERE id = 1`).get().season,
+             champ: handle.prepare(`SELECT championship_id c FROM entries WHERE id = ?`)
+                      .get(mine.id).c,
+             round: r.id }).map(x => x.id);
+    if (mates.length > 1) {
+      let sum = 0;
+      for (const id of mates) {
+        const c2 = economy.roundCost(handle, id, r.id);
+        if (c2) sum += c2.total;
+      }
+      fleet = { cars: mates.length, total: sum };
+    }
+  }
+
   return Object.assign(cost, { entryId: mine.id, roundId: r.id,
                                capital: purse.capital, track: r.track,
                                paidBy: mineToPay ? 'you' : 'team',
+                               fleet,
+                               seatFee: mineToPay ? null
+                                 : (handle.prepare(`SELECT seat_fee f FROM entry_drivers
+                                     WHERE entry_id = ? AND driver_id = ?`)
+                                     .get(mine.id, me2) || {}).f || 0,
                                payerName: mineToPay ? null
                                  : handle.prepare(`SELECT t.name n FROM entries e
                                      JOIN teams t ON t.id = e.team_id WHERE e.id = ?`)
@@ -620,9 +665,37 @@ function worldTree() {
     ORDER BY ch.home_continent, ch.class, ch.name`).all(c.season, c.season, c.season, c.season);
 }
 
+// Which cup a driver is classified in. Real GT racing splits a field by the
+// grade on each driver's licence, so a Bronze runs for something he can
+// actually win instead of measuring himself against professionals. Platinum is
+// thin on the ground here and belongs with Gold rather than in a cup of three;
+// an unrated driver has not been graded yet, and a driver who has not been
+// graded is an amateur.
+const CUP_OF = { Platinum: 'Gold', Gold: 'Gold', Silver: 'Silver', Bronze: 'Bronze' };
+const CUPS = ['Gold', 'Silver', 'Bronze'];
+const cupFor = rating => CUP_OF[rating] || 'Bronze';
+
+// Only the classes that carry graded licences run cups.
+const cupClasses = new Set(['gt3', 'gt4', 'lmdh']);
+
 function standings(championshipId, kind) {
   if (!handle) return null;
   const c = handle.prepare(`SELECT season, player_driver_id FROM career WHERE id = 1`).get();
+
+  // the same driver table, split into the three licence cups
+  if (kind === 'cups') {
+    const champ = handle.prepare(`SELECT class FROM championships WHERE id = ?`)
+      .get(championshipId);
+    if (!champ || !cupClasses.has(champ.class)) return null;
+    const rows = standings(championshipId, 'drivers') || [];
+    const out = [];
+    for (const cup of CUPS) {
+      const inCup = rows.filter(x => cupFor(x.rating) === cup);
+      if (!inCup.length) continue;
+      out.push({ cup, drivers: inCup });
+    }
+    return out.length ? out : null;
+  }
 
   if (kind === 'teams') {
     return handle.prepare(`
@@ -668,8 +741,15 @@ function standings(championshipId, kind) {
       .all({ season: c.season, champ: championshipId });
   }
 
+  // A car's result belongs to everyone who drove it that weekend. In the
+  // sprints that is one man and this changes nothing; in the endurance rounds
+  // both of the crew take the car's points, as they do in reality. The crew is
+  // read from who actually appeared in the round's results, not from the
+  // entry's roster — the roster carries the endurance co-driver even for the
+  // sprint rounds he never starts.
   return handle.prepare(`
     SELECT d.name AS name, d.country, t.name team, cm.name car,
+           d.fia_rating rating,
            SUM(res.points) pts,
            SUM(CASE WHEN res.finish_pos = 1 THEN 1 ELSE 0 END) wins,
            SUM(CASE WHEN res.finish_pos <= 3 AND res.finish_pos IS NOT NULL THEN 1 ELSE 0 END) podiums,
@@ -682,7 +762,10 @@ function standings(championshipId, kind) {
     JOIN teams t ON t.id = e.team_id
     JOIN chassis ch ON ch.id = e.chassis_id
     JOIN car_models cm ON cm.id = ch.model_id
-    JOIN drivers d ON d.id = res.driver_id
+    JOIN (SELECT DISTINCT r2.entry_id, lg.round_id, r2.driver_id
+          FROM results r2 JOIN legs lg ON lg.id = r2.leg_id) crew
+         ON crew.entry_id = res.entry_id AND crew.round_id = l.round_id
+    JOIN drivers d ON d.id = crew.driver_id
     WHERE r.season = @season AND r.championship_id = @champ
     GROUP BY d.id ORDER BY pts DESC, wins DESC`)
     .all({ season: c.season, champ: championshipId });

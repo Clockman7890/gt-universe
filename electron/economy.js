@@ -51,12 +51,13 @@ function purseOf(db, cost) {
   return { kind: 'team', id: cost.teamId, capital: t ? t.capital : 0 };
 }
 
-function charge(db, purse, amount, season, week, reason, roundId) {
+function charge(db, purse, amount, season, week, reason, roundId, entryId) {
   const kind = purse.kind === 'driver' ? 'drivers' : 'teams';
   db.prepare(`UPDATE ${kind} SET capital = capital - ? WHERE id = ?`).run(amount, purse.id);
-  db.prepare(`INSERT INTO ledger (season,week,round_id,entity_type,entity_id,amount,reason)
-              VALUES (?,?,?,?,?,?,?)`)
-    .run(season, week, roundId || null, purse.kind, purse.id, -amount, reason);
+  db.prepare(`INSERT INTO ledger
+              (season,week,round_id,entry_id,entity_type,entity_id,amount,reason)
+              VALUES (?,?,?,?,?,?,?,?)`)
+    .run(season, week, roundId || null, entryId || null, purse.kind, purse.id, -amount, reason);
 }
 
 // The player pays for their own meeting, once, when they commit to running it.
@@ -65,10 +66,13 @@ function chargePlayerRound(db, roundId, entryId) {
   const cost = roundCost(db, entryId, roundId);
   if (!cost) return null;
   const purse = purseOf(db, cost);
-  const already = db.prepare(`SELECT 1 FROM ledger WHERE round_id = ? AND entity_id = ?
-                              AND reason = 'race_costs'`).get(roundId, purse.id);
+  // Guarded per car, not per payer. An owner running two entries is the payer
+  // for both, so matching on who paid made the second car free: the first
+  // charge satisfied the guard and the other car travelled for nothing.
+  const already = db.prepare(`SELECT 1 FROM ledger WHERE round_id = ? AND entry_id = ?
+                              AND reason = 'race_costs'`).get(roundId, entryId);
   if (already) return { alreadyPaid: true, total: cost.total };
-  charge(db, purse, cost.total, c.season, c.week, 'race_costs', roundId);
+  charge(db, purse, cost.total, c.season, c.week, 'race_costs', roundId, entryId);
   return Object.assign(cost, { paid: true, capital: purse.capital - cost.total });
 }
 
@@ -108,6 +112,9 @@ function settleRound(db, roundId) {
       const already = db.prepare(`SELECT 1 FROM round_absences WHERE round_id = ? AND entry_id = ?`)
         .get(roundId, e.id);
       if (already) continue;
+      const paid = db.prepare(`SELECT 1 FROM ledger WHERE round_id = ? AND entry_id = ?
+                               AND reason = 'race_costs'`).get(roundId, e.id);
+      if (paid) continue;
 
       const cost = roundCost(db, e.id, roundId);
       if (!cost) continue;
@@ -122,7 +129,7 @@ function settleRound(db, roundId) {
                     VALUES (?,?,'no_funds')`).run(roundId, e.id);
         missing.push({ entryId: e.id, team: e.team, driver: e.driver });
       } else {
-        charge(db, purse, cost.total, c.season, c.week, 'race_costs', roundId);
+        charge(db, purse, cost.total, c.season, c.week, 'race_costs', roundId, e.id);
       }
     }
   });
@@ -195,6 +202,18 @@ function reviewSponsors(db, roundId) {
     SELECT r.*, ch.class, ch.prestige FROM rounds r
     JOIN championships ch ON ch.id = r.championship_id WHERE r.id = ?`).get(roundId);
   if (!round) return [];
+
+  // A sponsorship is bought by the round, not by the race, and a round can be
+  // two races on the same weekend. So nothing is counted down or paid out until
+  // every leg of the meeting is behind us: a backer who signed for five rounds
+  // does not walk out between Saturday and Sunday. This also keeps the player
+  // honest with the rest of the field — the player's legs come through here one
+  // at a time, the AI's arrive as a finished round, and before this the player
+  // was being paid twice a weekend.
+  const legsLeft = db.prepare(`SELECT COUNT(*) n FROM legs
+                               WHERE round_id = ? AND simulated = 0`).get(roundId).n;
+  if (legsLeft) return [];
+
   const tier = tierOf(round.class);
   const r = rng((roundId * 2654435761 + c.season) >>> 0);
   const signed = [];
@@ -208,29 +227,24 @@ function reviewSponsors(db, roundId) {
     WHERE l.round_id = ? GROUP BY res.driver_id`).all(roundId);
 
   const tx = db.transaction(() => {
-    // a race run is a race paid for
-    db.prepare(`UPDATE sponsors SET races_left = races_left - 1
-                WHERE driver_id IN (SELECT DISTINCT res.driver_id FROM results res
-                                    JOIN legs l ON l.id = res.leg_id WHERE l.round_id = ?)
-                  AND races_left > 0`).run(roundId);
-
     for (const row of perDriver) {
       const d = db.prepare(`SELECT * FROM drivers WHERE id = ?`).get(row.driver_id);
       if (!d) continue;
 
       // pay out what is already signed
-      const live = db.prepare(`SELECT * FROM sponsors WHERE driver_id = ? AND races_left > 0`)
+      const live = db.prepare(`SELECT * FROM sponsors WHERE driver_id = ? AND rounds_left > 0`)
         .all(d.id);
       let paid = 0;
-      for (const s of live) paid += s.per_race;
+      for (const s of live) paid += s.per_round;
       if (paid) {
         db.prepare(`UPDATE drivers SET capital = capital + ? WHERE id = ?`).run(paid, d.id);
-        db.prepare(`INSERT INTO ledger (season,week,entity_type,entity_id,amount,reason)
-                    VALUES (?,?,'driver',?,?, 'sponsorship')`).run(c.season, c.week, d.id, paid);
+        db.prepare(`INSERT INTO ledger (season,week,round_id,entity_type,entity_id,amount,reason)
+                    VALUES (?,?,?,'driver',?,?, 'sponsorship')`)
+          .run(c.season, c.week, roundId, d.id, paid);
       }
 
       // and see whether anyone new is interested
-      const held = db.prepare(`SELECT COUNT(*) n FROM sponsors WHERE driver_id = ? AND races_left > 0`)
+      const held = db.prepare(`SELECT COUNT(*) n FROM sponsors WHERE driver_id = ? AND rounds_left > 0`)
         .get(d.id).n;
       if (held >= slots(d)) continue;
 
@@ -243,27 +257,38 @@ function reviewSponsors(db, roundId) {
       const pay = Math.round((band[0] + r() * (band[1] - band[0])) * TIER_MULT[st]
                              * round.prestige / 500) * 500;
       const name = `${pick(r, PREFIX)} ${pick(r, TIER_WORDS[st])}`;
-      const races = 3 + Math.floor(r() * 8);
+      // three to ten race weekends: less than a season at the short end, two at
+      // the long one, so a good run is worth something beyond the prize money
+      const rounds = 3 + Math.floor(r() * 8);
 
-      db.prepare(`INSERT INTO sponsors (driver_id,name,per_race,races_left,season_signed,tier)
-                  VALUES (?,?,?,?,?,?)`).run(d.id, name, pay, races, c.season, st);
+      db.prepare(`INSERT INTO sponsors (driver_id,name,per_round,rounds_left,season_signed,tier)
+                  VALUES (?,?,?,?,?,?)`).run(d.id, name, pay, rounds, c.season, st);
 
       if (d.is_player)
         db.prepare(`INSERT INTO news (season,week,category,headline,body) VALUES (?,?,'driver',?,?)`)
           .run(c.season, c.week, `${name} comes on board`,
-               `${pay} a race for the next ${races}.`);
-      signed.push({ driver: d.name, sponsor: name, pay, races, isPlayer: !!d.is_player });
+               `${pay} a round for the next ${rounds} race weekends.`);
+      signed.push({ driver: d.name, sponsor: name, pay, rounds, isPlayer: !!d.is_player });
     }
 
-    db.prepare(`DELETE FROM sponsors WHERE races_left <= 0`).run();
+    // Counted down only after everyone has been paid for the round they just
+    // ran. The other way round costs a backer's final round: the term ticks to
+    // zero, the payout skips it as expired, and the driver never sees the money
+    // he was owed for the weekend he just did.
+    db.prepare(`UPDATE sponsors SET rounds_left = rounds_left - 1
+                WHERE driver_id IN (SELECT DISTINCT res.driver_id FROM results res
+                                    JOIN legs l ON l.id = res.leg_id WHERE l.round_id = ?)
+                  AND rounds_left > 0`).run(roundId);
+
+    db.prepare(`DELETE FROM sponsors WHERE rounds_left <= 0`).run();
   });
   tx();
   return signed;
 }
 
 function sponsorsOf(db, driverId) {
-  return db.prepare(`SELECT name, per_race, races_left, tier FROM sponsors
-                     WHERE driver_id = ? ORDER BY per_race DESC`).all(driverId);
+  return db.prepare(`SELECT name, per_round, rounds_left, tier FROM sponsors
+                     WHERE driver_id = ? ORDER BY per_round DESC`).all(driverId);
 }
 
 // ------------------------------------------------------------ yearly income

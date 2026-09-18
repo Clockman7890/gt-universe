@@ -39,10 +39,18 @@ function lockEntries(db, world, leaveOpen = 0) {
     const champ = db.prepare(`SELECT * FROM championships WHERE id = ?`).get(w.id);
     if (!champ) continue;
 
-    // A championship opens smaller than it will end up: grid_first is the
-    // field it musters in its first year, grid the one it settles at. Using the
-    // opening number for ever leaves a series permanently half full.
-    const full = (c.season === w.active_from ? (w.grid_first || w.grid) : w.grid) || w.grid;
+    // A championship grows into itself. In its debut year nobody is
+    // press-ganged onto the grid: it is brought up to the number it needs to
+    // run at all and no further, and everything above that has to be earned by
+    // teams deciding for themselves to move up. The second year it musters the
+    // field grid_first describes, and from the third it settles at grid. Force
+    // the full number from day one and a brand new class arrives looking like
+    // it has always been there.
+    const age = c.season - (w.active_from || 1);
+    const opening = (w.grid_first || w.grid) || w.grid;
+    const full = age <= 0 ? Math.min(opening, champ.min_grid)
+               : age === 1 ? opening
+               : w.grid || opening;
     // leaveOpen holds places back so the player still has somewhere to enter
     // during their four weeks; at the lock itself nothing is held back.
     const target = Math.max(1, full - leaveOpen);
@@ -184,6 +192,23 @@ function saveResults(db, legId, entries) {
     db.prepare(`SELECT position, points FROM points_scheme WHERE level_id = ?`)
       .all(round.level_id).map(r => [r.position, r.points]));
 
+  // An endurance round is one race driven in two stints, not two races. The
+  // car finishes in one position, and in real endurance racing every driver in
+  // that crew is credited with it. Scoring each stint on its own split a
+  // crew's result in half and left the endurance table full of names that
+  // never appeared in the sprints — the co-drivers, scoring alone, while the
+  // lead drivers were credited with a stint instead of a result.
+  const lvl = db.prepare(`SELECT two_leg, drivers_per_car FROM championship_levels
+                          WHERE id = ?`).get(round.level_id) || {};
+  const legCount = db.prepare(`SELECT COUNT(*) n FROM legs WHERE round_id = ?`)
+    .get(leg.round_id).n;
+  // One result row per car per leg, as the table's own unique key insists. The
+  // crew is credited where the tables are read, not by duplicating the car:
+  // every driver on the entry takes the car's points, which is how an
+  // endurance result actually works.
+  const staged = !!lvl.two_leg && legCount > 1;
+  const scores = !staged || leg.leg_no === legCount;
+
   return db.transaction(() => {
     db.prepare(`DELETE FROM results WHERE leg_id = ?`).run(legId);
 
@@ -191,12 +216,13 @@ function saveResults(db, legId, entries) {
                   (leg.practice_min + leg.quali_min) / 60;
 
     for (const e of entries) {
-      const pts = e.status === 'finished' ? (points[e.finish] || 0) : 0;
+      const pts = scores && e.status === 'finished' ? (points[e.finish] || 0) : 0;
       db.prepare(`INSERT INTO results
           (leg_id,entry_id,driver_id,grid_pos,finish_pos,status,points,damage_cost)
           VALUES (?,?,?,?,?,?,?,?)`)
         .run(legId, e.entryId, e.driverId, e.grid || null,
              e.status === 'finished' ? e.finish : null, e.status, pts, 0);
+
 
       // engine and chassis wear for everyone who took part
       db.prepare(`UPDATE chassis SET engine_hours = engine_hours + ?,
