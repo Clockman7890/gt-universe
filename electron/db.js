@@ -213,12 +213,29 @@ function create(file, schemaSql, profile, world, namesDb) {
   return { file, ok: true };
 }
 
+// Columns added after a save file was written. A career opened from an older
+// build is missing them, and every query that names one would fail, so they are
+// put back on open. Only additions belong here: anything that needs data moved
+// around is a new career.
+const PATCHES = [
+  ['career', 'champ_chosen_season', 'INTEGER']
+];
+
+function migrate(db) {
+  for (const [table, column, type] of PATCHES) {
+    const has = db.prepare(`SELECT COUNT(*) n FROM pragma_table_info(?)
+                            WHERE name = ?`).get(table, column).n;
+    if (!has) db.prepare(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`).run();
+  }
+}
+
 function open(file, world, namesDb) {
   if (world) worldData = world;
   if (namesDb) namesData = namesDb;
   close();
   handle = new Database(file, { fileMustExist: true });
   handle.pragma('journal_mode = WAL');
+  migrate(handle);
   dirty = false;
   return { file, ok: true };
 }

@@ -48,7 +48,10 @@ function placePlayer(db, world, ctx, profile) {
   const p = db.prepare(`SELECT * FROM drivers WHERE is_player = 1`).get();
   if (!p) return null;
 
-  const cls = profile.entry === 'gt4' ? 'gt4' : 'gt5';
+  // Everybody starts in their own regional GT5 series. Moving up is a decision
+  // taken at Home inside the first four weeks, where it costs something and can
+  // be regretted, rather than a free pick on the create screen.
+  const cls = 'gt5';
   const champ = db.prepare(`
       SELECT c.* FROM championships c
       JOIN championship_blocks cb ON cb.championship_id = c.id
@@ -63,7 +66,7 @@ function placePlayer(db, world, ctx, profile) {
   // actually race, not a number in the abstract. The bottom of the slider puts
   // them at the back of their own grid, the top at the front, the middle in the
   // middle — whatever that grid happens to be worth this time.
-  const band = cls === 'gt4' ? [0.50, 0.60] : [0.60, 0.70];
+  const band = [0.60, 0.70];
   const want = Math.min(1, Math.max(0, (profile.experience - band[0]) / (band[1] - band[0])));
   const field = db.prepare(`
     SELECT s.race_skill v FROM entries en

@@ -375,7 +375,8 @@ function upgradeTeam(db) {
 // back down, stay where they are, or take one step up; GT3 asks for a licence,
 // which means a season already spent in GT4.
 function eligible(db) {
-  const c = db.prepare(`SELECT season, week, player_driver_id, player_championship_id
+  const c = db.prepare(`SELECT season, week, player_driver_id, player_championship_id,
+                               champ_chosen_season
                         FROM career WHERE id = 1`).get();
   const me = db.prepare(`SELECT * FROM drivers WHERE id = ?`).get(c.player_driver_id);
   if (!me) return null;
@@ -425,7 +426,9 @@ function eligible(db) {
     });
   }
   return { season: c.season, open: c.week <= 4, rating: me.fia_rating,
-           current: c.player_championship_id, options: out };
+           current: c.player_championship_id,
+           settled: c.champ_chosen_season === c.season,
+           options: out };
 }
 
 // Point the player at a championship. Only possible while nothing has been
@@ -442,7 +445,11 @@ function choose(db, championshipId) {
   if (!list || !list.options.some(o => o.id === championshipId))
     throw new Error('You are not eligible for that championship yet.');
 
-  db.prepare(`UPDATE career SET player_championship_id = ? WHERE id = 1`).run(championshipId);
+  // Recording the season as well as the championship is what tells Home the
+  // question has been answered. It is deliberately not carried forward: a new
+  // season asks again, which is the whole point of the choice.
+  db.prepare(`UPDATE career SET player_championship_id = ?, champ_chosen_season = ?
+              WHERE id = 1`).run(championshipId, c.season);
   const name = db.prepare(`SELECT name FROM championships WHERE id = ?`).get(championshipId).name;
   db.prepare(`INSERT INTO news (season,week,category,headline,body) VALUES (?,?,'market',?,?)`)
     .run(c.season, c.week, `You are aiming at the ${name}`,

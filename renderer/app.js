@@ -247,7 +247,6 @@ async function refreshSaves() {
         $('slot-tag').textContent = '— slot ' + s.slot;
         for (const id of ['f-name','f-age','f-capital','f-passive','f-exp']) $(id).value = '';
         $('f-country').selectedIndex = 0;
-        $('f-entry').selectedIndex = 0;
         show('create');
       } else if (!s.corrupt) {
         await window.gt.loadCareer(s.slot);
@@ -301,14 +300,15 @@ function invalid() {
   const cap  = +$('f-capital').value;
   const pas  = +$('f-passive').value;
   const exp  = +$('f-exp').value;
-  const gt5  = $('f-entry').value === 'gt5';
   if (!name)                        return 'Enter a driver name.';
   if (!sel)                         return 'Choose a nationality.';
   if (!(age >= 18 && age <= 50))    return 'Age must be between 18 and 50.';
   if (!(cap >= 150000 && cap <= 3000000)) return 'Starting capital must be between €150,000 and €3,000,000.';
   if (!(pas >= 10000 && pas <= 300000))   return 'Passive income must be between €10,000 and €300,000.';
-  const lo = gt5 ? 0.60 : 0.50, hi = gt5 ? 0.70 : 0.60;
-  if (!(exp >= lo && exp <= hi))    return `Driving experience must be between ${lo.toFixed(2)} and ${hi.toFixed(2)}.`;
+  // Everyone starts at the bottom, in their own regional GT5 series, and the
+  // number is their standing on that grid. Where they go from there is decided
+  // at Home in the first four weeks, not here.
+  if (!(exp >= 0.60 && exp <= 0.70)) return 'Driving experience must be between 0.60 and 0.70.';
   return null;
 }
 
@@ -324,7 +324,6 @@ on('btn-create', 'onclick', async () => {
     age: +$('f-age').value,
     capital: +$('f-capital').value,
     passiveIncome: +$('f-passive').value,
-    entry: $('f-entry').value,
     experience: +$('f-exp').value
   });
   pendingSlot = null;
@@ -1033,11 +1032,18 @@ const TUT = {
   0: { focus: null, title: 'Welcome to this journey, driver',
        html: `<p>You start with nothing but a name, a licence and whatever money you brought
                 with you. Everything after that is yours to arrange.</p>
-              <p>First, go to <b>Home</b>. There you decide how you will go racing: as a
-                <b>privateer</b>, running one car on your own and hiring a crew race by race,
-                or by founding your own <b>team</b>, which costs more up front but can enter
-                several cars and take on drivers who pay for their seat.</p>
-              <p>What you can afford depends on the money you have. Neither road is wrong.</p>` },
+              <p>Go to <b>Home</b>. Two things are decided there, in this order.</p>
+              <p><b>Where you race.</b> Your own regional GT5 series is the obvious place to
+                begin, but the continental GT4 championships are open to you from the start if
+                you would rather be out of your depth among quicker company. GT3 asks for a
+                licence, which means a season already spent in GT4.</p>
+              <p><b>How you race.</b> As a <b>privateer</b>, running one car on your own and
+                hiring a crew race by race. By founding your own <b>team</b>, which costs more
+                up front but can enter several cars and take on drivers who pay for their
+                seat. Or by buying a <b>seat</b> from somebody else's team, which owns nothing
+                of yours and carries the repair bills.</p>
+              <p>What you can afford depends on the money you have. None of the three is
+                wrong.</p>` },
   1: { focus: 'home', title: 'Home', html: '' },
   2: { focus: 'market', title: 'Market',
        html: `<p>Now buy a car. Pick the model, then pick the entry number it will carry
@@ -1168,26 +1174,35 @@ async function openHome() {
   box.appendChild(cards);
 
   // ---- which championship, when the winter is open and nothing is settled ----
+  // This is the first of two decisions and it has to be answered alone: where
+  // you race decides what founding a team would even cost, so the second
+  // question is held back until this one is settled. Both on screen at once
+  // pushed the second below the fold and it read as missing.
+  let awaitingChoice = false;
   if (o && o.open && !h.entry) {
     const el = await window.gt.eligible();
-    if (el && el.options.length > 1) {
+    if (el && el.options.length > 1 && !el.settled) {
+      awaitingChoice = true;
       const pick = document.createElement('div');
       pick.className = 'upgrade';
       pick.innerHTML = `<h4>Where will you race this season?</h4>` +
         `<p class="note">You may stay where you are, drop back down, or take one step up. ` +
-        `A GT3 seat asks for a licence, which means a season already spent in GT4.</p>`;
+        `A GT3 seat asks for a licence, which means a season already spent in GT4.</p>` +
+        `<p class="note">Nothing else is decided until this is.</p>`;
       const row = document.createElement('div');
       row.className = 'choice';
       for (const opt of el.options) {
         const el2 = document.createElement('div');
-        el2.className = 'opt' + (opt.current ? ' sel' : '');
+        el2.className = 'opt';
         el2.innerHTML = `<b>${opt.name}</b><span>` +
           `${CLASS_LABEL[opt.cls] || opt.cls.toUpperCase()} · ${opt.cars} cars` +
-          (opt.step === 'up' ? ' · a step up' : opt.step === 'down' ? ' · a step back' : '') +
+          (opt.current ? ' · where you are now'
+            : opt.step === 'up' ? ' · a step up'
+            : opt.step === 'down' ? ' · a step back' : '') +
           (opt.home ? '' : ' · away from home') + `</span>`;
         el2.onclick = async () => {
           try {
-            const r = await window.gt.chooseChamp(opt.id);
+            await window.gt.chooseChamp(opt.id);
             await refresh(); await openHome();
           } catch (e) { alert(String(e.message || e).replace(/^Error: /, '')); }
         };
@@ -1197,6 +1212,7 @@ async function openHome() {
       box.appendChild(pick);
     }
   }
+  if (awaitingChoice) return;
 
   // ---- bringing the workshop up to the class you are aiming at ----
   if (h.team && o && o.upgrade) {
@@ -1701,15 +1717,6 @@ async function carWork(holder, c) {
     holder.appendChild(b);
   }
 }
-
-// entry level switches the allowed experience range
-on('f-entry', 'onchange', e => {
-  const gt5 = e.target.value === 'gt5';
-  const f = $('f-exp');
-  f.min = gt5 ? 0.60 : 0.50;
-  f.max = gt5 ? 0.70 : 0.60;
-  f.value = gt5 ? 0.65 : 0.55;
-});
 
 (async () => {
   try {
