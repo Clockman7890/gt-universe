@@ -130,6 +130,7 @@ window.addEventListener('resize', paint);
 async function refresh() {
   const s = await window.gt.state();
   if (!s) return;
+  primeGameOverSound();                // cached once, never awaited here
   if (s.gameOver) { await showGameOver(s); return; }
   const d = s.driver || {};
   $('b-money').textContent  = eur(d.capital);
@@ -433,6 +434,18 @@ function nudge(text) {
 // through any volume setting and never will be — a player who has turned the
 // music down has not asked to be spared this.
 let goShown = false;
+let goSound = null;          // fetched early: see below
+
+// The clip is pulled in as soon as a career is open, long before it is needed.
+// Fetching it at the moment of death meant an IPC round trip between the click
+// that ended the career and the call to play, and a browser only honours
+// autoplay for a few seconds after a real interaction. Cached, the call to
+// play() follows the click closely enough to count.
+async function primeGameOverSound() {
+  if (goSound !== null) return;
+  try { goSound = await window.gt.gameOverSound(); }
+  catch (_) { goSound = null; }
+}
 
 function silenceEverything() {
   for (const el of document.querySelectorAll('audio, video')) {
@@ -462,15 +475,27 @@ async function showGameOver(state) {
   $('gameover').hidden = false;
 
   // played detached from the document so nothing can reach it to mute it
+  if (goSound === null) await primeGameOverSound();
+  if (!goSound) { console.error('game over sound unavailable'); return; }
+
+  const a = new Audio(goSound);
+  a.volume = 1;                        // exactly as supplied, no attenuation
+  a.loop = false;
   try {
-    const src = await window.gt.gameOverSound();
-    if (src) {
-      const a = new Audio(src);
-      a.volume = 1;                    // exactly as supplied, no attenuation
-      a.loop = false;
-      await a.play().catch(() => {});  // a refused autoplay must not break the screen
-    }
-  } catch (_) { /* the screen matters more than the sound */ }
+    await a.play();
+  } catch (err) {
+    // Some builds refuse to start audio without a fresh interaction. Rather
+    // than lose the cue, arm it to fire on the very next thing the player does
+    // on this screen — they still hear it, once.
+    console.error('game over sound blocked, waiting for input:', err && err.message);
+    const fire = () => {
+      document.removeEventListener('pointerdown', fire, true);
+      document.removeEventListener('keydown', fire, true);
+      a.play().catch(e => console.error('game over sound failed:', e && e.message));
+    };
+    document.addEventListener('pointerdown', fire, true);
+    document.addEventListener('keydown', fire, true);
+  }
 }
 
 on('go-out', 'onclick', async () => {

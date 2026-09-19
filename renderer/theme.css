@@ -554,7 +554,8 @@ select.st { background: var(--surface-0); border: 1px solid var(--border); color
 #go-sums span:first-child { color: var(--text-muted); min-width: 190px; }
 #go-sums span:last-child { margin-left: auto; }
 #go-sums .bad { color: #C4635F; }
-#go-out { padding: 11px 26px; }
+/* on its own line under the figures, not beside them */
+#go-out { display: block; margin: 0 auto; padding: 11px 26px; }
 
 /* ---------- money in trouble ---------- */
 .debt { background: #17100F; border-left: 3px solid #C4635F; }

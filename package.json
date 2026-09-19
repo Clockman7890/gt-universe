@@ -1,7 +1,7 @@
 {
   "name": "gt-universe",
   "productName": "GT Universe",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "AMS2 GT career manager",
   "main": "electron/main.js",
   "scripts": {
