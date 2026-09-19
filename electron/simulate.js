@@ -92,6 +92,15 @@ function paceOf(car, cls, fieldBop = 0) {
 const REL = { amateurs: 0.68, experienced: 0.78, specialist: 0.86 };
 const FLEET_PENALTY = { 1: 1.00, 2: 0.96, 3: 0.91, 4: 0.85 };
 
+// Seconds a lap of race-day luck that has nothing to do with who is driving.
+// Scaled against the pace spread of the class, so it shuffles drivers who are
+// close together without ever turning a backmarker into a winner.
+const LUCK = { gt5: 0.21, gt4: 0.17, gt3: 0.13, lmdh: 0.10 };
+
+// How far a car has to run before the mechanical risk it carries is fully
+// spent. A longer number means fewer cars parked at the side of the road.
+const DNF_DISTANCE = 310;
+
 function simulateLeg(db, roundId, legNo, seed) {
   const round = db.prepare(`
     SELECT r.*, ch.class, ch.level_id FROM rounds r
@@ -144,19 +153,27 @@ function simulateLeg(db, roundId, legNo, seed) {
   const passing = { gt5: 0.10, gt4: 0.14, gt3: 0.18, lmdh: 0.22 }[tier];
 
   for (const c of runners) {
-    // how this one is going today, held for the whole race
-    const form = (r() - 0.5) * 2 * (1 - c.consistency) * 1.00;
+    // How this one is going today, held for the whole race. It scales with
+    // inconsistency, so a metronome of a driver barely has an off day.
+    const form = (r() - 0.5) * 2 * (1 - c.consistency) * 1.35;
+
+    // And a share of the day that belongs to nobody's skill: a set-up that
+    // never came right, a wrong tyre call, traffic at the wrong moment. Without
+    // it every bit of variance in the race is a driver's own fault, and the
+    // best drivers become untouchable rather than merely hard to beat. Smaller
+    // the higher the class, where preparation leaves less to chance.
+    const luck = (r() - 0.5) * 2 * LUCK[tier];
 
     let total = 0;
     for (let lap = 0; lap < laps; lap++) {
       const scatter = (1 - c.consistency) * 1.1;
       const tyre = (lap / laps) * (1 - c.tyre_management) * 1.6;
       const fade = (lap / laps) * (1 - c.stamina) * 0.7;
-      total += c.base + form + tyre + fade + (r() - 0.5) * 2 * scatter;
+      total += c.base + form + luck + tyre + fade + (r() - 0.5) * 2 * scatter;
     }
 
     // moments: a spin, a lock-up, a lap ruined behind a backmarker
-    const expected = (1 - c.avoidance_of_mistakes) * 1.8 * (laps / 14);
+    const expected = (1 - c.avoidance_of_mistakes) * 1.9 * (laps / 14);
     let moments = 0;
     for (let k = 0; k < 6; k++) if (r() < expected / 6) moments++;
     for (let k = 0; k < moments; k++) total += 3 + r() * 16;
@@ -176,10 +193,10 @@ function simulateLeg(db, roundId, legNo, seed) {
     const fleet = Math.min(4, c.fleet || 1);
     const rel = (REL[c.engineering] || 0.72) * (FLEET_PENALTY[fleet] || 0.85)
               * engineHealth(c.engine_hours || 0);
-    const mechRisk = (1 - rel) * (leg.distance_km / 260);
+    const mechRisk = (1 - rel) * (leg.distance_km / DNF_DISTANCE);
     // and contact, from his own care and the temper of the field
-    const contactRisk = (1 - c.avoidance_of_mistakes) * 0.05
-                      + (1 - c.avoidance_of_forced_mistakes) * meanAggression * 0.05;
+    const contactRisk = (1 - c.avoidance_of_mistakes) * 0.042
+                      + (1 - c.avoidance_of_forced_mistakes) * meanAggression * 0.042;
     c.out = r() < mechRisk || r() < contactRisk;
   }
 

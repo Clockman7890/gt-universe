@@ -13,6 +13,21 @@ function rng(seed) {
 
 const pick = (r, arr) => arr[Math.floor(r() * arr.length)];
 
+// Pick one item with a weight on each. Used for the country a new driver comes
+// from: an even roll across a block's countries makes Albania as productive as
+// Italy, which is not a world anyone recognises.
+const pickWeighted = (r, arr, weightOf) => {
+  let total = 0;
+  for (const x of arr) total += Math.max(0, weightOf(x)) || 0;
+  if (total <= 0) return pick(r, arr);
+  let roll = r() * total;
+  for (const x of arr) {
+    roll -= Math.max(0, weightOf(x)) || 0;
+    if (roll <= 0) return x;
+  }
+  return arr[arr.length - 1];
+};
+
 // Icelandic patronymics need the father's given name in the genitive.
 const GENITIVE = {
   Jon: 'Jons', Gunnar: 'Gunnars', Olafur: 'Olafs', Sigurdur: 'Sigurdar',
@@ -128,4 +143,4 @@ class TeamFactory {
   factory(team, manufacturer) { return `${team} by ${manufacturer}`; }
 }
 
-module.exports = { rng, pick, NameFactory, TeamFactory };
+module.exports = { rng, pick, pickWeighted, NameFactory, TeamFactory };

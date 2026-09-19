@@ -9,6 +9,18 @@ const CORE_BY_CLASS = {
 };
 const MIN_CAPITAL = { gt5: 250000, gt4: 850000, gt3: 2600000 };
 
+// What a class asks of a driver's own purse before it will have him at all,
+// whether he owns the car or is paid to sit in somebody else's. A GT4 weekend
+// costs money a GT5 season never sees — tyres, travel, a bill after a shunt —
+// and a driver who cannot carry that is no use to a team either. Short of it,
+// the only road open is his own regional GT5 series.
+// GT5 turns nobody away: it is the way in. GT4 is the first door with a price
+// on it. GT3 is scaled from the GT4 figure by what the classes actually cost to
+// run — a seat is 225k against 520k, a crew 30-45k a round against 70-110k,
+// both a little over twice — which puts the GT3 floor just under the price of
+// the seat itself. Change either number here and the whole ladder follows.
+const MIN_TO_RACE = { gt5: 0, gt4: 200000, gt3: 500000, lmdh: 500000 };
+
 // Buildings and equipment, paid once and kept for life. A team that works its
 // way up pays less than one that starts at the top, and nobody founds a team
 // straight into GT3 — that workshop has to be earned.
@@ -171,6 +183,13 @@ function takeSeat(db, entryId) {
     JOIN chassis ch ON ch.id = e.chassis_id JOIN car_models cm ON cm.id = ch.model_id
     WHERE e.id = ?`).get(entryId);
   if (!row) throw new Error('That seat is gone.');
+
+  // The floor applies to a hired driver exactly as it does to an owner: the
+  // class costs what it costs whoever's name is on the car.
+  const floor = MIN_TO_RACE[ctx.champ.class] || 0;
+  if (ctx.player.capital < floor)
+    throw new Error(`A ${ctx.champ.class.toUpperCase()} drive needs at least ` +
+                    `€${floor.toLocaleString('en-GB')} in capital, even as a hired driver.`);
 
   const refuses = willHave(row, ctx.player);
   if (refuses) throw new Error(`They are not interested — ${refuses}.`);
@@ -418,11 +437,17 @@ function eligible(db) {
     if (row.class === 'gt3' && best < ORDER.indexOf('gt4')) continue;
 
     const home = db.prepare(`SELECT continent FROM blocks WHERE id = ?`).get(me.block_id).continent;
+    // Shown, not hidden: a driver should be able to see the class he cannot
+    // afford yet, and what it would take to get there.
+    const floor = MIN_TO_RACE[row.class] || 0;
+    const short = me.capital < floor;
     out.push({
       id: row.id, name: row.name, cls: row.class, cars: row.cars,
       home: row.home_continent === home,
       current: row.id === c.player_championship_id,
-      step: at > best ? 'up' : at === best ? 'same' : 'down'
+      step: at > best ? 'up' : at === best ? 'same' : 'down',
+      locked: short, floor,
+      why: short ? `Needs €${floor.toLocaleString('en-GB')} in capital` : null
     });
   }
   return { season: c.season, open: c.week <= 4, rating: me.fia_rating,
@@ -442,8 +467,12 @@ function choose(db, championshipId) {
   if (seat) throw new Error('You already have a drive this season.');
 
   const list = eligible(db);
-  if (!list || !list.options.some(o => o.id === championshipId))
-    throw new Error('You are not eligible for that championship yet.');
+  const want = list && list.options.find(o => o.id === championshipId);
+  if (!want) throw new Error('You are not eligible for that championship yet.');
+  if (want.locked)
+    throw new Error(`Racing in ${want.name} needs at least ` +
+                    `€${want.floor.toLocaleString('en-GB')} in capital, owned car or hired seat. ` +
+                    `Your own GT5 series is the road open to you.`);
 
   // Recording the season as well as the championship is what tells Home the
   // question has been answered. It is deliberately not carried forward: a new

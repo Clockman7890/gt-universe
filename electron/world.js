@@ -34,7 +34,7 @@ function buildWorld(db, world, blocks, countries, alreadySeeded = false) {
 
   if (!alreadySeeded) {
     for (const b of blocks)    ins.block.run(b.id, b.name, b.continent, b.weight, b.passive);
-    for (const c of countries) ins.country.run(c.code, c.name, c.block, 1.0);
+    for (const c of countries) ins.country.run(c.code, c.name, c.block, c.weight || 1.0);
   }
 
   const trackId = {};

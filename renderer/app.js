@@ -165,8 +165,11 @@ async function refresh() {
   const off = await window.gt.office();
   if (off) {
     mkNode.classList.toggle('due', off.open && !off.hasSeat);
+    // a seat that cannot be signed is not an offer, and saying otherwise sends
+    // the player to a screen full of buttons that do nothing
     $('n-office').textContent = off.hasSeat
       ? (off.team ? off.team.name : 'contracted')
+      : !off.open ? 'contracts closed'
       : (off.seats.length ? `${off.seats.length} seats for sale` : 'no offers');
     document.querySelector('[data-go="office"]').classList.toggle('locked', !off.open && !off.team);
     const homeNode = document.querySelector('[data-go="home"]');

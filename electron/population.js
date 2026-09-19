@@ -1,5 +1,5 @@
 'use strict';
-const { rng, pick, NameFactory, TeamFactory } = require('./names');
+const { rng, pick, pickWeighted, NameFactory, TeamFactory } = require('./names');
 
 // ---------------------------------------------------------------- helpers
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -68,8 +68,11 @@ function generatePopulation(db, world, blocks, countries, namesDb, seed = 12345)
   for (const row of db.prepare(`SELECT * FROM championship_blocks`).all())
     (feeds[row.championship_id] ||= []).push(row.block_id);
 
+  // countries carry their own weight inside the block, so the strong racing
+  // nations supply most of it
   const countryByBlock = {};
-  for (const c of countries) (countryByBlock[c.block] ||= []).push(c.code);
+  for (const c of countries)
+    (countryByBlock[c.block] ||= []).push({ code: c.code, weight: c.weight || 1 });
 
   // ---- 1. how many drivers each block has to supply --------------------
   const demand = {};
@@ -108,7 +111,7 @@ function generatePopulation(db, world, blocks, countries, namesDb, seed = 12345)
     for (let i = 0; i < need; i++) {
       // ages skew young; a long tail of gentlemen drivers keeps GT5 honest
       const age = r() < .55 ? irange(r, 18, 29) : (r() < .7 ? irange(r, 30, 41) : irange(r, 42, 52));
-      const code = pick(r, codes);
+      const code = pickWeighted(r, codes, x => x.weight).code;
       const pot = {
         speed:     round3(between(r, .73, .80)),
         judgement: round3(between(r, .70, .86)),

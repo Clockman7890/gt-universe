@@ -245,6 +245,40 @@ function migrate(db) {
       db.prepare(`ALTER TABLE ${table} RENAME COLUMN ${from} TO ${to}`).run();
 }
 
+// A season that was never built. Older builds moved the calendar into a new
+// year before rebuilding the world, so a winter that failed halfway left the
+// career in a year with no entry lists and no calendar — unrecoverable from
+// inside the game, because every screen needs a world that isn't there. The
+// rollover is one transaction now and cannot produce this, but saves that
+// already hit it are worth rescuing rather than throwing away.
+function repairSeason(db) {
+  const c = db.prepare(`SELECT season, week FROM career WHERE id = 1`).get();
+  if (!c) return null;
+  const rounds = db.prepare(`SELECT COUNT(*) n FROM rounds WHERE season = ?`).get(c.season).n;
+  const entries = db.prepare(`SELECT COUNT(*) n FROM entries WHERE season = ?`).get(c.season).n;
+  if (rounds || entries) return null;                 // the year exists, nothing to do
+  if (c.season <= 1 || !worldData || !namesData) return null;
+
+  db.transaction(() => {
+    winter.runWinter(db, worldData, namesData, c.season);
+    season.rollBoP(db, c.season);
+    if (!db.prepare(`SELECT COUNT(*) n FROM rounds WHERE season = ?`).get(c.season).n)
+      weekend.buildCalendar(db, c.season);
+    // The four weeks are given back. This year never actually started — there
+    // was nothing to enter and nothing to sign — so charging the player for the
+    // weeks they spent staring at an empty world would be punishing them for a
+    // fault of ours.
+    db.prepare(`UPDATE career SET week = 1 WHERE id = 1`).run();
+    db.prepare(`INSERT INTO news (season,week,category,headline,body) VALUES (?,1,'market',?,?)`)
+      .run(c.season, 'The season has been rebuilt',
+           'This career was saved by an older version that left the year empty: no teams, '
+           + 'no entry lists, no calendar. All of it has been put back, and the four weeks '
+           + 'of the entry window start again from now, since there was never anything to '
+           + 'enter. Go to Home and decide how you will go racing.');
+  })();
+  return { season: c.season, weeksReturned: c.week > 1 };
+}
+
 function open(file, world, namesDb) {
   if (world) worldData = world;
   if (namesDb) namesData = namesDb;
@@ -252,8 +286,11 @@ function open(file, world, namesDb) {
   handle = new Database(file, { fileMustExist: true });
   handle.pragma('journal_mode = WAL');
   migrate(handle);
-  dirty = false;
-  return { file, ok: true };
+  let repaired = null;
+  try { repaired = repairSeason(handle); }
+  catch (e) { repaired = { failed: e.message }; }
+  dirty = !!repaired;
+  return { file, ok: true, repaired };
 }
 
 function state() {
@@ -276,19 +313,33 @@ function advanceWeek() {
   const c = handle.prepare(`SELECT season, week FROM career WHERE id = 1`).get();
   let week = c.week + 1, s = c.season;
   if (week > 52) { week = 1; s += 1; }
-  handle.prepare(`UPDATE career SET season = ?, week = ? WHERE id = 1`).run(s, week);
+  const setClock = () =>
+    handle.prepare(`UPDATE career SET season = ?, week = ? WHERE id = 1`).run(s, week);
 
   // A new year: the classes are rebalanced on last season's evidence before
   // anything can be entered, then the retainers are paid.
   if (s > c.season) {
-    // the world turns over before the player gets their four weeks
-    let wintered = null;
-    if (worldData && namesData) wintered = winter.runWinter(handle, worldData, namesData, s);
-    const bop = season.rollBoP(handle, s);
-
-    // grids exist now, so the season has a calendar to run
-    const hasCalendar = handle.prepare(`SELECT COUNT(*) n FROM rounds WHERE season = ?`).get(s).n;
-    if (!hasCalendar) weekend.buildCalendar(handle, s);
+    // The clock and the world turn over together or not at all.
+    //
+    // This used to move the calendar to the new season first and rebuild the
+    // world afterwards. Anything that went wrong in between — and a winter
+    // touches every table there is — left a career stranded in a year that had
+    // never been built: no teams carried over, no entry lists, no calendar, no
+    // seats to sign. Every further click just advanced the week inside that
+    // empty year, and nothing the player did could get them onto a grid,
+    // because there was no grid. One transaction means a failed winter leaves
+    // the career exactly where it was, with the error visible, instead of
+    // quietly destroying it.
+    let wintered = null, bop = null;
+    handle.transaction(() => {
+      setClock();
+      if (worldData && namesData) wintered = winter.runWinter(handle, worldData, namesData, s);
+      bop = season.rollBoP(handle, s);
+      // grids exist now, so the season has a calendar to run
+      const hasCalendar = handle.prepare(`SELECT COUNT(*) n FROM rounds WHERE season = ?`)
+        .get(s).n;
+      if (!hasCalendar) weekend.buildCalendar(handle, s);
+    })();
 
     if (bop && bop.moved && bop.moved.length) {
       const pegged = bop.moved.filter(x => x.dir < 0).map(x => x.model);
@@ -299,6 +350,8 @@ function advanceWeek() {
         [pegged.length ? `Pegged back: ${pegged.join(', ')}.` : '',
          helped.length ? `Given help: ${helped.join(', ')}.` : ''].filter(Boolean).join(' '));
     }
+  } else {
+    setClock();
   }
   if (week === 1) economy.payPassive(handle);
 
