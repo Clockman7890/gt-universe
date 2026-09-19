@@ -529,3 +529,33 @@ select.st { background: var(--surface-0); border: 1px solid var(--border); color
 .calrow .wn em { color: var(--text-muted); font-style: normal; margin-right: 5px; }
 .calrow.played .tk { color: var(--text); }
 .calrow:not(.played) .tk { color: var(--text-dim); }
+
+
+/* ---------- the end ---------- */
+/* Deliberately above everything, including the status bar: when a career is
+   over there is nothing else to look at and nothing else to click. */
+#gameover {
+  position: fixed; inset: 0; z-index: 9999;
+  background: #06070A;
+  display: flex; align-items: center; justify-content: center;
+  animation: go-in 1.6s ease both;
+}
+#gameover[hidden] { display: none; }
+@keyframes go-in { from { opacity: 0; } to { opacity: 1; } }
+.go-inner { text-align: center; max-width: 520px; padding: 0 24px; }
+.go-inner h1 {
+  font-size: 34px; font-weight: 300; letter-spacing: 6px; text-transform: uppercase;
+  color: #C4635F; margin: 0 0 18px;
+}
+#go-line { color: var(--text-2); font-size: 14px; line-height: 1.6; margin: 0 0 22px; }
+#go-sums { display: inline-block; text-align: left; margin-bottom: 26px; }
+#go-sums div { display: flex; gap: 28px; font-size: 13px; padding: 5px 0;
+               border-bottom: .5px solid #1B1E24; }
+#go-sums span:first-child { color: var(--text-muted); min-width: 190px; }
+#go-sums span:last-child { margin-left: auto; }
+#go-sums .bad { color: #C4635F; }
+#go-out { padding: 11px 26px; }
+
+/* ---------- money in trouble ---------- */
+.debt { background: #17100F; border-left: 3px solid #C4635F; }
+.debt h4 { color: #C4635F; }

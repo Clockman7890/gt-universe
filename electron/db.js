@@ -224,6 +224,7 @@ function create(file, schemaSql, profile, world, namesDb) {
 // around is a new career.
 const PATCHES = [
   ['career', 'champ_chosen_season', 'INTEGER'],
+  ['career', 'game_over_season', 'INTEGER'],
   ['ledger', 'entry_id', 'INTEGER']
 ];
 
@@ -305,7 +306,9 @@ function state() {
   }
   const unread = handle.prepare(
     `SELECT COUNT(*) n FROM news WHERE read = 0`).get().n;
-  return { career: c, sim, driver, unread, tutorial: c.tutorial_step };
+  const money = economy.solvency(handle);
+  return { career: c, sim, driver, unread, tutorial: c.tutorial_step,
+           money, gameOver: c.game_over_season || null };
 }
 
 function advanceWeek() {
@@ -354,6 +357,14 @@ function advanceWeek() {
     setClock();
   }
   if (week === 1) economy.payPassive(handle);
+
+  // The books are read once the year's income is in, never before: a driver
+  // whose retainer clears the overdraft on the first of January has not gone
+  // under, and declaring it before the money lands buried careers that were
+  // still alive. Ruin means the debt survives both the income and the sale of
+  // everything owned.
+  let ruin = null;
+  if (s > c.season) ruin = economy.callTheReceivers(handle, s);
 
   // the entry list closes at the end of week 4; anything still open is taken
   let filled = null;
@@ -468,6 +479,7 @@ function enterOwned(chassisId, liveryId) {
   dirty = true;
   return res;
 }
+function solvency() { return handle ? economy.solvency(handle) : null; }
 function usedList() { return handle ? market.usedList(handle) : null; }
 function buyUsed(chassisId, liveryId) {
   if (!handle) throw new Error('No career open.');
@@ -990,7 +1002,10 @@ function garage() {
     LEFT JOIN liveries lastl ON lastl.id = (
       SELECT e2.livery_id FROM entries e2 WHERE e2.chassis_id = ch.id
       ORDER BY e2.season DESC LIMIT 1)
-    WHERE t.status = 'active' AND t.owner_driver_id = @me
+    -- ownership, not the team's standing: a car belongs to its owner even when
+    -- the outfit around it has collapsed, and that is exactly when they need to
+    -- be able to see it and sell it
+    WHERE t.owner_driver_id = @me
     UNION
     SELECT ch.id AS id, cm.name model, cm.class, ch.value, ch.engine_hours, ch.chassis_hours,
            t.name team, 0 mine, ch.for_sale, e.id entry_id,
@@ -1012,7 +1027,7 @@ function garage() {
 module.exports = { create, open, peek, state, advanceWeek, save, close, isDirty,
                    marketList, marketBuy, marketBuyMany,
                    usedList, buyUsed, sellQuote, sellCar, rebuildQuote, rebuildEngine,
-                   ownedCars, enterOwned, garage, myEntries, lineup, setCarDriver, newsList, newsRead, home, setTutorial, raceInfo, racePrepare, raceSheet, raceSave,
+                   ownedCars, enterOwned, solvency, garage, myEntries, lineup, setCarDriver, newsList, newsRead, home, setTutorial, raceInfo, racePrepare, raceSheet, raceSave,
                    worldTree, standings, calendar,
                    roundBill, myRoundCost, withdrawFromRound, sponsors, simulateLeg,
                    whereToRace, pickChampionship, facilitiesDue, upgradeFacilities,

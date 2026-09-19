@@ -291,6 +291,63 @@ function sponsorsOf(db, driverId) {
                      WHERE driver_id = ? ORDER BY per_round DESC`).all(driverId);
 }
 
+// ------------------------------------------------------------ the reckoning
+// Racing on somebody else's money only works while somebody else keeps lending
+// it. Three states, and the player is always told which one they are in:
+//
+//   ok        the books balance, carry on
+//   must_sell overdrawn, but the cars are worth more than the debt — sell one
+//   ruined    overdrawn with nothing left worth enough to cover it
+//
+// The middle state is the important one. It is the difference between a bad
+// year and the end of a career, and it is only reachable if the player can
+// actually see their cars and sell them, which is why their team is never
+// wound up for them.
+function solvency(db) {
+  const me = db.prepare(`SELECT id, capital, passive_income FROM drivers WHERE is_player = 1`).get();
+  if (!me) return null;
+
+  // what the cars would fetch: the same seven tenths a dealer pays, and only
+  // cars not already committed to this season's entry list
+  const cars = db.prepare(`
+    SELECT ch.id, ch.value, cm.name model,
+           (SELECT COUNT(*) FROM entries e WHERE e.chassis_id = ch.id
+             AND e.season = (SELECT season FROM career WHERE id = 1)) entered
+    FROM chassis ch
+    JOIN car_models cm ON cm.id = ch.model_id
+    JOIN teams t ON t.id = ch.owner_team_id
+    WHERE t.owner_driver_id = ?`).all(me.id);
+
+  const sellable = cars.reduce((n, c) => n + Math.round(c.value * 0.7), 0);
+  const net = me.capital + sellable;
+
+  return {
+    capital: me.capital,
+    cars: cars.length,
+    sellable,
+    net,
+    passive: me.passive_income,
+    state: me.capital >= 0 ? 'ok' : (net >= 0 ? 'must_sell' : 'ruined')
+  };
+}
+
+// Called as a season turns over. Ruin is only declared at that point: inside a
+// season a driver can still be paid, win something, or find a backer.
+function callTheReceivers(db, season) {
+  const s = solvency(db);
+  if (!s || s.state !== 'ruined') return null;
+  const already = db.prepare(`SELECT game_over_season g FROM career WHERE id = 1`).get().g;
+  if (already) return { season: already, already: true };
+
+  db.prepare(`UPDATE career SET game_over_season = ? WHERE id = 1`).run(season);
+  db.prepare(`INSERT INTO news (season,week,category,headline,body) VALUES (?,1,'driver',?,?)`)
+    .run(season, 'Your career is over',
+         `You owe ${Math.abs(s.capital).toLocaleString('en-GB')} and everything you own `
+         + `together is worth ${s.sellable.toLocaleString('en-GB')}. There is nothing left `
+         + `to sell that would cover it, and nobody will put you in a car.`);
+  return { season, ...s };
+}
+
 // ------------------------------------------------------------ yearly income
 // Passive income lands in week 1, for everyone who is still racing.
 function payPassive(db) {
@@ -305,6 +362,6 @@ function payPassive(db) {
 
 module.exports = {
   roundCost, purseOf, settleRound, withdraw, absentEntries, chargePlayerRound,
-  reviewSponsors, sponsorsOf, payPassive, slots,
+  reviewSponsors, sponsorsOf, payPassive, slots, solvency, callTheReceivers,
   CREW_PRIVATEER, CREW_TEAM, TRAVEL_HOME, TRAVEL_AWAY, OVERDRAFT
 };

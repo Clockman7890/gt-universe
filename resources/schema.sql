@@ -147,6 +147,7 @@ CREATE TABLE career (
   player_team_id    INTEGER,
   player_championship_id TEXT,           -- the seat being held for them
   champ_chosen_season INTEGER,           -- the season the player last settled that choice
+  game_over_season  INTEGER,             -- set once the debt can no longer be paid
   ams2_path         TEXT,
   tutorial_step     INTEGER NOT NULL DEFAULT 0,  -- 0 welcome, 1 home, 2 market, 3 office, 4 done
   time_multiplier   INTEGER NOT NULL DEFAULT 2

@@ -143,11 +143,22 @@ ipcMain.handle('market:image', (_e, modelName) => {
   return require('./market').image(RESOURCES, modelName, specs);
 });
 
+// The end-of-career sound, as a data URL. It is served whole and played at
+// the volume it was authored at: this one cue is deliberately outside whatever
+// mixer the rest of the game grows, so it cannot be turned down or missed.
+ipcMain.handle('sound:gameOver', () => {
+  try {
+    const f = path.join(RESOURCES, 'sound', 'game_over.mp3');
+    return 'data:audio/mpeg;base64,' + fs.readFileSync(f).toString('base64');
+  } catch (_) { return null; }
+});
+
 ipcMain.handle('car:specs', (_e, modelName) => {
   const specs = JSON.parse(fs.readFileSync(path.join(RESOURCES, 'car_specs.json'), 'utf8'));
   return specs.find(s => s.model === modelName) || null;
 });
 
+ipcMain.handle('money:solvency', () => db.solvency());
 ipcMain.handle('garage:list', () => db.garage());
 
 ipcMain.handle('office:list',     () => db.officeOffers());

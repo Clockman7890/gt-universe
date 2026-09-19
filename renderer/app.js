@@ -130,6 +130,7 @@ window.addEventListener('resize', paint);
 async function refresh() {
   const s = await window.gt.state();
   if (!s) return;
+  if (s.gameOver) { await showGameOver(s); return; }
   const d = s.driver || {};
   $('b-money').textContent  = eur(d.capital);
   $('b-season').textContent = `Season ${s.career.season} · week ${s.career.week}`;
@@ -424,6 +425,61 @@ function nudge(text) {
   const skip = $('tut-skip');
   if (skip) skip.onclick = async () => { $('tut').hidden = true; await tutorialAdvance(4); };
 }
+
+// ---------------------------------------------------------------- the end
+// A career can end. When it does, everything else stops: the background music
+// this game will one day have, any cue still ringing, the hub, the buttons.
+// One sound plays, once, at the level it was authored at. It is not routed
+// through any volume setting and never will be — a player who has turned the
+// music down has not asked to be spared this.
+let goShown = false;
+
+function silenceEverything() {
+  for (const el of document.querySelectorAll('audio, video')) {
+    try { el.pause(); el.currentTime = 0; } catch (_) {}
+  }
+  // anything the game adds later registers itself here
+  if (window.gtAudio && typeof window.gtAudio.stopAll === 'function') {
+    try { window.gtAudio.stopAll(); } catch (_) {}
+  }
+}
+
+async function showGameOver(state) {
+  if (goShown) return;
+  goShown = true;
+  silenceEverything();
+
+  const m = state.money || {};
+  const season = state.gameOver || (state.career && state.career.season);
+  $('go-line').textContent =
+    `Season ${season}. The money ran out, and there was nothing left worth enough ` +
+    `to cover what you owed.`;
+  $('go-sums').innerHTML =
+    `<div><span>Debt</span><span class="bad">${eur(m.capital || 0)}</span></div>` +
+    `<div><span>Cars owned</span><span>${m.cars || 0}</span></div>` +
+    `<div><span>What they would fetch</span><span>${eur(m.sellable || 0)}</span></div>` +
+    `<div><span>Still short by</span><span class="bad">${eur(m.net || 0)}</span></div>`;
+  $('gameover').hidden = false;
+
+  // played detached from the document so nothing can reach it to mute it
+  try {
+    const src = await window.gt.gameOverSound();
+    if (src) {
+      const a = new Audio(src);
+      a.volume = 1;                    // exactly as supplied, no attenuation
+      a.loop = false;
+      await a.play().catch(() => {});  // a refused autoplay must not break the screen
+    }
+  } catch (_) { /* the screen matters more than the sound */ }
+}
+
+on('go-out', 'onclick', async () => {
+  $('gameover').hidden = true;
+  goShown = false;
+  try { await window.gt.closeCareer(); } catch (_) {}
+  show('title');
+  try { await refreshSaves(); } catch (_) {}
+});
 
 // ---------------------------------------------------------------- market
 let mk = null, mkModel = null, mkLivery = null, mkTab = 'new';
@@ -1231,6 +1287,27 @@ async function openHome() {
     ['Cars owned', h.cars]
   ]));
   box.appendChild(cards);
+
+  // ---- in the red: the one thing that matters until it is fixed ----
+  const money = await window.gt.solvency();
+  if (money && money.state !== 'ok') {
+    const warn = document.createElement('div');
+    warn.className = 'upgrade debt';
+    const short = Math.abs(money.net);
+    warn.innerHTML = `<h4>You are ${eur(Math.abs(money.capital))} in debt</h4>` +
+      (money.state === 'must_sell'
+        ? `<p class="note">Nobody will enter you in anything while the books are in ` +
+          `the red. Your ${money.cars === 1 ? 'car is' : `${money.cars} cars are`} worth ` +
+          `about <b>${eur(money.sellable)}</b> to a dealer — enough to clear it. Sell in ` +
+          `the <b>Garage</b>, then come back and pick a championship you can afford. ` +
+          `A season in a cheaper class is how most people climb out of this.</p>`
+        : `<p class="note">Everything you own together would fetch about ` +
+          `<b>${eur(money.sellable)}</b>, which leaves you <b>${eur(short)}</b> short. ` +
+          `Passive income of ${eur(money.passive)} a year is the only thing still ` +
+          `coming in. If the sign has not turned by the time the season turns, that ` +
+          `is the end of it.</p>`);
+    box.appendChild(warn);
+  }
 
   // ---- which championship, when the winter is open and nothing is settled ----
   // This is the first of two decisions and it has to be answered alone: where

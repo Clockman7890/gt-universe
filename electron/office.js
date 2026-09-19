@@ -439,15 +439,23 @@ function eligible(db) {
     const home = db.prepare(`SELECT continent FROM blocks WHERE id = ?`).get(me.block_id).continent;
     // Shown, not hidden: a driver should be able to see the class he cannot
     // afford yet, and what it would take to get there.
+    // A floor of zero is no requirement. Testing capital < 0 against it locked
+    // every championship in the game the moment a driver went a euro overdrawn,
+    // including the GT5 series that asks nothing of anybody.
     const floor = MIN_TO_RACE[row.class] || 0;
-    const short = me.capital < floor;
+    // Nobody signs an entry form for a driver who is in the red, whatever the
+    // class asks for. Selling a car is the way out, and the Garage is where
+    // that happens.
+    const inDebt = me.capital < 0;
+    const short = inDebt || (floor > 0 && me.capital < floor);
     out.push({
       id: row.id, name: row.name, cls: row.class, cars: row.cars,
       home: row.home_continent === home,
       current: row.id === c.player_championship_id,
       step: at > best ? 'up' : at === best ? 'same' : 'down',
       locked: short, floor,
-      why: short ? `Needs €${floor.toLocaleString('en-GB')} in capital` : null
+      why: inDebt ? 'Clear your debt first — sell a car in the Garage'
+           : short ? `Needs €${floor.toLocaleString('en-GB')} in capital` : null
     });
   }
   return { season: c.season, open: c.week <= 4, rating: me.fia_rating,

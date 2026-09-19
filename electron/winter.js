@@ -231,8 +231,15 @@ function carryTeamsForward(db, world, r, season) {
     SELECT t.*, (SELECT COUNT(*) FROM entries e WHERE e.team_id = t.id AND e.season = ?) ran
     FROM teams t WHERE t.status = 'active'`).all(last);
 
+  const me = playerId(db);
   for (const t of teams) {
     if (!t.ran) continue;                                  // never raced, nothing to carry
+    // The player's own team is never wound up behind their back. A bankrupt AI
+    // owner simply disappears and his cars go on the market; doing that to the
+    // player took the one asset they could have sold to dig themselves out and
+    // left them with a debt, no car, and nothing to press. Their reckoning is
+    // handled where they can see it and act on it.
+    if (t.owner_driver_id === me) { kept.push(t); continue; }
     const purse = t.owner_driver_id
       ? db.prepare(`SELECT capital, status FROM drivers WHERE id = ?`).get(t.owner_driver_id)
       : { capital: t.capital, status: 'active' };

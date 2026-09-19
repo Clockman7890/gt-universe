@@ -433,7 +433,7 @@ function ownedCars(db) {
     FROM chassis ch
     JOIN car_models cm ON cm.id = ch.model_id
     JOIN teams t ON t.id = ch.owner_team_id
-    WHERE t.owner_driver_id = @me AND t.status = 'active'`)
+    WHERE t.owner_driver_id = @me`)
     .all({ me: player.id, season: season.season });
 
   const eligible = champ && champ.model_id
@@ -476,7 +476,7 @@ function enterOwned(db, chassisId, liveryId) {
     SELECT ch.*, cm.name model, cm.id model_id, cm.class, t.id team_id
     FROM chassis ch JOIN car_models cm ON cm.id = ch.model_id
     JOIN teams t ON t.id = ch.owner_team_id
-    WHERE ch.id = ? AND t.owner_driver_id = ? AND t.status = 'active'`)
+    WHERE ch.id = ? AND t.owner_driver_id = ?`)
     .get(chassisId, p.id);
   if (!car) throw new Error('That car is not yours.');
   if (db.prepare(`SELECT 1 FROM entries WHERE chassis_id = ? AND season = ?`)

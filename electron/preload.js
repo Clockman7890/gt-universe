@@ -22,6 +22,8 @@ contextBridge.exposeInMainWorld('gt', {
   fixEngine:  c         => ipcRenderer.invoke('market:fix', c),
   carImage:   name      => ipcRenderer.invoke('market:image', name),
   carSpecs:   name      => ipcRenderer.invoke('car:specs', name),
+  gameOverSound: ()     => ipcRenderer.invoke('sound:gameOver'),
+  solvency:   ()        => ipcRenderer.invoke('money:solvency'),
   garage:     ()        => ipcRenderer.invoke('garage:list'),
   office:     ()        => ipcRenderer.invoke('office:list'),
   eligible:   ()        => ipcRenderer.invoke('office:eligible'),
