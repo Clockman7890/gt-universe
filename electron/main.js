@@ -129,6 +129,8 @@ ipcMain.handle('market:list', () => db.marketList());
 ipcMain.handle('market:buy', (_e, modelId, liveryId) => db.marketBuy(modelId, liveryId));
 ipcMain.handle('market:buyMany', (_e, modelId, ids) => db.marketBuyMany(modelId, ids));
 
+ipcMain.handle('market:owned',    () => db.ownedCars());
+ipcMain.handle('market:enter',    (_e, ch, lv) => db.enterOwned(ch, lv));
 ipcMain.handle('market:used',     () => db.usedList());
 ipcMain.handle('market:buyUsed',  (_e, ch, lv) => db.buyUsed(ch, lv));
 ipcMain.handle('market:sellQuote',(_e, ch) => db.sellQuote(ch));

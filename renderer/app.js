@@ -1728,10 +1728,41 @@ async function openGarage() {
 // dealer's money. A car in this season's entry list cannot be sold.
 async function carWork(holder, c) {
   if (!holder) return;
-  const [fix, offer] = await Promise.all([
-    window.gt.fixQuote(c.id), window.gt.sellQuote(c.id)
+  const [fix, offer, owned] = await Promise.all([
+    window.gt.fixQuote(c.id), window.gt.sellQuote(c.id), window.gt.ownedCars()
   ]);
   holder.innerHTML = '';
+
+  // A car in the garage is not on any grid until its owner puts it there. The
+  // entry lists are rebuilt every winter without the player's cars in them, so
+  // this is the only way a car bought last year races again.
+  const slot = owned && owned.cars ? owned.cars.find(x => x.chassisId === c.id) : null;
+  if (slot && !c.championship && owned.open) {
+    const b = document.createElement('button');
+    b.className = slot.canEnter ? 'primary small' : 'small';
+    if (!slot.canEnter) {
+      b.disabled = true;
+      b.textContent = slot.why || 'Cannot be entered';
+    } else {
+      b.textContent = `Enter in the ${owned.championship}`;
+      b.title = 'You already own it — entering costs nothing.';
+      b.onclick = async () => {
+        const lv = slot.liveries[0];
+        if (!confirm(`Enter the ${c.model} in the ${owned.championship}?\n\n` +
+                     `Running as ${lv.livery_name}. The car is yours, so there is ` +
+                     `nothing to pay for the entry itself — only the meetings.`)) return;
+        try {
+          const res = await window.gt.enterCar(c.id, lv.id);
+          alert(`${res.model} — ${res.livery}\nEntered the ${res.championship}.` +
+                (res.needsDriver ? '\n\nSign a driver for it in the Office.' : ''));
+          await refresh(); await openGarage();
+        } catch (e) {
+          alert(String(e.message || e).replace(/^Error: /, ''));
+        }
+      };
+    }
+    holder.appendChild(b);
+  }
 
   if (fix) {
     const b = document.createElement('button');

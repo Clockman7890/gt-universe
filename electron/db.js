@@ -36,89 +36,89 @@ const BLOCKS = [
 
 // every country the create screen can pick; the generator adds more later
 const COUNTRIES = [
-  ['ITA','Italy','trofeo_adriatico'],
-  ['GRC','Greece','trofeo_adriatico'],
-  ['TUR','Turkey','trofeo_adriatico'],
-  ['CYP','Cyprus','trofeo_adriatico'],
-  ['BGR','Bulgaria','trofeo_adriatico'],
-  ['ROU','Romania','trofeo_adriatico'],
-  ['SRB','Serbia','trofeo_adriatico'],
-  ['HRV','Croatia','trofeo_adriatico'],
-  ['SVN','Slovenia','trofeo_adriatico'],
-  ['MKD','North Macedonia','trofeo_adriatico'],
-  ['ALB','Albania','trofeo_adriatico'],
-  ['SWE','Sweden','nordisk'],
-  ['NOR','Norway','nordisk'],
-  ['DNK','Denmark','nordisk'],
-  ['FIN','Finland','nordisk'],
-  ['ISL','Iceland','nordisk'],
-  ['GBR','United Kingdom','british_benelux'],
-  ['IRL','Ireland','british_benelux'],
-  ['NLD','Netherlands','british_benelux'],
-  ['BEL','Belgium','british_benelux'],
-  ['LUX','Luxembourg','british_benelux'],
-  ['DEU','Germany','alpen_pokal'],
-  ['AUT','Austria','alpen_pokal'],
-  ['CHE','Switzerland','alpen_pokal'],
-  ['POL','Poland','alpen_pokal'],
-  ['CZE','Czechia','central_european'],
-  ['SVK','Slovakia','central_european'],
-  ['HUN','Hungary','central_european'],
-  ['EST','Estonia','central_european'],
-  ['LVA','Latvia','central_european'],
-  ['LTU','Lithuania','central_european'],
-  ['UKR','Ukraine','central_european'],
-  ['FRA','France','coupe_latine'],
-  ['ESP','Spain','coupe_latine'],
-  ['PRT','Portugal','coupe_latine'],
-  ['RUS','Russia','eurasian'],
-  ['BLR','Belarus','eurasian'],
-  ['KAZ','Kazakhstan','eurasian'],
-  ['GEO','Georgia','eurasian'],
-  ['ARM','Armenia','eurasian'],
-  ['AZE','Azerbaijan','eurasian'],
-  ['USA','United States','gt5_north_america'],
-  ['CAN','Canada','gt5_north_america'],
-  ['BRA','Brazil','copa_sudamericana'],
-  ['ARG','Argentina','copa_sudamericana'],
-  ['CHL','Chile','copa_sudamericana'],
-  ['URY','Uruguay','copa_sudamericana'],
-  ['PRY','Paraguay','copa_sudamericana'],
-  ['BOL','Bolivia','copa_sudamericana'],
-  ['PER','Peru','copa_sudamericana'],
-  ['COL','Colombia','copa_sudamericana'],
-  ['ECU','Ecuador','copa_sudamericana'],
-  ['VEN','Venezuela','copa_sudamericana'],
-  ['JPN','Japan','lancer_japan'],
-  ['CHN','China','east_asia_lancer'],
-  ['TWN','Taiwan','east_asia_lancer'],
-  ['HKG','Hong Kong','east_asia_lancer'],
-  ['MAC','Macau','east_asia_lancer'],
-  ['KOR','South Korea','east_asia_lancer'],
-  ['THA','Thailand','asian_gt5_trophy'],
-  ['MYS','Malaysia','asian_gt5_trophy'],
-  ['SGP','Singapore','asian_gt5_trophy'],
-  ['IDN','Indonesia','asian_gt5_trophy'],
-  ['PHL','Philippines','asian_gt5_trophy'],
-  ['IND','India','asian_gt5_trophy'],
-  ['LKA','Sri Lanka','asian_gt5_trophy'],
-  ['PAK','Pakistan','asian_gt5_trophy'],
-  ['AUS','Australia','australasian_arc'],
-  ['NZL','New Zealand','australasian_arc'],
-  ['ZAF','South Africa','africa_gulf'],
-  ['MAR','Morocco','africa_gulf'],
-  ['EGY','Egypt','africa_gulf'],
-  ['NGA','Nigeria','africa_gulf'],
-  ['KEN','Kenya','africa_gulf'],
-  ['AGO','Angola','africa_gulf'],
-  ['ARE','United Arab Emirates','africa_gulf'],
-  ['SAU','Saudi Arabia','africa_gulf'],
-  ['QAT','Qatar','africa_gulf'],
-  ['BHR','Bahrain','africa_gulf'],
-  ['KWT','Kuwait','africa_gulf'],
-  ['OMN','Oman','africa_gulf'],
-  ['JOR','Jordan','africa_gulf'],
-  ['LBN','Lebanon','africa_gulf'],
+  ['ITA','Italy','trofeo_adriatico',10],
+  ['GRC','Greece','trofeo_adriatico',2],
+  ['TUR','Turkey','trofeo_adriatico',2.5],
+  ['CYP','Cyprus','trofeo_adriatico',0.5],
+  ['BGR','Bulgaria','trofeo_adriatico',1],
+  ['ROU','Romania','trofeo_adriatico',1.2],
+  ['SRB','Serbia','trofeo_adriatico',1],
+  ['HRV','Croatia','trofeo_adriatico',1],
+  ['SVN','Slovenia','trofeo_adriatico',1.5],
+  ['MKD','North Macedonia','trofeo_adriatico',0.4],
+  ['ALB','Albania','trofeo_adriatico',0.3],
+  ['SWE','Sweden','nordisk',4],
+  ['NOR','Norway','nordisk',2],
+  ['DNK','Denmark','nordisk',3],
+  ['FIN','Finland','nordisk',3.5],
+  ['ISL','Iceland','nordisk',0.3],
+  ['GBR','United Kingdom','british_benelux',10],
+  ['IRL','Ireland','british_benelux',1.5],
+  ['NLD','Netherlands','british_benelux',5],
+  ['BEL','Belgium','british_benelux',4],
+  ['LUX','Luxembourg','british_benelux',0.6],
+  ['DEU','Germany','alpen_pokal',10],
+  ['AUT','Austria','alpen_pokal',3],
+  ['CHE','Switzerland','alpen_pokal',3],
+  ['POL','Poland','alpen_pokal',3],
+  ['CZE','Czechia','central_european',2.5],
+  ['SVK','Slovakia','central_european',1.2],
+  ['HUN','Hungary','central_european',2],
+  ['EST','Estonia','central_european',0.8],
+  ['LVA','Latvia','central_european',0.8],
+  ['LTU','Lithuania','central_european',1],
+  ['UKR','Ukraine','central_european',2],
+  ['FRA','France','coupe_latine',9],
+  ['ESP','Spain','coupe_latine',6],
+  ['PRT','Portugal','coupe_latine',3],
+  ['RUS','Russia','eurasian',4],
+  ['BLR','Belarus','eurasian',1],
+  ['KAZ','Kazakhstan','eurasian',1],
+  ['GEO','Georgia','eurasian',0.5],
+  ['ARM','Armenia','eurasian',0.4],
+  ['AZE','Azerbaijan','eurasian',0.8],
+  ['USA','United States','gt5_north_america',10],
+  ['CAN','Canada','gt5_north_america',3],
+  ['BRA','Brazil','copa_sudamericana',6],
+  ['ARG','Argentina','copa_sudamericana',3],
+  ['CHL','Chile','copa_sudamericana',1],
+  ['URY','Uruguay','copa_sudamericana',0.8],
+  ['PRY','Paraguay','copa_sudamericana',0.5],
+  ['BOL','Bolivia','copa_sudamericana',0.4],
+  ['PER','Peru','copa_sudamericana',0.6],
+  ['COL','Colombia','copa_sudamericana',1.2],
+  ['ECU','Ecuador','copa_sudamericana',0.5],
+  ['VEN','Venezuela','copa_sudamericana',0.8],
+  ['JPN','Japan','lancer_japan',7],
+  ['CHN','China','east_asia_lancer',3],
+  ['TWN','Taiwan','east_asia_lancer',1],
+  ['HKG','Hong Kong','east_asia_lancer',0.8],
+  ['MAC','Macau','east_asia_lancer',0.4],
+  ['KOR','South Korea','east_asia_lancer',2],
+  ['THA','Thailand','asian_gt5_trophy',2],
+  ['MYS','Malaysia','asian_gt5_trophy',1.5],
+  ['SGP','Singapore','asian_gt5_trophy',1],
+  ['IDN','Indonesia','asian_gt5_trophy',1.5],
+  ['PHL','Philippines','asian_gt5_trophy',1],
+  ['IND','India','asian_gt5_trophy',2],
+  ['LKA','Sri Lanka','asian_gt5_trophy',0.5],
+  ['PAK','Pakistan','asian_gt5_trophy',0.5],
+  ['AUS','Australia','australasian_arc',4],
+  ['NZL','New Zealand','australasian_arc',1.5],
+  ['ZAF','South Africa','africa_gulf',2.5],
+  ['MAR','Morocco','africa_gulf',0.8],
+  ['EGY','Egypt','africa_gulf',0.8],
+  ['NGA','Nigeria','africa_gulf',0.6],
+  ['KEN','Kenya','africa_gulf',0.5],
+  ['AGO','Angola','africa_gulf',0.4],
+  ['ARE','United Arab Emirates','africa_gulf',2],
+  ['SAU','Saudi Arabia','africa_gulf',1.5],
+  ['QAT','Qatar','africa_gulf',1],
+  ['BHR','Bahrain','africa_gulf',1.2],
+  ['KWT','Kuwait','africa_gulf',0.8],
+  ['OMN','Oman','africa_gulf',0.5],
+  ['JOR','Jordan','africa_gulf',0.5],
+  ['LBN','Lebanon','africa_gulf',0.6],
 ];
 
 function seedReference(d) {
@@ -126,8 +126,13 @@ function seedReference(d) {
       (id, name, continent, production_weight, passive_multiplier)
       VALUES (?,?,?,?,?)`);
   for (const row of BLOCKS) b.run(...row);
+  // Relative weight inside its own block: how much racing a country actually
+  // produces. The block's own production_weight sets the region's share of the
+  // world, this sets who inside it the drivers come from — so Italy supplies
+  // its block many times over what Albania does, instead of the two being
+  // equally likely because every weight was written as 1.0.
   const c = d.prepare(`INSERT OR IGNORE INTO countries (code, name, block_id, weight)
-      VALUES (?,?,?,1.0)`);
+      VALUES (?,?,?,?)`);
   for (const row of COUNTRIES) c.run(...row);
 }
 
@@ -199,10 +204,10 @@ function create(file, schemaSql, profile, world, namesDb) {
   handle.transaction(() => {
     buildWorld(handle, world, BLOCKS.map(b => ({
       id: b[0], name: b[1], continent: b[2], weight: b[3], passive: b[4]
-    })), COUNTRIES.map(c => ({ code: c[0], name: c[1], block: c[2] })), true);
+    })), COUNTRIES.map(c => ({ code: c[0], name: c[1], block: c[2], weight: c[3] })), true);
     const ctx = generatePopulation(handle, world, BLOCKS.map(b => ({
       id: b[0], name: b[1], continent: b[2], weight: b[3], passive: b[4]
-    })), COUNTRIES.map(c => ({ code: c[0], name: c[1], block: c[2] })), namesDb, seed);
+    })), COUNTRIES.map(c => ({ code: c[0], name: c[1], block: c[2], weight: c[3] })), namesDb, seed);
     buildEntries(handle, world, ctx, profile);
     if (profile) placePlayer(handle, world, ctx, profile);
     weekend.buildCalendar(handle, 1);
@@ -400,6 +405,13 @@ function marketBuy(modelId, liveryId) {
 function marketBuyMany(modelId, liveryIds) {
   if (!handle) throw new Error('No career open.');
   const res = market.buyMany(handle, modelId, liveryIds);
+  dirty = true;
+  return res;
+}
+function ownedCars() { return handle ? market.ownedCars(handle) : null; }
+function enterOwned(chassisId, liveryId) {
+  if (!handle) throw new Error('No career open.');
+  const res = market.enterOwned(handle, chassisId, liveryId);
   dirty = true;
   return res;
 }
@@ -946,7 +958,8 @@ function garage() {
 
 module.exports = { create, open, peek, state, advanceWeek, save, close, isDirty,
                    marketList, marketBuy, marketBuyMany,
-                   usedList, buyUsed, sellQuote, sellCar, rebuildQuote, rebuildEngine, garage, myEntries, lineup, setCarDriver, newsList, newsRead, home, setTutorial, raceInfo, racePrepare, raceSheet, raceSave,
+                   usedList, buyUsed, sellQuote, sellCar, rebuildQuote, rebuildEngine,
+                   ownedCars, enterOwned, garage, myEntries, lineup, setCarDriver, newsList, newsRead, home, setTutorial, raceInfo, racePrepare, raceSheet, raceSave,
                    worldTree, standings, calendar,
                    roundBill, myRoundCost, withdrawFromRound, sponsors, simulateLeg,
                    whereToRace, pickChampionship, facilitiesDue, upgradeFacilities,

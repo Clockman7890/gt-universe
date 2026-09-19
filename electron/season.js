@@ -14,7 +14,12 @@ function freeLivery(db, modelId, season, champId) {
         SELECT e2.livery_id FROM entries e2 JOIN teams t2 ON t2.id = e2.team_id
         WHERE e2.season = @last AND e2.championship_id = @champ
           AND t2.owner_driver_id = (SELECT player_driver_id FROM career WHERE id = 1))
-    ORDER BY l.id LIMIT 1`)
+    -- A works number goes to a works team. The humble liveries are what a
+    -- privateer runs, and the Market only ever sells those, so an AI field
+    -- helping itself to them in id order quietly locks the player out of his
+    -- own championship: sixteen cars, eleven sellable numbers, none left.
+    ORDER BY CASE l.sponsor_level WHEN 'high' THEN 0 WHEN 'medium' THEN 1 ELSE 2 END,
+             l.id LIMIT 1`)
     .get({ model: modelId, season, champ: champId, last: season - 1 });
 }
 

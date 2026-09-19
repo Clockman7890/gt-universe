@@ -301,7 +301,12 @@ function rebuildEntries(db, world, r, season, playerChampId, moving = new Set())
     // Room enough for the field the series settles at, not the one it opened
     // with. Whatever the returning teams do not take is filled afterwards.
     const w = world.championships.find(x => x.id === c.id) || {};
-    const room = w.grid || c.min_grid;
+    // Two places are kept back for the player's four weeks. Without this the
+    // returning teams take the whole grid the moment the winter ends, and in a
+    // one-make series — where the number of cars is the number of liveries that
+    // exist — there is then literally no way in until next winter.
+    const HELD_FOR_THE_PLAYER = 2;
+    const room = Math.max(c.min_grid, (w.grid || c.min_grid) - HELD_FOR_THE_PLAYER);
 
     // last year's teams in this championship, with the cars they own
     // The player's own cars are left out: they sit in the garage until their
@@ -330,7 +335,8 @@ function rebuildEntries(db, world, r, season, playerChampId, moving = new Set())
           SELECT l.id FROM liveries l
           WHERE l.model_id = ?
             AND l.id NOT IN (SELECT livery_id FROM entries WHERE season = ? AND championship_id = ?)
-          LIMIT 1`).get(chassis.model_id, season, c.id);
+          ORDER BY CASE l.sponsor_level WHEN 'high' THEN 0 WHEN 'medium' THEN 1 ELSE 2 END,
+                   l.id LIMIT 1`).get(chassis.model_id, season, c.id);
         if (!alt) continue;
         livery = alt.id;
       }

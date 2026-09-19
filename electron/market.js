@@ -55,12 +55,15 @@ function list(db) {
     JOIN manufacturers m ON m.id = cm.manufacturer_id
     WHERE cm.purchasable = 1 ORDER BY cm.price_new DESC`).all();
 
+  // A privateer runs a modest livery by preference, but if every modest number
+  // in the series is taken he takes whatever is left rather than being told to
+  // go home. Running under a works livery is a smaller oddity than a career
+  // that cannot continue.
   const freeLiveries = db.prepare(`
     SELECT l.id, l.livery_name, l.sponsor_level FROM liveries l
     WHERE l.model_id = ?
-      AND l.sponsor_level IN ('low','medium')
       AND l.id NOT IN (SELECT livery_id FROM entries WHERE season = ? AND championship_id = ?)
-    ORDER BY l.id`);
+    ORDER BY CASE l.sponsor_level WHEN 'high' THEN 2 ELSE 0 END, l.id`);
 
   const models = rows.map(m => {
     const ok = eligible.includes(m.id);
@@ -316,9 +319,8 @@ function usedList(db) {
   const freeLiveries = db.prepare(`
     SELECT l.id, l.livery_name, l.sponsor_level FROM liveries l
     WHERE l.model_id = ?
-      AND l.sponsor_level IN ('low','medium')
       AND l.id NOT IN (SELECT livery_id FROM entries WHERE season = ? AND championship_id = ?)
-    ORDER BY l.id`);
+    ORDER BY CASE l.sponsor_level WHEN 'high' THEN 2 ELSE 0 END, l.id`);
 
   const cars = rows.map(r => {
     const price = r.asking_price || Math.round(r.value * 1.0);
@@ -410,6 +412,109 @@ function buyUsed(db, chassisId, liveryId) {
   })();
 }
 
+// ---------------------------------------------------------- a car you own
+// A chassis in the garage is not automatically on next year's grid: the entry
+// lists are rebuilt every winter and the player's own cars are deliberately
+// left out of that, so their owner can decide what to do with them. This is
+// how they decide to race it again. Without it a car bought in season one
+// became an ornament — the only ways onto a grid were buying another car or
+// buying a seat, and a driver who had spent his money on the car he already
+// owned could do neither.
+function ownedCars(db) {
+  const ctx = context(db);
+  if (!ctx) return { cars: [], championship: null, open: false };
+  const { player, season, champ, seat } = ctx;
+
+  const mine = db.prepare(`
+    SELECT ch.id, ch.value, ch.engine_hours, cm.id model_id, cm.name model, cm.class,
+           t.id team_id, t.name team, t.is_privateer,
+           (SELECT COUNT(*) FROM entries e WHERE e.chassis_id = ch.id
+             AND e.season = @season) entered
+    FROM chassis ch
+    JOIN car_models cm ON cm.id = ch.model_id
+    JOIN teams t ON t.id = ch.owner_team_id
+    WHERE t.owner_driver_id = @me AND t.status = 'active'`)
+    .all({ me: player.id, season: season.season });
+
+  const eligible = champ && champ.model_id
+    ? [champ.model_id]
+    : champ ? db.prepare(`SELECT id FROM car_models WHERE class IN (${
+        champ.class === 'gt4' ? "'gt4'" : "'gt3_gen1','gt3_gen2','gto'"
+      })`).all().map(r => r.id) : [];
+
+  const freeLiveries = db.prepare(`
+    SELECT l.id, l.livery_name FROM liveries l
+    WHERE l.model_id = ?
+      AND l.id NOT IN (SELECT livery_id FROM entries WHERE season = ? AND championship_id = ?)
+    ORDER BY l.id`);
+
+  const cars = mine.map(c => {
+    const fits = champ ? eligible.includes(c.model_id) : false;
+    const liveries = fits && !c.entered ? freeLiveries.all(c.model_id, season.season, champ.id) : [];
+    let why = null;
+    if (c.entered) why = 'Already entered this season';
+    else if (!champ) why = 'No championship chosen yet';
+    else if (!fits) why = `Not eligible in the ${champ.name}`;
+    else if (!liveries.length) why = 'No free entry number left';
+    else if (seat && !ctx.team) why = 'You already have a drive this season';
+    return { chassisId: c.id, model: c.model, cls: c.class, team: c.team,
+             hours: c.engine_hours, value: c.value,
+             canEnter: !why, why, liveries };
+  });
+
+  return { cars, championship: champ ? champ.name : null,
+           open: season.week <= 4, hasSeat: !!seat };
+}
+
+function enterOwned(db, chassisId, liveryId) {
+  const ctx = context(db);
+  if (!ctx || !ctx.champ) throw new Error('Choose a championship first.');
+  if (ctx.season.week > 4) throw new Error('The entry list for this season has closed.');
+  const p = ctx.player, champ = ctx.champ;
+
+  const car = db.prepare(`
+    SELECT ch.*, cm.name model, cm.id model_id, cm.class, t.id team_id
+    FROM chassis ch JOIN car_models cm ON cm.id = ch.model_id
+    JOIN teams t ON t.id = ch.owner_team_id
+    WHERE ch.id = ? AND t.owner_driver_id = ? AND t.status = 'active'`)
+    .get(chassisId, p.id);
+  if (!car) throw new Error('That car is not yours.');
+  if (db.prepare(`SELECT 1 FROM entries WHERE chassis_id = ? AND season = ?`)
+        .get(chassisId, ctx.season.season))
+    throw new Error('That car is already entered this season.');
+
+  const ok = champ.model_id ? champ.model_id === car.model_id
+    : (champ.class === 'gt4' ? car.class === 'gt4'
+       : ['gt3_gen1','gt3_gen2','gto'].includes(car.class));
+  if (!ok) throw new Error(`A ${car.model} is not eligible in the ${champ.name}.`);
+
+  const lv = db.prepare(`
+    SELECT * FROM liveries WHERE id = ? AND model_id = ?
+      AND id NOT IN (SELECT livery_id FROM entries WHERE season = ? AND championship_id = ?)`)
+    .get(liveryId, car.model_id, ctx.season.season, champ.id);
+  if (!lv) throw new Error('That entry number has just been taken.');
+
+  return db.transaction(() => {
+    const entryId = db.prepare(`INSERT INTO entries
+        (season,championship_id,team_id,chassis_id,livery_id,class_cup,works_support)
+        VALUES (?,?,?,?,?,NULL,0)`)
+      .run(ctx.season.season, champ.id, car.team_id, chassisId, lv.id).lastInsertRowid;
+
+    // the owner takes the wheel unless he has already signed for somebody else
+    if (!ctx.seat)
+      db.prepare(`INSERT INTO entry_drivers (entry_id,driver_id,role,seat_fee) VALUES (?,?,1,0)`)
+        .run(entryId, p.id);
+
+    db.prepare(`UPDATE news SET read = 1 WHERE headline = 'You have no car yet'`).run();
+    db.prepare(`INSERT INTO news (season,week,category,headline,body) VALUES (?,?,'market',?,?)`)
+      .run(ctx.season.season, ctx.season.week,
+           `Your ${car.model} is entered in the ${champ.name}`,
+           `Running as ${lv.livery_name}. ${car.engine_hours.toFixed(1)} hours on the engine.`);
+    return { model: car.model, livery: lv.livery_name, championship: champ.name,
+             needsDriver: !!ctx.seat };
+  })();
+}
+
 // One image at a time, as a data URL, so the renderer needs no file access.
 function image(resourcesDir, modelName, specs) {
   const s = specs.find(x => x.model === modelName);
@@ -434,6 +539,6 @@ function buyMany(db, modelId, liveryIds) {
            capital: out[out.length - 1].capital, championship: out[0].championship };
 }
 
-module.exports = { list, buy, buyMany, image, context,
+module.exports = { list, buy, buyMany, image, context, ownedCars, enterOwned,
                    usedList, buyUsed, sellQuote, sellCar,
                    rebuildQuote, rebuildEngine, engineHealth, ENGINE_LIFE };
