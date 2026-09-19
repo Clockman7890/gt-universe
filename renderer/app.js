@@ -1450,10 +1450,17 @@ async function openNews() {
 async function openOffice() {
   const o = await window.gt.office();
   const box = $('of-body');
+  box.innerHTML = '';
+  // the payload is null until a championship is chosen, and reading it first
+  // threw before the check below could say so
+  if (!o) {
+    $('of-deadline').textContent = '';
+    box.innerHTML = '<p class="note">Choose where you will race at Home first. ' +
+                    'Until then there is nothing here to sign.</p>';
+    return;
+  }
   $('of-deadline').textContent = o.open
     ? 'contracts close at the end of week 4' : 'closed until the winter';
-  box.innerHTML = '';
-  if (!o) { box.innerHTML = '<p class="note">Nothing here yet.</p>'; return; }
 
   const h = (t) => { const d = document.createElement('div'); d.className = 'sect'; d.textContent = t; box.appendChild(d); };
   const p = (t) => { const d = document.createElement('p'); d.className = 'note'; d.innerHTML = t; box.appendChild(d); };
@@ -1538,11 +1545,20 @@ async function renderUsed() {
     ? 'entry list closes at the end of week 4'
     : 'closed — reopens next winter';
   renderUsedList();
-  $('mk-detail').innerHTML = ud.cars.length
-    ? `<p class="note">${ud.championship
-        ? 'Pick a car to enter the ' + ud.championship + '.'
-        : 'Choose a championship at the Office first.'}</p>`
-    : `<div class="bubble"><b>No used cars listed</b><p>${ud.note || ''}</p></div>`;
+  const usable = ud.cars.filter(c => c.affordable).length;
+  const fits = ud.cars.filter(c => !/Not eligible/.test(c.why || '')).length;
+  $('mk-detail').innerHTML = !ud.cars.length
+    ? `<div class="bubble"><b>No used cars listed</b><p>${ud.note || ''}</p></div>`
+    : !fits
+      ? `<div class="bubble"><b>Nothing here fits your championship</b>` +
+        `<p>${ud.cars.length} cars are for sale, but none of them is eligible in the ` +
+        `${ud.championship || 'series you are aiming at'}. A one-make series takes one ` +
+        `model and nothing else, so second-hand stock only helps when somebody running ` +
+        `that same car has given up. Buy new instead, or look for a seat at the Office.</p></div>`
+      : `<p class="note">${ud.championship
+          ? 'Pick a car to enter the ' + ud.championship + '.'
+            + (usable ? '' : ' Nothing listed is within reach yet.')
+          : 'Choose a championship at the Office first.'}</p>`;
 }
 
 function renderUsedList() {

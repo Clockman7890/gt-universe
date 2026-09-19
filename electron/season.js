@@ -146,7 +146,17 @@ function lockEntries(db, world, leaveOpen = 0, prefer = {}, reserved = new Set()
       if (free.length < perCar) break;            // nobody left to put in it
 
       const lead = free[0];
-      const priv = champ.class === 'gt5' && r() < 0.7;
+      // GT5 is mostly owner-drivers, but a grid made entirely of privateers has
+      // nothing to sell: a driver looking for a paid seat is told there are no
+      // offers and the class becomes a closed shop. A third of the field is
+      // kept as teams that take on drivers, and only above that does the
+      // privateer roll apply.
+      const works = db.prepare(`SELECT COUNT(*) n FROM entries e
+          JOIN teams t ON t.id = e.team_id
+          WHERE e.season = ? AND e.championship_id = ? AND t.is_privateer = 0`)
+        .get(c.season, w.id).n;
+      const needWorks = works < Math.ceil(target / 3);
+      const priv = !needWorks && champ.class === 'gt5' && r() < 0.7;
       const teamId = db.prepare(`INSERT INTO teams
           (name,country,block_id,founded_season,is_privateer,owner_driver_id,capital,
            engineering,facilities,goals)
